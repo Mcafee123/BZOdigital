@@ -33,7 +33,7 @@ const regexCitationStart = new RegExp(
     "gu"
 );
 const regexConnectedCitationChunk = new RegExp(
-    String.raw`(?<separator>${combinationSeparatorPattern})(?<citation>(?:(?:${citationMarkerPattern})\.?\s*)?(?<provision>${provisionPattern})${citationDetailPattern})`,
+    String.raw`(?<separator>${combinationSeparatorPattern})(?<citation>(?:(?<marker>${citationMarkerPattern})\.?\s*)?(?<provision>${provisionPattern})${citationDetailPattern})`,
     "iuy"
 );
 const regexLawAbbreviationToken = new RegExp(lawAbbreviationToken, "uy");
@@ -46,34 +46,31 @@ const regexBGE = /(?:(?:(BGE|ATF|DTF)\.?\s*)?(\d+(?:\w\b)?)\s*M{0,4}(IV|V|I{1,3}
 const regexBGer = /(\d+)([A-Z])_(\d+\/\d+)/g
 
 function enrichMarkdown(text, options = {}) {
-    text = enrichLawReferences(text, options.defaultLaw);
+    const lawResult = enrichLawReferences(text, options.defaultLaw);
+    const courtCitations = collectCourtCitations(text);
+    let markdown = lawResult.markdown;
 
     // Highlight reference Numbers
-    text = text.replace(regexBGer, function (ref) {
-        // let response = [...ref.matchAll(regexBGer)]; //if array of matches needed
-        return buildMarkdownLink(ref, "https://links.weblaw.ch/" + encodeURIComponent(ref)); //Todo convert link to admin.ch link
+    regexBGer.lastIndex = 0;
+    markdown = markdown.replace(regexBGer, function (ref) {
+        return buildMarkdownLink(ref, buildBGerUrl(ref)); //Todo convert link to admin.ch link
     });
 
     //Highlight BGEs with <a>...</a>
-    return text.replace(regexBGE, function (ref) {
-        let res = [...ref.matchAll(regexBGE)];
-        let lang;
+    regexBGE.lastIndex = 0;
+    markdown = markdown.replace(regexBGE, function (ref, reporter, volume, division, page) {
+        return buildMarkdownLink(ref, buildBGEUrl({
+            division,
+            language: getBGEReporterLanguage(reporter),
+            page,
+            volume,
+        }));
+    });
 
-        if (!res[0][1]) {
-            res[0][1] = "BGE";
-        }
-        if (res[0][1] == "BGE") {
-            lang = "de";
-        }
-        if (res[0][1] == "ATF") {
-            lang = "fr";
-        }
-        if (res[0][1] == "DTF") {
-            lang = "it";
-        }
-        let link = "https://www.bger.ch/ext/eurospider/live/" + lang + "/php/aza/http/index.php?lang=" + lang + "&type=show_document&page=1&from_date=&to_date=&sort=relevance&insertion_date=&top_subcollection_aza=all&query_words=&rank=0&azaclir=aza&highlight_docid=atf%3A%2F%2F" + res[0][2] + "-" + res[0][3] + "-" + res[0][4] + "%3A" + lang + "&number_of_ranks=0#page" + res[0][4];
-        return buildMarkdownLink(ref, link);
-    })
+    return {
+        citations: [...lawResult.citations, ...courtCitations].sort(compareCitationsByLocation),
+        markdown,
+    };
 };
 
 function buildOfficialLawsByAbbreviation(lawData) {
@@ -157,7 +154,8 @@ function getLawAbbreviationAliases(abbreviation) {
 }
 
 function enrichLawReferences(text, defaultLaw) {
-    let enrichedText = "";
+    const citations = [];
+    let markdown = "";
     let cursor = 0;
 
     regexCitationStart.lastIndex = 0;
@@ -173,12 +171,16 @@ function enrichLawReferences(text, defaultLaw) {
             continue;
         }
 
-        enrichedText += text.slice(cursor, match.index) + renderLawReference(reference, text);
+        markdown += text.slice(cursor, match.index) + renderLawReference(reference, text);
+        citations.push(...buildLawCitationRecords(reference, text));
         cursor = reference.endIndex;
         regexCitationStart.lastIndex = reference.endIndex;
     }
 
-    return enrichedText + text.slice(cursor);
+    return {
+        citations,
+        markdown: markdown + text.slice(cursor),
+    };
 }
 
 function parseLawReference(text, startMatch, defaultLaw) {
@@ -186,6 +188,7 @@ function parseLawReference(text, startMatch, defaultLaw) {
         startIndex: startMatch.index,
         endIndex: startMatch.index + startMatch[0].length,
         label: startMatch.groups.citation,
+        marker: startMatch.groups.marker,
         provision: startMatch.groups.provision,
     }];
     let endIndex = chunks[0].endIndex;
@@ -204,6 +207,7 @@ function parseLawReference(text, startMatch, defaultLaw) {
             startIndex: chunkStartIndex,
             endIndex: chunkMatch.index + chunkMatch[0].length,
             label: chunkMatch.groups.citation,
+            marker: chunkMatch.groups.marker || chunks[0].marker,
             provision: chunkMatch.groups.provision,
         });
         endIndex = chunkMatch.index + chunkMatch[0].length;
@@ -215,15 +219,18 @@ function parseLawReference(text, startMatch, defaultLaw) {
         return {
             chunks,
             law: trailingLaw.law,
+            lawAbbreviation: trailingLaw.abbreviation,
+            lawMatchSource: "explicit",
             endIndex: trailingLaw.endIndex,
         };
     }
 
     if (trailingLaw?.unknownAbbreviation) {
         return {
-            chunks: [],
+            chunks,
             law: null,
             markdown: text.slice(startMatch.index, trailingLaw.endIndex),
+            unknownLawAbbreviation: trailingLaw.unknownAbbreviation,
             endIndex: trailingLaw.endIndex,
         };
     }
@@ -235,6 +242,8 @@ function parseLawReference(text, startMatch, defaultLaw) {
     return {
         chunks,
         law: defaultLaw,
+        lawAbbreviation: defaultLaw.abbreviation,
+        lawMatchSource: "default-law",
         endIndex,
     };
 }
@@ -318,6 +327,133 @@ function renderLawReference(reference, sourceText) {
     return markdown;
 }
 
+function buildLawCitationRecords(reference, sourceText) {
+    const groupText = sourceText.slice(reference.chunks[0].startIndex, reference.endIndex);
+
+    return reference.chunks.map((chunk, index) => {
+        const provisionDetails = parseProvisionDetails(chunk.label, chunk.provision);
+        const url = reference.law ? buildProvisionUrl(reference.law, chunk.provision) : null;
+
+        return {
+            confidence: reference.law ? 0.95 : 0.55,
+            end_index: chunk.endIndex,
+            extraction_method: "regex-law-reference",
+            full_text: groupText,
+            group_end_index: reference.endIndex,
+            group_index: index,
+            group_start_index: reference.chunks[0].startIndex,
+            is_resolved: Boolean(reference.law),
+            label: chunk.label,
+            law_abbreviation: reference.lawAbbreviation || reference.unknownLawAbbreviation || null,
+            law_match_source: reference.lawMatchSource || (reference.unknownLawAbbreviation ? "explicit" : null),
+            marker: chunk.marker || null,
+            provision: chunk.provision,
+            start_index: chunk.startIndex,
+            text: sourceText.slice(chunk.startIndex, chunk.endIndex),
+            type: "law",
+            url,
+            ...provisionDetails,
+            ...buildLawMetadata(reference.law),
+        };
+    });
+}
+
+function parseProvisionDetails(label, provision) {
+    const details = {
+        following: null,
+        letter: null,
+        letter_label: null,
+        number: null,
+        number_label: null,
+        paragraph: null,
+        paragraph_label: null,
+        provision_end: null,
+        range_connector: null,
+    };
+    const provisionMatch = new RegExp(escapeRegExp(provision), "u").exec(label);
+
+    if (!provisionMatch) {
+        return details;
+    }
+
+    const tail = label.slice(provisionMatch.index + provision.length);
+    const rangeMatch = /^\s*(?<connector>-|–|—|bis|à|a)\s*(?<provisionEnd>\d+(?:[a-zA-Z]\b)?)/iu.exec(tail);
+    const paragraphMatch = /(?<label>Abs|Absatz|Al|al|Cpv|cpv)\.?\s*(?<value>\d+(?:[a-zA-Z]\b)?)/iu.exec(tail);
+    const numberMatch = /(?<label>Ziff|Ziffer|Ch|ch|N|n)\.?\s*(?<value>\d+(?:[a-zA-Z]\b)?)/iu.exec(tail);
+    const letterMatch = /(?<label>Lit|lit|Buchstabe|Bchst|Let|let|Lett|lett)\.?\s*(?<value>[A-Za-z])/u.exec(tail);
+    const followingMatch = /\b(?<value>f{1,2}\.)\s*$/iu.exec(tail);
+
+    if (rangeMatch) {
+        details.provision_end = rangeMatch.groups.provisionEnd;
+        details.range_connector = rangeMatch.groups.connector;
+    }
+
+    if (paragraphMatch) {
+        details.paragraph = paragraphMatch.groups.value;
+        details.paragraph_label = paragraphMatch.groups.label;
+    }
+
+    if (numberMatch) {
+        details.number = numberMatch.groups.value;
+        details.number_label = numberMatch.groups.label;
+    }
+
+    if (letterMatch) {
+        details.letter = letterMatch.groups.value;
+        details.letter_label = letterMatch.groups.label;
+    }
+
+    if (followingMatch) {
+        details.following = followingMatch.groups.value;
+    }
+
+    return details;
+}
+
+function buildLawMetadata(lawEntry) {
+    if (!lawEntry) {
+        return {
+            law_dynamic_prod_url: null,
+            law_dynamic_source_url: null,
+            law_language: null,
+            law_refno: null,
+            law_scope: null,
+            law_title_abbreviation: null,
+            law_title_full: null,
+            law_title_short: null,
+        };
+    }
+
+    return {
+        law_dynamic_prod_url: lawEntry.dynamic_prod_url || null,
+        law_dynamic_source_url: lawEntry.dynamic_source_url || null,
+        law_language: lawEntry.language,
+        law_refno: lawEntry.law.refno_law || null,
+        law_scope: lawEntry.scope,
+        law_title_abbreviation: lawEntry.abbreviation,
+        law_title_full: getLocalizedLawValue(lawEntry.law.law_title_full, lawEntry.language),
+        law_title_short: getLocalizedLawValue(lawEntry.law.law_title_short, lawEntry.language),
+    };
+}
+
+function getLocalizedLawValue(value, preferredLanguage) {
+    if (!value || typeof value !== "object") {
+        return value || "";
+    }
+
+    if (preferredLanguage && value[preferredLanguage]) {
+        return value[preferredLanguage];
+    }
+
+    for (const language of federalLanguagePreference) {
+        if (value[language]) {
+            return value[language];
+        }
+    }
+
+    return "";
+}
+
 function buildOdatProvisionUrl(law, provision) {
     return law.dynamic_prod_url + "-latest.html#seq-0-prov-" + encodeURIComponent(provision.toLowerCase());
 }
@@ -334,8 +470,103 @@ function buildFedlexProvisionUrl(law, provision) {
     return law.dynamic_source_url + "#art_" + encodeURIComponent(provision.toLowerCase());
 }
 
+function collectCourtCitations(text) {
+    return [
+        ...collectBGerCitations(text),
+        ...collectBGECitations(text),
+    ];
+}
+
+function collectBGerCitations(text) {
+    const citations = [];
+
+    regexBGer.lastIndex = 0;
+
+    for (let match = regexBGer.exec(text); match; match = regexBGer.exec(text)) {
+        citations.push({
+            chamber_number: match[1],
+            confidence: 0.9,
+            court: "swiss_federal_supreme_court",
+            docket_number: match[0],
+            end_index: match.index + match[0].length,
+            extraction_method: "regex-bger-docket",
+            is_resolved: true,
+            start_index: match.index,
+            text: match[0],
+            type: "case_law",
+            url: buildBGerUrl(match[0]),
+        });
+    }
+
+    return citations;
+}
+
+function collectBGECitations(text) {
+    const citations = [];
+
+    regexBGE.lastIndex = 0;
+
+    for (let match = regexBGE.exec(text); match; match = regexBGE.exec(text)) {
+        const reporter = match[1] || "BGE";
+        const language = getBGEReporterLanguage(reporter);
+        const citation = {
+            confidence: 0.9,
+            court: "swiss_federal_supreme_court",
+            division: match[3],
+            end_index: match.index + match[0].length,
+            extraction_method: "regex-bge-official-report",
+            is_resolved: true,
+            language,
+            page: match[4],
+            reporter,
+            start_index: match.index,
+            text: match[0],
+            type: "case_law",
+            url: buildBGEUrl({
+                division: match[3],
+                language,
+                page: match[4],
+                volume: match[2],
+            }),
+            volume: match[2],
+        };
+
+        citations.push(citation);
+    }
+
+    return citations;
+}
+
+function buildBGerUrl(reference) {
+    return "https://links.weblaw.ch/" + encodeURIComponent(reference);
+}
+
+function getBGEReporterLanguage(reporter) {
+    if (reporter === "ATF") {
+        return "fr";
+    }
+
+    if (reporter === "DTF") {
+        return "it";
+    }
+
+    return "de";
+}
+
+function buildBGEUrl(citation) {
+    return "https://www.bger.ch/ext/eurospider/live/" + citation.language + "/php/aza/http/index.php?lang=" + citation.language + "&type=show_document&page=1&from_date=&to_date=&sort=relevance&insertion_date=&top_subcollection_aza=all&query_words=&rank=0&azaclir=aza&highlight_docid=atf%3A%2F%2F" + citation.volume + "-" + citation.division + "-" + citation.page + "%3A" + citation.language + "&number_of_ranks=0#page" + citation.page;
+}
+
+function compareCitationsByLocation(left, right) {
+    return left.start_index - right.start_index || left.end_index - right.end_index;
+}
+
 function normalizeLawAbbreviation(value) {
     return String(value || "").replace(/\s+/g, " ").trim();
+}
+
+function escapeRegExp(value) {
+    return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function buildMarkdownLink(label, url) {
@@ -523,7 +754,7 @@ app.post("/enrich", rawEnrichBodyParser, (request, response) => {
         return;
     }
 
-    response.json({ markdown: enrichMarkdown(text, { defaultLaw }) });
+    response.json(enrichMarkdown(text, { defaultLaw }));
 });
 
 app.use((error, request, response, next) => {
