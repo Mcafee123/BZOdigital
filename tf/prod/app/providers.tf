@@ -9,13 +9,14 @@ terraform {
       source  = "cloudflare/cloudflare"
       version = "~> 4.0"
     }
+    null = {
+      source  = "hashicorp/null"
+      version = "~> 3.2"
+    }
   }
 }
 
 provider "azurerm" {
+  subscription_id = var.platform.subscription_id
   features {}
-}
-
-provider "cloudflare" {
-  api_token = var.cloudflare_api_token
 }

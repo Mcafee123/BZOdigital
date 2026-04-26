@@ -17,16 +17,55 @@ jobs:
     name: Sync data/ and app/data/ to Azure File share
     runs-on: ubuntu-latest
     environment: production
+    env:
+      ARM_CLIENT_ID:       ${{ secrets.ARM_CLIENT_ID }}
+      ARM_CLIENT_SECRET:   ${{ secrets.ARM_CLIENT_SECRET }}
+      ARM_TENANT_ID:       ${{ secrets.ARM_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
     steps:
       - uses: actions/checkout@v5
+      - uses: webfactory/ssh-agent@v0.10.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - uses: hashicorp/setup-terraform@v3
+      - uses: azure/login@v3
+        with:
+          creds: |
+            {
+              "clientId":     "${{ secrets.ARM_CLIENT_ID }}",
+              "clientSecret": "${{ secrets.ARM_CLIENT_SECRET }}",
+              "tenantId":     "${{ secrets.ARM_TENANT_ID }}",
+              "subscriptionId": "${{ secrets.ARM_SUBSCRIPTION_ID }}"
+            }
+
+      - name: Read storage outputs from Terraform state
+        id: tf
+        working-directory: tf/prod/app
+        run: |
+          terraform init -input=false -backend-config=_backend.hcl
+          {
+            echo "rg=$(terraform output -raw resource_group_name)"
+            echo "sa=$(terraform output -raw storage_account_name)"
+            echo "share=$(terraform output -raw file_share_name)"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Resolve storage account key
+        id: key
+        run: |
+          KEY=$(az storage account keys list \
+            -g "${{ steps.tf.outputs.rg }}" \
+            -n "${{ steps.tf.outputs.sa }}" \
+            --query '[0].value' -o tsv)
+          echo "::add-mask::$KEY"
+          echo "key=$KEY" >> "$GITHUB_OUTPUT"
 
       - name: Sync top-level data/
         if: hashFiles('data/**') != ''
         run: |
           az storage file upload-batch \
-            --account-name "${{ secrets.STORAGE_ACCOUNT_NAME }}" \
-            --account-key "${{ secrets.STORAGE_ACCOUNT_KEY }}" \
-            --destination "${{ secrets.FILE_SHARE_NAME }}" \
+            --account-name "${{ steps.tf.outputs.sa }}" \
+            --account-key "${{ steps.key.outputs.key }}" \
+            --destination "${{ steps.tf.outputs.share }}" \
             --destination-path "data" \
             --source "./data"
 
@@ -34,8 +73,8 @@ jobs:
         if: hashFiles('app/data/**') != ''
         run: |
           az storage file upload-batch \
-            --account-name "${{ secrets.STORAGE_ACCOUNT_NAME }}" \
-            --account-key "${{ secrets.STORAGE_ACCOUNT_KEY }}" \
-            --destination "${{ secrets.FILE_SHARE_NAME }}" \
+            --account-name "${{ steps.tf.outputs.sa }}" \
+            --account-key "${{ steps.key.outputs.key }}" \
+            --destination "${{ steps.tf.outputs.share }}" \
             --destination-path "app/data" \
             --source "./app/data"

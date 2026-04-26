@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 #
-# Push GitHub Actions secrets to a deployment ENVIRONMENT (default: production)
-# with the current gh user added as a required reviewer. Workflow jobs that
-# reference `environment: production` will pause until you approve them.
+# Push the minimum GitHub Actions secrets to a deployment ENVIRONMENT
+# (default: production) with the current gh user added as a required reviewer.
+# Workflow jobs that reference `environment: production` will pause until
+# you approve them.
 #
 # Usage:
 #   1. cp secrets.env.example secrets.env
@@ -10,7 +11,6 @@
 #   3. ./init_secrets.sh                              # current repo, env=production
 #      ./init_secrets.sh -R owner/repo                # explicit repo
 #      ./init_secrets.sh -e staging                   # different environment
-#      SECRETS_FILE=other.env ./init_secrets.sh
 #
 # Requires: gh CLI, authenticated (`gh auth login`).
 
@@ -34,32 +34,10 @@ while [[ $# -gt 0 ]]; do
 done
 
 REQUIRED=(
-  ACR_LOGIN_SERVER
-  ACR_USERNAME
-  ACR_PASSWORD
   ARM_CLIENT_ID
   ARM_CLIENT_SECRET
   ARM_TENANT_ID
   ARM_SUBSCRIPTION_ID
-  TF_BACKEND_RESOURCE_GROUP
-  TF_BACKEND_STORAGE_ACCOUNT
-  TF_BACKEND_CONTAINER
-  TF_BACKEND_KEY
-  TF_RESOURCE_GROUP
-  TF_CONTAINER_APP_ENV_ID
-  TF_ACR_ID
-  KEYVAULT_ID
-  STORAGE_ACCOUNT_NAME
-  STORAGE_ACCOUNT_RESOURCE_GROUP
-  STORAGE_ACCOUNT_KEY
-  FILE_SHARE_NAME
-)
-
-# Optional secrets — pushed when non-empty, skipped silently when empty.
-OPTIONAL=(
-  CLOUDFLARE_API_TOKEN
-  CLOUDFLARE_ZONE_ID
-  CUSTOM_DOMAIN
 )
 
 command -v gh >/dev/null 2>&1 || {
@@ -85,18 +63,15 @@ set +a
 
 missing=()
 for name in "${REQUIRED[@]}"; do
-  if [[ -z "${!name:-}" ]]; then
-    missing+=("$name")
-  fi
+  [[ -z "${!name:-}" ]] && missing+=("$name")
 done
 
 if (( ${#missing[@]} > 0 )); then
-  echo "The following secrets are empty in $SECRETS_FILE:" >&2
+  echo "The following values are empty in $SECRETS_FILE:" >&2
   printf '  %s\n' "${missing[@]}" >&2
   exit 1
 fi
 
-# Resolve repo for environment API calls (--repo flag or current dir's repo).
 if [[ ${#REPO_ARGS[@]} -eq 2 ]]; then
   REPO_NWO="${REPO_ARGS[1]}"
 else
@@ -130,21 +105,8 @@ for name in "${REQUIRED[@]}"; do
   echo "  ✓ $name"
 done
 
-for name in "${OPTIONAL[@]}"; do
-  if [[ -z "${!name:-}" ]]; then
-    echo "  - $name (empty, skipped)"
-    continue
-  fi
-  printf '%s' "${!name}" | gh secret set "$name" \
-    --repo "$REPO_NWO" \
-    --env "$GH_ENVIRONMENT" \
-    --body -
-  echo "  ✓ $name"
-done
-
-# SSH deploy key: read from a file path (multi-line content), default ~/.ssh/id_ed25519.
+# SSH deploy key from a file path (multi-line content), default ~/.ssh/id_ed25519.
 SSH_PRIVATE_KEY_PATH="${SSH_PRIVATE_KEY_PATH:-$HOME/.ssh/id_ed25519}"
-# Expand a leading ~ if the file came from secrets.env quoted.
 SSH_PRIVATE_KEY_PATH="${SSH_PRIVATE_KEY_PATH/#\~/$HOME}"
 if [[ -f "$SSH_PRIVATE_KEY_PATH" ]]; then
   gh secret set SSH_PRIVATE_KEY \

@@ -1,4 +1,4 @@
-output "container_app_id" {
+output "container_app_name" {
   value = module.container_app.cfg.name
 }
 
@@ -7,16 +7,28 @@ output "container_app_fqdn" {
   description = "Default Azure Container App ingress FQDN."
 }
 
-output "identity_principal_id" {
-  value = azurerm_user_assigned_identity.app.principal_id
+output "custom_domain_fqdn" {
+  value       = var.custom_domain
+  description = "Configured custom hostname (null when DNS isn't being managed)."
 }
 
 output "custom_domain_verification_id" {
-  value       = module.container_app.cfg.custom_domain_verification_id
-  description = "Used by the cloudflare module as the asuid TXT record value."
+  value     = module.container_app.cfg.custom_domain_verification_id
+  sensitive = true
 }
 
-output "custom_domain_fqdn" {
-  value       = var.custom_domain
-  description = "The custom domain configured (null when DNS isn't being managed by this module)."
+output "resource_group_name" {
+  value = azurerm_resource_group.app.name
+}
+
+output "storage_account_name" {
+  value = azurerm_storage_account.data.name
+}
+
+output "file_share_name" {
+  value = azurerm_storage_share.data.name
+}
+
+output "identity_principal_id" {
+  value = azurerm_user_assigned_identity.app.principal_id
 }
