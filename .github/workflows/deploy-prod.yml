@@ -24,47 +24,59 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     outputs:
-      image-ref: ${{ steps.version.outputs.image-ref }}
+      image-ref: ${{ steps.compose.outputs.image-ref }}
     steps:
       - uses: actions/checkout@v5
-
-      - name: Compute image tag
-        id: version
-        run: |
-          VERSION=$(grep -m1 '^version' app/pyproject.toml | sed -E 's/.*"([^"]+)".*/\1/')
-          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-          IMAGE_REF="${ACR_LOGIN_SERVER}/${IMAGE_NAME}:${VERSION}-${SHORT_SHA}"
-          echo "image-ref=${IMAGE_REF}" >> "$GITHUB_OUTPUT"
 
       - name: Azure login
         uses: azure/login@v3
         with:
           creds: |
             {
-              "clientId":     "${{ secrets.ARM_CLIENT_ID }}",
-              "clientSecret": "${{ secrets.ARM_CLIENT_SECRET }}",
-              "tenantId":     "${{ secrets.ARM_TENANT_ID }}",
+              "clientId":       "${{ secrets.ARM_CLIENT_ID }}",
+              "clientSecret":   "${{ secrets.ARM_CLIENT_SECRET }}",
+              "tenantId":       "${{ secrets.ARM_TENANT_ID }}",
               "subscriptionId": "${{ secrets.ARM_SUBSCRIPTION_ID }}"
             }
 
-      - name: ACR login
-        run: az acr login --name "${ACR_NAME}"
+      - name: Resolve ACR credentials and image version
+        id: compose
+        run: |
+          VERSION=$(grep -m1 '^version' app/pyproject.toml | sed -E 's/.*"([^"]+)".*/\1/')
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          TAG="${VERSION}-${SHORT_SHA}"
+          PW=$(az acr credential show -n "${ACR_NAME}" --query 'passwords[0].value' -o tsv)
+          echo "::add-mask::$PW"
+          {
+            echo "version=${VERSION}"
+            echo "tag=${TAG}"
+            echo "image-ref=${ACR_LOGIN_SERVER}/${IMAGE_NAME}:${TAG}"
+            echo "acr-username=${ACR_NAME}"
+            echo "acr-password=${PW}"
+          } >> "$GITHUB_OUTPUT"
 
-      - name: Build image
-        run: docker build -t "${{ steps.version.outputs.image-ref }}" app/
-
-      - name: Push image
-        run: docker push "${{ steps.version.outputs.image-ref }}"
+      - name: Build and push image
+        uses: affolterNET/affolterNET.Github.SharedWorkflows/actions/build-backend@main
+        with:
+          project-root:  app
+          project-folder: .
+          project-file:   pyproject.toml
+          version:        ${{ steps.compose.outputs.tag }}
+          image-name:     ${{ env.IMAGE_NAME }}
+          registry-name:  ${{ env.ACR_LOGIN_SERVER }}
+          dockerfile:     Dockerfile
+          push:           'true'
+          acr-username:   ${{ steps.compose.outputs.acr-username }}
+          acr-password:   ${{ steps.compose.outputs.acr-password }}
 
       - name: Tag commit
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TAG=$(echo "${{ steps.version.outputs.image-ref }}" | sed 's|.*:||')
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag "v${TAG}"
-          git push origin "v${TAG}"
+          git tag "v${{ steps.compose.outputs.tag }}"
+          git push origin "v${{ steps.compose.outputs.tag }}"
 
   deploy:
     name: Terraform apply
