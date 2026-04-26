@@ -98,26 +98,27 @@ gh api --method PUT "repos/${REPO_NWO}/environments/${GH_ENVIRONMENT}" \
 echo "Setting secrets on ${REPO_NWO} (environment: ${GH_ENVIRONMENT})"
 
 for name in "${REQUIRED[@]}"; do
-  printf '%s' "${!name}" | gh secret set "$name" \
+  echo "${!name}" | gh secret set "$name" \
     --repo "$REPO_NWO" \
-    --env "$GH_ENVIRONMENT" \
-    --body -
+    --env "$GH_ENVIRONMENT"
   echo "  ✓ $name"
 done
 
-# Composite credentials for azure/login@v3. Built with jq so any special
-# characters in the SP secret (quote, backslash, backtick) are properly
-# JSON-escaped instead of breaking the document.
-jq -n \
-  --arg cid "$ARM_CLIENT_ID" \
-  --arg cs  "$ARM_CLIENT_SECRET" \
-  --arg tid "$ARM_TENANT_ID" \
-  --arg sid "$ARM_SUBSCRIPTION_ID" \
-  '{clientId: $cid, clientSecret: $cs, tenantId: $tid, subscriptionId: $sid}' \
-  | gh secret set AZURE_CREDENTIALS \
-      --repo "$REPO_NWO" \
-      --env "$GH_ENVIRONMENT" \
-      --body -
+# AZURE_CREDENTIALS for azure/login@v3 — heredoc + field order match the
+# working pattern in Memo / DocConverter, and `echo | gh secret set` (no
+# --body -) preserves the trailing newline that azure/login expects.
+AZURE_CREDENTIALS=$(cat <<EOF
+{
+  "clientId": "$ARM_CLIENT_ID",
+  "clientSecret": "$ARM_CLIENT_SECRET",
+  "subscriptionId": "$ARM_SUBSCRIPTION_ID",
+  "tenantId": "$ARM_TENANT_ID"
+}
+EOF
+)
+echo "$AZURE_CREDENTIALS" | gh secret set AZURE_CREDENTIALS \
+  --repo "$REPO_NWO" \
+  --env "$GH_ENVIRONMENT"
 echo "  ✓ AZURE_CREDENTIALS"
 
 # SSH deploy key from a file path (multi-line content), default ~/.ssh/id_ed25519.
