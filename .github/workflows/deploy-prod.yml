@@ -1,0 +1,110 @@
+name: Deploy PROD
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'app/**'
+      - '!app/data/**'
+      - 'tf/**'
+      - '.github/workflows/deploy-prod.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  IMAGE_NAME: bzo-app
+  ACR_NAME: anplatformacr
+  ACR_LOGIN_SERVER: anplatformacr.azurecr.io
+
+jobs:
+  build-and-push:
+    name: Build and push image
+    runs-on: ubuntu-latest
+    environment: production
+    outputs:
+      image-ref: ${{ steps.compose.outputs.image-ref }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Azure login
+        uses: azure/login@v3
+        with:
+          creds: |
+            {
+              "clientId":       "${{ secrets.ARM_CLIENT_ID }}",
+              "clientSecret":   "${{ secrets.ARM_CLIENT_SECRET }}",
+              "tenantId":       "${{ secrets.ARM_TENANT_ID }}",
+              "subscriptionId": "${{ secrets.ARM_SUBSCRIPTION_ID }}"
+            }
+
+      - name: Resolve ACR credentials and image version
+        id: compose
+        run: |
+          VERSION=$(grep -m1 '^version' app/pyproject.toml | sed -E 's/.*"([^"]+)".*/\1/')
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          TAG="${VERSION}-${SHORT_SHA}"
+          PW=$(az acr credential show -n "${ACR_NAME}" --query 'passwords[0].value' -o tsv)
+          echo "::add-mask::$PW"
+          {
+            echo "version=${VERSION}"
+            echo "tag=${TAG}"
+            echo "image-ref=${ACR_LOGIN_SERVER}/${IMAGE_NAME}:${TAG}"
+            echo "acr-username=${ACR_NAME}"
+            echo "acr-password=${PW}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build and push image
+        uses: affolterNET/affolterNET.Github.SharedWorkflows/actions/build-backend@main
+        with:
+          project-root:  app
+          project-folder: .
+          project-file:   pyproject.toml
+          version:        ${{ steps.compose.outputs.tag }}
+          image-name:     ${{ env.IMAGE_NAME }}
+          registry-name:  ${{ env.ACR_LOGIN_SERVER }}
+          dockerfile:     Dockerfile
+          push:           'true'
+          acr-username:   ${{ steps.compose.outputs.acr-username }}
+          acr-password:   ${{ steps.compose.outputs.acr-password }}
+
+      - name: Tag commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag "v${{ steps.compose.outputs.tag }}"
+          git push origin "v${{ steps.compose.outputs.tag }}"
+
+  deploy:
+    name: Terraform apply
+    needs: [build-and-push]
+    runs-on: ubuntu-latest
+    environment: production
+    defaults:
+      run:
+        working-directory: tf/prod/app
+    env:
+      ARM_CLIENT_ID:       ${{ secrets.ARM_CLIENT_ID }}
+      ARM_CLIENT_SECRET:   ${{ secrets.ARM_CLIENT_SECRET }}
+      ARM_TENANT_ID:       ${{ secrets.ARM_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: webfactory/ssh-agent@v0.10.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform init
+        run: terraform init -input=false -backend-config=_backend.hcl
+
+      - name: Terraform plan
+        run: |
+          terraform plan -input=false -out=tfplan \
+            -var "image_name=${{ needs.build-and-push.outputs.image-ref }}"
+
+      - name: Terraform apply
+        run: terraform apply -input=false -auto-approve tfplan

@@ -1,0 +1,15 @@
+--- a/sample.md
++++ b/sample.md
+@@ -1,7 +1,9 @@
+ # Sample document
+
+-This is the original version of the sample document.
++This is the **revised** version of the sample document.
+
+-It contains a few lines of plain text that the diff
+-viewer will render side-by-side or stacked.
++It contains a few lines of plain text that the diff
++viewer will render side-by-side or stacked, depending
++on which mode you select in the toolbar.
++
++Replace this file by setting `DIFF_PATH` to your own unified-diff file.
