@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NUPLA - Nutzungsplanung</title>
+  <style>
+    /* --- CSS VARIABLES (Minimalist Theme) --- */
+    :root {
+      --bg-color: #fafafa;
+      --surface-color: #ffffff;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --border-color: #e5e7eb;
+      --accent-color: #2563eb;
+      --accent-hover: #1d4ed8;
+      --success-bg: #dcfce7;
+      --success-text: #166534;
+      --radius: 8px;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    /* --- RESET & BASE --- */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    /* --- VIEW MANAGEMENT --- */
+    .view {
+      display: none;
+      opacity: 0;
+      transition: opacity 0.4s ease-in-out;
+    }
+    .view.active {
+      display: block;
+      opacity: 1;
+    }
+
+    /* --- HOMEPAGE VIEW --- */
+    #view-home {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+    #view-home.active { display: flex; opacity: 1; }
+    
+    .logo {
+      font-size: 48px;
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 18px;
+      margin-bottom: 40px;
+    }
+    
+    .search-wrapper {
+      width: 100%;
+      max-width: 500px;
+      position: relative;
+    }
+    .search-wrapper input {
+      width: 100%;
+      padding: 16px 20px;
+      font-size: 18px;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      transition: all 0.2s;
+      outline: none;
+    }
+    .search-wrapper input:focus {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+    }
+    .search-hint {
+      margin-top: 12px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* --- MUNICIPALITY VIEW --- */
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 14px;
+      margin-bottom: 30px;
+      cursor: pointer;
+    }
+    .back-btn:hover { color: var(--text-main); }
+
+    .header-section { margin-bottom: 40px; }
+    .header-section h1 {
+      font-size: 36px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .status-badge {
+      font-size: 13px;
+      font-weight: 600;
+      padding: 4px 12px;
+      background-color: var(--success-bg);
+      color: var(--success-text);
+      border-radius: 99px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .documents-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    .doc-card {
+      background: var(--surface-color);
+      border: 1px solid var(--border-color);
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      text-decoration: none;
+      color: var(--accent-color);
+      font-weight: 500;
+      font-size: 14px;
+      transition: 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .doc-card:hover {
+      border-color: var(--accent-color);
+      background-color: #f8fafc;
+    }
+
+    /* --- TOGGLE (SEGMENTED CONTROL) --- */
+    .toggle-wrapper {
+      display: inline-flex;
+      background: #f1f5f9;
+      padding: 4px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+    }
+    .toggle-wrapper button {
+      padding: 8px 24px;
+      border: none;
+      background: transparent;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    .toggle-wrapper button.active {
+      background: var(--surface-color);
+      color: var(--text-main);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    /* --- TABLES --- */
+    .table-container {
+      background: var(--surface-color);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+    th, td {
+      padding: 20px;
+      text-align: left;
+      vertical-align: top;
+      border-bottom: 1px solid var(--border-color);
+    }
+    th {
+      background: #f8fafc;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    td { font-size: 15px; }
+    
+    /* Overview specific */
+    .row-clickable { cursor: pointer; transition: background 0.2s; position: relative; }
+    .row-clickable:hover { background: #f8fafc; }
+    .row-clickable td:last-child { position: relative; }
+    .row-clickable:hover td:last-child::after {
+      content: "→ Details";
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent-color);
+    }
+
+    /* --- EXTENDED VIEW ELEMENTS --- */
+    .topic-selector {
+      margin-bottom: 20px;
+    }
+    .topic-selector select {
+      padding: 12px 16px;
+      font-size: 16px;
+      font-weight: 500;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      outline: none;
+      cursor: pointer;
+      min-width: 250px;
+      background-color: var(--surface-color);
+    }
+
+    /* Native HTML5 Accordion */
+    details {
+      background: #f8fafc;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+    summary {
+      padding: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      list-style: none; /* Hide default arrow */
+      display: flex;
+      justify-content: space-between;
+      color: var(--accent-color);
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::after { content: '+'; font-weight: bold; }
+    details[open] summary::after { content: '−'; }
+    details > p {
+      padding: 0 12px 12px 12px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .summary-box {
+      margin-top: 40px;
+      padding: 24px;
+      background: #f1f5f9;
+      border-left: 4px solid var(--text-muted);
+      border-radius: 0 var(--radius) var(--radius) 0;
+    }
+    .summary-box h3 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 8px;}
+    
+    .referenced-articles { margin-top: 40px; }
+    .referenced-articles h3 { font-size: 18px; margin-bottom: 16px; }
+
+  </style>
+</head>
+<body>
+
+  <div id="view-home" class="view active">
+    <div class="logo">NUPLA</div>
+    <div class="subtitle">Nutzungsplanungen einfach verstehen</div>
+    <div class="search-wrapper">
+      <input type="text" id="searchInput" placeholder="Gemeinde suchen (z.B. Bern)..." autocomplete="off" />
+      <div class="search-hint">Tippen Sie einen Namen und drücken Sie Enter</div>
+    </div>
+  </div>
+
+
+  <div id="view-municipality" class="view">
+    <div class="container">
+      
+      <span class="back-btn" id="btn-back">← Neue Suche</span>
+
+      <div class="header-section">
+        <h1>
+          <span id="municipality-name">Gemeinde XY</span>
+          <span class="status-badge">Genehmigt</span>
+        </h1>
+        
+        <div class="documents-row">
+          <a href="#" class="doc-card">📄 Planungsbericht</a>
+          <a href="#" class="doc-card">📄 Bau- und Zonenreglement</a>
+          <a href="#" class="doc-card">📄 Mitwirkungsbericht</a>
+        </div>
+      </div>
+
+      <div class="toggle-wrapper">
+        <button id="btn-overview" class="active">Kompakte Übersicht (Overview)</button>
+        <button id="btn-extended">Erweiterte Details (Extended)</button>
+      </div>
+
+      <div id="content-overview">
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 50%;">Bisherige Bestimmung (Alt)</th>
+                <th style="width: 50%;">Geänderte Bestimmung (Neu)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="row-clickable" onclick="switchMode('extended', 'Grenzabstände')">
+                <td>
+                  <strong>Art. 15 Abs. 1</strong><br><br>
+                  Der grosse Grundabstand in der Wohnzone W2 beträgt 10.0 Meter. Der kleine Grundabstand beträgt 5.0 Meter.
+                </td>
+                <td>
+                  <strong>Art. 15 Abs. 1</strong><br><br>
+                  Der grosse Grundabstand wird aufgehoben. Es gilt allseitig der kleine Grundabstand von minimal 5.0 Metern.
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <strong>Art. 16 Abs. 1</strong><br><br>
+                  Dachaufbauten dürfen maximal einen Drittel der Fassadenlänge beanspruchen.
+                </td>
+                <td style="color: var(--text-muted); font-style: italic;">
+                  Keine Änderung
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="content-extended" style="display: none;">
+        
+        <div class="topic-selector">
+          <select id="topicDropdown">
+            <option value="Grenzabstände">Thema: Grenzabstände (Art. 15)</option>
+            <option value="Grünflächenziffer">Thema: Grünflächenziffer (Art. 18)</option>
+          </select>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 30%;">Bisher (Alt)</th>
+                <th style="width: 30%;">Geplant (Neu)</th>
+                <th style="width: 40%;">Referenzen & Quellen</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <strong>Art. 15 Abs. 1</strong><br><br>
+                  Der grosse Grundabstand in der Wohnzone W2 beträgt 10.0 Meter. Der kleine Grundabstand beträgt 5.0 Meter.
+                </td>
+                <td>
+                  <strong>Art. 15 Abs. 1</strong><br><br>
+                  Der grosse Grundabstand wird aufgehoben. Es gilt allseitig der kleine Grundabstand von minimal 5.0 Metern.
+                </td>
+                <td>
+                  <details>
+                    <summary>Planungsbericht S. 12</summary>
+                    <p>Die Aufhebung des grossen Grundabstandes dient der inneren Verdichtung. Dadurch wird die Setzung von Baukörpern flexibilisiert.</p>
+                  </details>
+                  <details>
+                    <summary>Mitwirkungsbericht Nr. 4</summary>
+                    <p>Einwendungen von Anwohnern bzgl. Schattenwurf wurden geprüft, jedoch abgelehnt, da die minimale Besonnung durch kantonales Recht (§ 234 PBG) gewahrt bleibt.</p>
+                  </details>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="summary-box">
+          <h3>Zusammenfassende Begründung</h3>
+          <p>
+            Die Anpassung erfolgt aufgrund der neuen kantonalen Richtplanvorgaben zur inneren Verdichtung. Der grosse Grundabstand galt als veraltetes Planungsinstrument, das zeitgemässe Architektur und die optimale Ausnutzung von Parzellen behinderte. Die Änderung ermöglicht kompaktere Siedlungsstrukturen bei gleichzeitigem Erhalt des minimalen Nachbarschaftsschutzes (5 Meter).
+          </p>
+        </div>
+
+        <div class="referenced-articles">
+          <h3>Verknüpfte kantonal/kommunale Artikel</h3>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 25%;">Artikel</th>
+                  <th style="width: 75%;">Wortlaut</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>§ 234 PBG</strong><br>(Kantonales Recht)</td>
+                  <td>Die Gebäude sind so zu stellen und zu gestalten, dass Nachbargrundstücke nicht übermässig beeinträchtigt werden (Gute Einordnung).</td>
+                </tr>
+                <tr>
+                  <td><strong>Art. 18 BZO</strong><br>(Kommunal)</td>
+                  <td>Zur Kompensation der Verdichtung wird die minimal erforderliche Grünflächenziffer von 20% auf 30% erhöht.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // --- DOM Elements ---
+    const viewHome = document.getElementById('view-home');
+    const viewMunicipality = document.getElementById('view-municipality');
+    const searchInput = document.getElementById('searchInput');
+    const muniNameLabel = document.getElementById('municipality-name');
+    const btnBack = document.getElementById('btn-back');
+
+    const btnOverview = document.getElementById('btn-overview');
+    const btnExtended = document.getElementById('btn-extended');
+    const contentOverview = document.getElementById('content-overview');
+    const contentExtended = document.getElementById('content-extended');
+    const topicDropdown = document.getElementById('topicDropdown');
+
+    // --- Flow Logic: Home to Municipality ---
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && searchInput.value.trim() !== '') {
+        // Set dynamic name based on search
+        muniNameLabel.textContent = "Gemeinde " + searchInput.value.trim();
+        
+        // Transition views
+        viewHome.classList.remove('active');
+        setTimeout(() => {
+          viewMunicipality.classList.add('active');
+        }, 400); // Wait for fade out
+      }
+    });
+
+    // --- Flow Logic: Back to Home ---
+    btnBack.addEventListener('click', () => {
+      searchInput.value = ''; // Reset
+      viewMunicipality.classList.remove('active');
+      setTimeout(() => {
+        viewHome.classList.add('active');
+      }, 400);
+    });
+
+    // --- Toggle Logic: Overview vs Extended ---
+    function switchMode(mode, targetTopic = null) {
+      if (mode === 'overview') {
+        contentOverview.style.display = 'block';
+        contentExtended.style.display = 'none';
+        btnOverview.classList.add('active');
+        btnExtended.classList.remove('active');
+      } else if (mode === 'extended') {
+        contentOverview.style.display = 'none';
+        contentExtended.style.display = 'block';
+        btnExtended.classList.add('active');
+        btnOverview.classList.remove('active');
+        
+        // If triggered from table row click, pre-select the dropdown
+        if (targetTopic) {
+          topicDropdown.value = targetTopic;
+        }
+      }
+    }
+
+    btnOverview.addEventListener('click', () => switchMode('overview'));
+    btnExtended.addEventListener('click', () => switchMode('extended'));
+
+  </script>
+</body>
+</html>

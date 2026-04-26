@@ -26,17 +26,32 @@
 
 # Node
 node_modules/
-dist/
 .vite/
 
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
+*.pyc
+*.egg-info/
 .venv/
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
+
+# Build artifacts
+dist/
+build/
+
+# Nix
+result
+.direnv/
+
+# uv
+uv.lock
+
+# SQLite
+*.db
 
 # Terraform
 .terraform/

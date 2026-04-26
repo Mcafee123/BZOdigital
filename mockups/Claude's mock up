@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BZO Digital Oberrieden</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=IBM+Plex+Mono:wght@400;600&family=Source+Serif+4:opsz,wght@8..60,300;400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #0f1923;
+  --paper: #f5f0e8;
+  --gold: #b8860b;
+  --gold-light: #f0d080;
+  --blue: #1a3a5c;
+  --blue-mid: #2563a8;
+  --blue-light: #dbeafe;
+  --green: #14532d;
+  --green-light: #dcfce7;
+  --red: #7f1d1d;
+  --red-light: #fee2e2;
+  --amber: #92400e;
+  --amber-light: #fef3c7;
+  --gray: #6b7280;
+  --gray-light: #f3f4f6;
+  --white: #ffffff;
+  --border: #d1c9b8;
+  --shadow: 0 4px 24px rgba(15,25,35,0.12);
+  --shadow-lg: 0 12px 48px rgba(15,25,35,0.2);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Source Serif 4', Georgia, serif;
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── TOPBAR ── */
+.topbar {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 3px solid var(--gold);
+}
+.topbar-logo {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gold-light);
+}
+.topbar-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--paper);
+  letter-spacing: 0.02em;
+}
+.topbar-status {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--gray);
+  text-align: right;
+  line-height: 1.4;
+}
+.status-dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #4ade80;
+  margin-right: 4px;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* ── HERO ── */
+.hero {
+  background: var(--blue);
+  background-image: 
+    repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(255,255,255,0.03) 40px, rgba(255,255,255,0.03) 41px),
+    repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(255,255,255,0.03) 40px, rgba(255,255,255,0.03) 41px);
+  padding: 3rem 2rem 2rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  align-items: center;
+  border-bottom: 4px solid var(--gold);
+}
+.hero-text h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 900;
+  color: var(--paper);
+  line-height: 1.1;
+  margin-bottom: 0.75rem;
+}
+.hero-text h1 span { color: var(--gold-light); }
+.hero-text p {
+  color: rgba(245,240,232,0.75);
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+.hero-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.badge {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  padding: 0.25rem 0.75rem;
+  border-radius: 2px;
+  text-transform: uppercase;
+}
+.badge-gold { background: var(--gold); color: var(--ink); }
+.badge-outline { border: 1px solid rgba(245,240,232,0.3); color: rgba(245,240,232,0.7); }
+.hero-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+.stat-card {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-left: 3px solid var(--gold);
+  padding: 1rem 1.25rem;
+  border-radius: 2px;
+}
+.stat-card .stat-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--gold-light);
+  line-height: 1;
+}
+.stat-card .stat-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.6rem;
+  color: rgba(245,240,232,0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: 0.25rem;
+}
+
+/* ── LAYOUT ── */
+.main-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr 380px;
+  min-height: calc(100vh - 56px - 180px);
+}
+
+/* ── SIDEBAR NAV ── */
+.sidebar {
+  background: var(--ink);
+  border-right: 1px solid rgba(255,255,255,0.08);
+  padding: 1.5rem 0;
+  position: sticky;
+  top: 56px;
+  height: calc(100vh - 56px);
+  overflow-y: auto;
+}
+.sidebar-section {
+  margin-bottom: 0.25rem;
+}
+.sidebar-heading {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gold);
+  padding: 0.75rem 1.25rem 0.25rem;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.25rem;
+  cursor: pointer;
+  border-left: 2px solid transparent;
+  transition: all 0.15s;
+  font-size: 0.82rem;
+  color: rgba(245,240,232,0.6);
+  font-family: 'Source Serif 4', serif;
+}
+.nav-item:hover { background: rgba(255,255,255,0.05); color: var(--paper); border-left-color: var(--gold); }
+.nav-item.active { background: rgba(184,134,11,0.15); color: var(--gold-light); border-left-color: var(--gold); font-weight: 600; }
+.nav-item .nav-icon { font-size: 0.8rem; width: 16px; }
+.nav-item .nav-tag {
+  margin-left: auto;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.55rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 2px;
+}
+.tag-new { background: var(--green); color: #86efac; }
+.tag-mod { background: var(--blue); color: #93c5fd; }
+.tag-del { background: var(--red); color: #fca5a5; }
+
+/* ── CONTENT AREA ── */
+.content {
+  padding: 2rem;
+  overflow-y: auto;
+  max-height: calc(100vh - 56px);
+}
+.content-header {
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.content-header h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--blue);
+  line-height: 1.2;
+}
+.content-header .sub {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--gray);
+  margin-top: 0.25rem;
+}
+
+/* ── ARTICLE CARDS ── */
+.article-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.article-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  transition: box-shadow 0.2s;
+}
+.article-card:hover { box-shadow: var(--shadow-lg); }
+
+.article-card-header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+}
+.art-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--blue-mid);
+  background: var(--blue-light);
+  padding: 0.25rem 0.6rem;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+.art-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+.art-subtitle {
+  font-size: 0.78rem;
+  color: var(--gray);
+  margin-top: 0.1rem;
+}
+.art-status {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.6rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+.status-modified { background: var(--amber-light); color: var(--amber); }
+.status-new { background: var(--green-light); color: var(--green); }
+.status-unchanged { background: var(--gray-light); color: var(--gray); }
+
+.article-body {
+  display: none;
+  padding: 1.25rem;
+}
+.article-body.open { display: block; }
+
+.field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.field {
+  background: var(--gray-light);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.field.full { grid-column: 1 / -1; }
+.field-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.4rem 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.field-label.old { background: var(--red-light); color: var(--red); }
+.field-label.new { background: var(--green-light); color: var(--green); }
+.field-label.why { background: var(--amber-light); color: var(--amber); }
+.field-label.how { background: var(--blue-light); color: var(--blue); }
+.field-label.note { background: var(--gray-light); color: var(--gray); border-top: 1px solid var(--border); }
+.field-content {
+  padding: 0.6rem 0.75rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.field-content ul { padding-left: 1.2rem; }
+.field-content li { margin-bottom: 0.2rem; }
+
+.sources-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+.source-link {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--blue-mid);
+  background: var(--blue-light);
+  padding: 0.2rem 0.6rem;
+  border-radius: 2px;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid rgba(37,99,168,0.2);
+}
+.source-link:hover { background: var(--blue-mid); color: white; }
+
+.related-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+.related-tag {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--gray);
+  background: var(--gray-light);
+  padding: 0.2rem 0.6rem;
+  border-radius: 2px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+}
+.related-tag:hover { border-color: var(--blue-mid); color: var(--blue-mid); }
+
+/* ── CHATBOT ── */
+.chatpanel {
+  background: var(--ink);
+  border-left: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 56px);
+  position: sticky;
+  top: 56px;
+}
+.chat-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  flex-shrink: 0;
+}
+.chat-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+.chat-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--paper);
+}
+.chat-subtitle {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--gray);
+}
+.api-key-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+.api-input {
+  flex: 1;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 3px;
+  padding: 0.4rem 0.6rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--paper);
+  outline: none;
+}
+.api-input:focus { border-color: var(--gold); }
+.api-input::placeholder { color: rgba(255,255,255,0.25); }
+.btn-sm {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.6rem;
+  font-weight: 600;
+  padding: 0.4rem 0.75rem;
+  border-radius: 2px;
+  border: none;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.15s;
+}
+.btn-gold { background: var(--gold); color: var(--ink); }
+.btn-gold:hover { background: var(--gold-light); }
+
+.quick-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0;
+}
+.pill {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.58rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(245,240,232,0.65);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.pill:hover { border-color: var(--gold); color: var(--gold-light); background: rgba(184,134,11,0.1); }
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.chat-messages::-webkit-scrollbar { width: 4px; }
+.chat-messages::-webkit-scrollbar-track { background: transparent; }
+.chat-messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+.msg {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  animation: fadeUp 0.2s ease;
+}
+@keyframes fadeUp { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+.msg-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.msg.user .msg-label { color: var(--gold); text-align: right; }
+.msg.assistant .msg-label { color: var(--gray); }
+
+.msg-bubble {
+  padding: 0.75rem 0.9rem;
+  border-radius: 4px;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  max-width: 95%;
+}
+.msg.user .msg-bubble {
+  background: var(--gold);
+  color: var(--ink);
+  align-self: flex-end;
+  font-weight: 500;
+}
+.msg.assistant .msg-bubble {
+  background: rgba(255,255,255,0.06);
+  color: var(--paper);
+  border: 1px solid rgba(255,255,255,0.08);
+  align-self: flex-start;
+  white-space: pre-wrap;
+}
+.msg.assistant .msg-bubble strong {
+  color: var(--gold-light);
+  font-weight: 600;
+}
+.msg.assistant .msg-bubble em { color: rgba(245,240,232,0.7); }
+
+.typing-indicator {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255,255,255,0.06);
+  border-radius: 4px;
+  width: fit-content;
+}
+.typing-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--gold);
+  animation: bounce 1.2s infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
+
+.chat-input-area {
+  padding: 0.75rem 1rem;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  flex-shrink: 0;
+}
+.chat-input-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+.chat-textarea {
+  flex: 1;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 3px;
+  padding: 0.6rem 0.75rem;
+  font-family: 'Source Serif 4', serif;
+  font-size: 0.82rem;
+  color: var(--paper);
+  resize: none;
+  min-height: 44px;
+  max-height: 120px;
+  outline: none;
+  line-height: 1.4;
+}
+.chat-textarea:focus { border-color: var(--gold); }
+.chat-textarea::placeholder { color: rgba(255,255,255,0.25); }
+.btn-send {
+  background: var(--gold);
+  border: none;
+  border-radius: 3px;
+  padding: 0.6rem 0.9rem;
+  cursor: pointer;
+  color: var(--ink);
+  font-size: 1rem;
+  height: 44px;
+  transition: background 0.15s;
+}
+.btn-send:hover { background: var(--gold-light); }
+.btn-send:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.chat-footer {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.55rem;
+  color: rgba(255,255,255,0.2);
+  text-align: center;
+  padding: 0.4rem;
+}
+
+/* ── WELCOME SCREEN ── */
+.welcome-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  padding: 2rem;
+  gap: 0.75rem;
+}
+.welcome-icon { font-size: 2.5rem; opacity: 0.4; }
+.welcome-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem;
+  color: rgba(245,240,232,0.5);
+  font-weight: 400;
+}
+.welcome-hint {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.6rem;
+  color: rgba(255,255,255,0.2);
+  max-width: 240px;
+  line-height: 1.5;
+}
+
+/* ── DETAIL VIEW ── */
+.detail-view { display: none; }
+.detail-view.active { display: block; }
+.list-view { display: block; }
+.list-view.hidden { display: none; }
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--blue-mid);
+  cursor: pointer;
+  margin-bottom: 1.5rem;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.15s;
+}
+.back-btn:hover { border-bottom-color: var(--blue-mid); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 1100px) {
+  .main-layout { grid-template-columns: 200px 1fr 320px; }
+}
+@media (max-width: 900px) {
+  .hero { grid-template-columns: 1fr; }
+  .main-layout { grid-template-columns: 1fr; }
+  .sidebar, .chatpanel { position: relative; height: auto; }
+}
+
+/* ── PROFILE BANNER ── */
+.profile-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 1rem;
+  border-radius: 3px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  margin-bottom: 1rem;
+  border: 1px solid;
+}
+.profile-a { background: var(--amber-light); border-color: #d97706; color: #92400e; }
+.profile-b { background: var(--blue-light); border-color: #2563a8; color: #1e40af; }
+.profile-c { background: var(--green-light); border-color: #16a34a; color: #14532d; }
+
+/* scroll smooth */
+html { scroll-behavior: smooth; }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-logo">BZO Digital</div>
+  <div class="topbar-title">Gemeinde Oberrieden — Bau- und Zonenordnung 2026</div>
+  <div class="topbar-status">
+    <span class="status-dot"></span>In Kraft seit Januar 2026<br>
+    Baudirektion Nr. 0209/25 · 03.11.2025
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-text">
+    <h1>BZO <span>Digital</span><br>Oberrieden</h1>
+    <p>Die revidierte Bau- und Zonenordnung der Gemeinde Oberrieden — strukturiert, kommentiert und mit KI-Unterstützung für Eigentümer, Anwälte und die Bauverwaltung.</p>
+    <div class="hero-badges">
+      <span class="badge badge-gold">Revision IVHB 2026</span>
+      <span class="badge badge-outline">Zweisprachig DE / FR</span>
+      <span class="badge badge-outline">Keine Mehrwertabgabe</span>
+    </div>
+  </div>
+  <div class="hero-stats">
+    <div class="stat-card">
+      <div class="stat-num">46</div>
+      <div class="stat-label">Artikel total</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">18</div>
+      <div class="stat-label">Geänderte Artikel</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">0%</div>
+      <div class="stat-label">Mehrwertabgabe</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">Jan '26</div>
+      <div class="stat-label">Inkrafttreten</div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div class="main-layout">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-heading">Themen</div>
+      <div class="nav-item active" onclick="filterTopic('all')">
+        <span class="nav-icon">⊞</span> Alle Artikel
+      </div>
+      <div class="nav-item" onclick="filterTopic('gabarit')">
+        <span class="nav-icon">📐</span> Gabarits / Höhen
+      </div>
+      <div class="nav-item" onclick="filterTopic('untergeschoss')">
+        <span class="nav-icon">🏗️</span> Untergeschoss
+        <span class="nav-tag tag-new">NEU</span>
+      </div>
+      <div class="nav-item" onclick="filterTopic('toiture')">
+        <span class="nav-icon">🌿</span> Dächer / Grünflächen
+      </div>
+      <div class="nav-item" onclick="filterTopic('distance')">
+        <span class="nav-icon">↔️</span> Abstände
+      </div>
+      <div class="nav-item" onclick="filterTopic('mobilite')">
+        <span class="nav-icon">🚗</span> Mobilität / Parkierung
+        <span class="nav-tag tag-new">NEU</span>
+      </div>
+      <div class="nav-item" onclick="filterTopic('procedure')">
+        <span class="nav-icon">⚖️</span> Verfahren / Rekurs
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-heading">Zonen</div>
+      <div class="nav-item" onclick="filterZone('kernzone')">
+        <span class="nav-icon">🏘️</span> Kernzonen KA/KB
+      </div>
+      <div class="nav-item" onclick="filterZone('wohnzone')">
+        <span class="nav-icon">🏠</span> Wohnzonen W2/W3
+      </div>
+      <div class="nav-item" onclick="filterZone('gewerbe')">
+        <span class="nav-icon">🏭</span> Gewerbezonen G3/G6
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-heading">Status</div>
+      <div class="nav-item" onclick="filterStatus('modified')">
+        <span class="nav-icon">✏️</span> Geändert
+        <span class="nav-tag tag-mod">18</span>
+      </div>
+      <div class="nav-item" onclick="filterStatus('new')">
+        <span class="nav-icon">✨</span> Neu
+        <span class="nav-tag tag-new">3</span>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-heading">Ressourcen</div>
+      <div class="nav-item" onclick="window.open('https://oberrieden.tlex.ch/app/de/texts_of_law/7.1-1','_blank')">
+        <span class="nav-icon">📄</span> BZO Volltext
+      </div>
+      <div class="nav-item" onclick="window.open('https://maps.zh.ch','_blank')">
+        <span class="nav-icon">🗺️</span> Zonenplan GIS
+      </div>
+    </div>
+  </nav>
+
+  <!-- CONTENT -->
+  <main class="content" id="mainContent">
+    <div class="list-view" id="listView">
+      <div class="content-header">
+        <div>
+          <h2>Artikel-Übersicht</h2>
+          <div class="sub">SYNOPSE · ERLÄUTERUNGSBERICHT · BZO-2026 · Stand: Januar 2026</div>
+        </div>
+      </div>
+      <div class="article-grid" id="articleGrid">
+        <!-- Cards injected by JS -->
+      </div>
+    </div>
+  </main>
+
+  <!-- CHATBOT -->
+  <aside class="chatpanel">
+    <div class="chat-header">
+      <div class="chat-header-top">
+        <div>
+          <div class="chat-title">BZO-Assistent</div>
+          <div class="chat-subtitle">KI-Rechtsauskunft · Zweisprachig DE/FR</div>
+        </div>
+      </div>
+      <div class="api-key-row">
+        <input type="password" class="api-input" id="apiKeyInput" placeholder="Anthropic API Key (sk-ant-...)" />
+        <button class="btn-sm btn-gold" onclick="saveApiKey()">OK</button>
+      </div>
+    </div>
+
+    <div class="quick-pills">
+      <div class="pill" onclick="sendQuick('Was ändert sich beim Untergeschoss?')">UG-Nutzung?</div>
+      <div class="pill" onclick="sendQuick('Kann ich ein Attikageschoss bauen?')">Attika?</div>
+      <div class="pill" onclick="sendQuick('Ist eine Mehrwertabgabe geschuldet?')">Mehrwert?</div>
+      <div class="pill" onclick="sendQuick('Welche Grünflächenziffer gilt für W2?')">Grünfläche?</div>
+      <div class="pill" onclick="sendQuick('Kann ich gegen die neue BZO Rekurs erheben?')">Rekurs?</div>
+      <div class="pill" onclick="sendQuick('Quel droit s\'applique à mon projet en cours?')">Droit transitoire?</div>
+    </div>
+
+    <div class="chat-messages" id="chatMessages">
+      <div class="welcome-screen" id="welcomeScreen">
+        <div class="welcome-icon">⚖️</div>
+        <div class="welcome-title">BZO-Assistent bereit</div>
+        <div class="welcome-hint">Stellen Sie Ihre Frage zum Baurecht Oberrieden — auf Deutsch oder Französisch. Posez votre question en français ou en allemand.</div>
+      </div>
+    </div>
+
+    <div class="chat-input-area">
+      <div class="chat-input-row">
+        <textarea class="chat-textarea" id="chatInput" 
+          placeholder="Frage auf DE oder FR... / Question en DE ou FR..."
+          rows="2"
+          onkeydown="handleKey(event)"></textarea>
+        <button class="btn-send" id="sendBtn" onclick="sendMessage()">▶</button>
+      </div>
+    </div>
+    <div class="chat-footer">BZO Digital Oberrieden · Kein Ersatz für anwaltliche Beratung</div>
+  </aside>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// DATA — 6 prioritised article cards
+// ═══════════════════════════════════════════════
+const articles = [
+  {
+    id: "art15",
+    num: "Art. 15",
+    title: "Grundmasse — Wohnzonen",
+    subtitle: "W2 25% / W2 35% / WG2 30% / W3 55% / WG3 50%",
+    status: "modified",
+    topics: ["gabarit","untergeschoss"],
+    zones: ["wohnzone"],
+    oldLaw: "Keine Regelung für anrechenbares Untergeschoss (aUG). Gebäudehöhe max. W2=7.5m / W3=10.5m. Kein Attikageschoss definiert. Grosse Grundabstand: W2=9m / W3=12m.",
+    newLaw: "Anrechenbares Untergeschoss max. 1/2 Vollgeschoss (50% Ø VG). Neue Fassadenhöhe traufseitig W2=8.5m / W3=11.5m (+1.0m). Attikageschoss max. 1 Einheit. Fassadenhöhe Flachdach W2=9m / W3=12m. Gesamthöhe Flachdach W2=12.3m / W3=15.3m. Grünflächenziffer min. W2=40% / W3=30%.",
+    why: "Einführung aUG reagiert auf die charakteristische Hanglage Oberriedens. Ziel: verdichtete Bauweise ohne Veränderung des Ortsbilds. Fassadenhöhe ersetzt Gebäudehöhe gemäss IVHB-Harmonisierung (§ 278 nPBG). Keine Mehrwertabgabe auf aUG (Initiative Mäder, 05.06.2025, 100 vs 76 Stimmen).",
+    how: "Beispiel W2 35%, Parzelle 1'500m²: Bis 50% der Ø Vollgeschossfläche darf als Wohn-/Arbeitsraum im UG genutzt werden. Bei 3m Ø VG = bis 1.5m anrechenbar. Neue Fassadenhöhe von 8.5m gilt ab massgebendem Terrain (nicht gewachsenem Boden). Grünflächenziffer 40%: mind. 600m² bepflanzte, unversiegelte Fläche.",
+    notes: "⚠️ Grünflächenziffer vor jedem Erweiterungsgesuch prüfen — blockiert bei Unterschreitung. ⚠️ Art. 36a: Abgrabungen max. ~0.5m (ausser UG vor 30.06.2023). ⚠️ Brüstung offen/transparent: +1.0m auf Fassadenhöhe (Art. 15 Abs. 2).",
+    sources: ["SYNOPSE Art. 15 S.6", "ERLÄUTERUNG Kap. 3.3.1 + 3.5.2 S.14+32", "oberrieden.tlex.ch"],
+    related: ["Art. 32", "Art. 36a", "Art. 38", "Art. 46"]
+  },
+  {
+    id: "art32",
+    num: "Art. 32",
+    title: "Flachdächer / Dachgestaltung bei Attikageschossen",
+    subtitle: "Alle Zonen mit Flachdach",
+    status: "modified",
+    topics: ["toiture","gabarit"],
+    zones: ["kernzone","wohnzone","gewerbe"],
+    oldLaw: "Flachdächer grundsätzlich zu begrünen, soweit nicht als Terrasse benutzt. Attikageschoss: Rückversetzung um ganzes Mass der Geschosshöhe (45°). Keine spezifische Regelung für Terrassennutzung.",
+    newLaw: "Flachdächer und Dächer bis 8% Neigung (>10m²): ökologisch wertvolle Begrünung + Wasserrückhaltekapazität mind. 45 l/m². Terrassennutzung: nur begründete Ausnahme, nur gemeinschaftlich, max. 50% der Dachfläche. Attikageschoss: immer Flachdach. Rückversetzung nur noch 1/2 Geschosshöhe (§ 275 Abs. 4 nPBG).",
+    why: "Förderung Biodiversität, Klimaanpassung (Hitzeminderung, Regenwasserretention). Attikageschosse sollen besser ausgenutzt werden können (innere Verdichtung). 45 l/m² = Mindestwert für extensive Begrünung (ca. 10cm Substrat).",
+    how: "Flachdach 150m²: gesamte Fläche ökologisch begrünen. Dachterrasse max. 75m² (50%), nur bei begründetem Ausnahmefall. Attikageschoss W3: Rückversetzung nur noch 1.65m (statt 3.3m bei voller GH). Kombination Begrünung + Solaranlage ausdrücklich zulässig.",
+    notes: "⚠️ Dachterrasse ist Ausnahmefall, nicht Regelfall — Begründung im Baugesuch zwingend. ⚠️ Abs. 4: Dachaufbauten Attikageschoss bergseitig 100% zulässig bei >3m Höhendifferenz.",
+    sources: ["SYNOPSE Art. 32 S.11", "ERLÄUTERUNG Kap. 3.5.4 S.34", "oberrieden.tlex.ch"],
+    related: ["Art. 15", "Art. 20", "Art. 6"]
+  },
+  {
+    id: "art36a",
+    num: "Art. 36a",
+    title: "Terrainveränderungen (NEUER ARTIKEL)",
+    subtitle: "Alle Bauzonen",
+    status: "new",
+    topics: ["untergeschoss","distance"],
+    zones: ["kernzone","wohnzone","gewerbe"],
+    oldLaw: "Kein spezifischer Artikel. Abgrabungen und Aufschüttungen waren weitgehend ungeregelt, solange Gebäudehöhe (ab gewachsenem Boden) eingehalten wurde.",
+    newLaw: "Abs. 1: Abgrabungen für Haus-/Kellerzugänge und Garagenein/-ausfahrten zulässig. Abs. 2: Im Übrigen nur geringfügige Abgrabungen/Aufschüttungen (max. ~0.5m). Weitergehende Veränderungen für harmonischen Geländeverlauf bewilligbar. Abs. 3: Umnutzung alter UG (vor 30.06.2023) zu aUG: weitreichendere Abgrabungen bei wohnhygienisch einwandfreien Verhältnissen zulässig.",
+    why: "Neue Fassadenhöhe orientiert sich am 'massgebenden Terrain' (nicht mehr gewachsener Boden) → erhöhter Anreiz für unregulierte Abgrabungen zur Gewinnung zusätzlicher Nutzfläche. Abgrabungen sind invasive Bodeneingriffe und wirken sich auf das Ortsbild (Hanglage) aus.",
+    how: "Neubau: Eingang und Garage = Abgrabung zulässig. Zusätzliche Abgrabung für Lichtschächte: max. ~0.5m. Bestehendes UG vor 2023 auf Südseite freilegen: möglich mit Baugesuch, wenn Wohnhygiene nachgewiesen. Neues UG: Abgrabung für Freilegung auf 0.5m beschränkt.",
+    notes: "⚠️ Entscheidend: Datum 30.06.2023 — UG davor = Sonderregime Abs. 3. ⚠️ Wohnhygienischer Nachweis (Licht, Luft) obligatorisch bei Abs. 3. ⚠️ Abgrabung > 0.5m immer bewilligungspflichtig.",
+    sources: ["SYNOPSE Art. 36a S.13", "ERLÄUTERUNG Kap. 3.5.5 S.35", "oberrieden.tlex.ch"],
+    related: ["Art. 15", "Art. 36", "Art. 46"]
+  },
+  {
+    id: "art6",
+    num: "Art. 6",
+    title: "Grundmasse für Neubauten — Kernzonen KA / KB",
+    subtitle: "Kernzone KA und KB",
+    status: "modified",
+    topics: ["gabarit","toiture"],
+    zones: ["kernzone"],
+    oldLaw: "Keine Grünflächenziffer. Kein Attikageschoss definiert. Gebäudehöhe max. KA=10.5m / KB=7.5m. Grosser Grundabstand KA=5m / KB=10m. Keine Fassadenhöhen.",
+    newLaw: "Grünflächenziffer min. KA=20% / KB=30%. Attikageschoss max. KA=1 / KB=1. Traufseitige Fassadenhöhe max. KA=10.5m / KB=7.5m. Giebelseitige Fassadenhöhe max. KA=16.0m / KB=13.0m. Grosser Grundabstand aufgehoben — nur kleiner Grundabstand 5m verbleibt.",
+    why: "Harmonisierung IVHB: Gebäudehöhe → Fassadenhöhe (+0.2-0.5m durch neue Messweise). Einführung Attikageschoss da Flachdächer in KA/KB denkbar. Grünflächenziffer gesichert bestehende Grünflächen gemäss GIS-Analyse. Aufhebung grosser Grundabstand = Flexibilisierung der Bebauung.",
+    how: "Neubau KB: max. 7.5m traufseitige Fassadenhöhe ab massgebendem Terrain. Mit Attikageschoss: Flachdach obligatorisch (Art. 32 Abs. 3). Min. 30% der Parzelle als bepflanzte, unversiegelte Fläche. Fussnote: In KA können örtliche Verhältnisse Unterschreitung der GFZ rechtfertigen.",
+    notes: "⚠️ Kernzone KA: Art. 11 Abs. 5 — Dacheinschnitte verboten. ⚠️ Giebelseitige FH KA=16m = traufseitige FH (10.5m) + bisherige Firsthöhe (5.5m). ⚠️ GFZ-Unterschreitung in KA möglich bei spezifischen örtlichen Verhältnissen (Fussnotenregelung).",
+    sources: ["SYNOPSE Art. 6 S.3", "ERLÄUTERUNG Kap. 3.3.1+3.3.9 S.14+23", "oberrieden.tlex.ch"],
+    related: ["Art. 11", "Art. 32", "Art. 9"]
+  },
+  {
+    id: "art38",
+    num: "Art. 38",
+    title: "Fahrzeugabstellplätze / Mobilitätskonzept",
+    subtitle: "Alle Bauzonen — Regelbauweise",
+    status: "modified",
+    topics: ["mobilite"],
+    zones: ["wohnzone","gewerbe"],
+    oldLaw: "Wohnbauten: mind. 1 Abstellplatz pro Wohnung, je 80m² anrechenbare GNF. Kein Mobilitätskonzept in Regelbauweise möglich — nur im Gestaltungsplan.",
+    newLaw: "Abs. 1-5 identisch mit altem Recht. Abs. 6 (NEU): Mit einem Mobilitätskonzept kann von Abs. 1-5 abgewichen werden — auch in der Regelbauweise (kein Gestaltungsplan erforderlich).",
+    why: "Umsetzung der Handlungsempfehlungen aus Verkehrsstudie 2022 und komm. Richtplan Verkehr. Ermöglicht situative Reduktion der Pflichtparkplätze bei Nachweis alternativer Mobilitätslösungen (ÖV-Anbindung, Velostationen, Carsharing etc.).",
+    how: "MFH 8 Wohnungen: normal 8 Pflichtplätze + 10% Besucher = 9 Plätze. Mit validiertem Mobilitätskonzept: Reduktion möglich auf z.B. 5 Plätze + Velostation + Carsharing-Platz. Konzept muss im Baugesuch eingereicht und von Baubehörde genehmigt werden.",
+    notes: "⚠️ Umfang der möglichen Reduktion ist nicht festgelegt — Ermessen der Baubehörde. ⚠️ Mobilitätskonzept muss langfristig gesichert sein (Grundbucheintrag oder Dienstbarkeit). ⚠️ VSS-Parkierungsnormen bleiben Ausgangsbasis für andere Bauten (Abs. 2).",
+    sources: ["SYNOPSE Art. 38 S.14", "ERLÄUTERUNG Kap. 3.5.6 S.36", "oberrieden.tlex.ch"],
+    related: ["Art. 39", "Art. 15"]
+  },
+  {
+    id: "art46",
+    num: "Art. 46",
+    title: "Übergangsbestimmungen + Rekursfrist",
+    subtitle: "Verfahren — Inkrafttreten Januar 2026",
+    status: "unchanged",
+    topics: ["procedure"],
+    zones: [],
+    oldLaw: "Art. 45 (alt): Inkrafttreten am Tag nach öffentlicher Bekanntmachung der Baudirektionsgenehmigung. Art. 46 (alt): Hängige Baugesuche nach neuem Recht.",
+    newLaw: "Art. 45: Inkrafttreten Januar 2026. Art. 46: Alle zum Zeitpunkt des Inkrafttretens hängigen Baugesuche werden nach neuem Recht beurteilt. Rekursfrist BZO: 31.12.2025 ABGELAUFEN (Amtsblatt 01.12.2025, Frist 30 Tage, §§ 329 ff. PBG).",
+    why: "Standardbestimmung des kantonalen Verfahrensrechts. Massgebend: Publikation Amtsblatt 01.12.2025 (Meldungsnummer RP-ZH02-0000003139), Baudirektion Verfügung Nr. 0209/25 vom 03.11.2025.",
+    how: "Baugesuch hängig seit Nov. 2025 → Beurteilung nach neuer BZO 2026. Baugesuch eingereicht Feb. 2026 → automatisch neues Recht. Rekurs gegen BZO selbst: UNZULÄSSIG (Frist 31.12.2025 abgelaufen). Rekurs gegen individuelle Baubewilligung: 30 Tage ab Zustellung (§ 329 PBG, Baurekursgericht ZH).",
+    notes: "⚠️ Rekursfrist gegen BZO: ABGELAUFEN 31.12.2025 — keine Anfechtung mehr möglich. ⚠️ Legitimation Rekurs gegen Baubewilligung: direkt betroffener Nachbar (§ 333 PBG). ⚠️ Mehrwertabgabe: durch Initiative Mäder (GV 05.06.2025, 100 vs 76) aufgehoben — Art. 43 neu = Verzicht.",
+    sources: ["AMTSBLATT 01.12.2025 RP-ZH02-0000003139", "BESCHLUSS-MAEDER 05.06.2025 Beschl.-Nr. 25-3", "§§ 329 ff. PBG ZH"],
+    related: ["Art. 45", "Art. 43"]
+  }
+];
+
+// ═══════════════════════════════════════════════
+// SYSTEM PROMPT
+// ═══════════════════════════════════════════════
+function buildSystemPrompt() {
+  const ficheContext = articles.map(a => `
+ART. ${a.num} — ${a.title}
+Statut: ${a.status}
+Zones: ${a.zones.join(', ')}
+ANCIEN DROIT: ${a.oldLaw}
+NOUVEAU DROIT: ${a.newLaw}
+POURQUOI: ${a.why}
+COMMENT S'APPLIQUE: ${a.how}
+POINTS D'ATTENTION: ${a.notes}
+Sources: ${a.sources.join(' / ')}
+Articles liés: ${a.related.join(', ')}
+`).join('\n---\n');
+
+  return `Tu es BZO-Assistent, le moteur juridique de la plateforme BZO Digital Oberrieden. Tu opères sur la révision partielle de la BZO d'Oberrieden entrée en vigueur en janvier 2026.
+
+LANGUE: Réponds dans la langue de l'utilisateur (DE ou FR). Citations légales toujours en allemand.
+
+DÉTECTION DE PROFIL (automatique):
+- Profil A (justiciable): langage clair, exemples chiffrés, recommande consultation avocat
+- Profil B (avocat/juriste): technique, références croisées PBG/IVHB, pas de disclaimer
+- Profil C (administration): orienté procédure et Vollzug
+
+CORPUS DOCUMENTAIRE (hiérarchie):
+1. [BZO-2026] BZO Oberrieden révisée, janvier 2026
+2. [SYNOPSE] Planpartner AG, 20.02.2024
+3. [ERLAEUTERUNG] Rapport explicatif Art. 47 RPV, Planpartner AG
+4. [BESCHLUSS-MAEDER] PV Gemeindeversammlung 05.06.2025 (100 vs 76): suppression Mehrwertabgabe
+5. [AMTSBLATT] 01.12.2025, RP-ZH02-0000003139: délai recours expiré 31.12.2025
+6. [PBG] nPBG Kanton Zürich (en vigueur 01.03.2017)
+
+FAITS CLÉS À MAÎTRISER:
+- Mehrwertabgabe: SUPPRIMÉE à Oberrieden (Initiative Mäder, GV 05.06.2025, 100 vs 76)
+- Délai recours BZO: EXPIRÉ 31.12.2025 — BZO définitivement en force
+- Droit transitoire (Art. 46): tous Baugesuche pendants → nouveau droit
+- anrechenbares UG: jusqu'à 50% Ø VG dans toutes zones W/WG, SANS Mehrwertabgabe
+- Fassadenhöhe remplace Gebäudehöhe (+0.2 à +0.5m selon type toiture)
+- Art. 36a NOUVEAU: excavations max. ~0.5m sauf UG avant 30.06.2023
+
+FORMAT DE RÉPONSE OBLIGATOIRE:
+1. RÉPONSE DIRECTE (1-3 phrases, sans préambule)
+2. BASE LÉGALE [Art. X BZO-2026] / [Source]
+3. ANALYSE (selon profil détecté)
+4. ⚠️ POINTS D'ATTENTION (max 3)
+5. [Profil A] Prochaine étape recommandée
+
+RÈGLES ABSOLUES:
+- Jamais affirmer conformité sans réserve
+- Toujours citer source précise
+- Jamais omettre suppression Mehrwertabgabe quand aUG concerné
+- Jamais "Bien sûr !", "Excellente question !" en début de réponse
+
+FICHES ARTICLES DISPONIBLES:
+${ficheContext}
+
+Sources directes: oberrieden.tlex.ch | oberrieden.ch/node/23373 | maps.zh.ch (Zonenplan)`;
+}
+
+// ═══════════════════════════════════════════════
+// RENDER ARTICLES
+// ═══════════════════════════════════════════════
+function renderArticles(filtered = articles) {
+  const grid = document.getElementById('articleGrid');
+  grid.innerHTML = '';
+  filtered.forEach(a => {
+    const statusLabel = { modified: 'Geändert', new: 'Neu', unchanged: 'Unverändert' }[a.status];
+    const statusClass = { modified: 'status-modified', new: 'status-new', unchanged: 'status-unchanged' }[a.status];
+    grid.innerHTML += `
+    <div class="article-card" id="card-${a.id}">
+      <div class="article-card-header" onclick="toggleCard('${a.id}')">
+        <div class="art-num">${a.num}</div>
+        <div>
+          <div class="art-title">${a.title}</div>
+          <div class="art-subtitle">${a.subtitle}</div>
+        </div>
+        <div class="art-status ${statusClass}">${statusLabel}</div>
+      </div>
+      <div class="article-body" id="body-${a.id}">
+        <div class="field-grid">
+          <div class="field">
+            <div class="field-label old">📋 Altes Recht</div>
+            <div class="field-content">${a.oldLaw}</div>
+          </div>
+          <div class="field">
+            <div class="field-label new">✅ Neues Recht (2026)</div>
+            <div class="field-content">${a.newLaw}</div>
+          </div>
+          <div class="field">
+            <div class="field-label why">💡 Warum geändert?</div>
+            <div class="field-content">${a.why}</div>
+          </div>
+          <div class="field">
+            <div class="field-label how">⚙️ Wie anwenden?</div>
+            <div class="field-content">${a.how}</div>
+          </div>
+          <div class="field full">
+            <div class="field-label note">⚠️ Hinweise &amp; Risiken</div>
+            <div class="field-content">${a.notes}</div>
+          </div>
+        </div>
+        <div class="sources-row">
+          <strong style="font-size:0.65rem;font-family:'IBM Plex Mono';color:var(--gray)">Quellen:</strong>
+          ${a.sources.map(s => `<span class="source-link">${s}</span>`).join('')}
+        </div>
+        <div class="related-row" style="margin-top:0.5rem">
+          <span style="font-size:0.65rem;font-family:'IBM Plex Mono';color:var(--gray)">Verwandte Artikel:</span>
+          ${a.related.map(r => `<span class="related-tag" onclick="askAbout('${r}')">${r}</span>`).join('')}
+        </div>
+      </div>
+    </div>`;
+  });
+}
+
+function toggleCard(id) {
+  const body = document.getElementById('body-' + id);
+  body.classList.toggle('open');
+}
+
+function filterTopic(topic) {
+  setActiveNav(event.target);
+  if (topic === 'all') { renderArticles(); return; }
+  renderArticles(articles.filter(a => a.topics.includes(topic)));
+}
+
+function filterZone(zone) {
+  setActiveNav(event.target);
+  renderArticles(articles.filter(a => a.zones.includes(zone)));
+}
+
+function filterStatus(status) {
+  setActiveNav(event.target);
+  renderArticles(articles.filter(a => a.status === status));
+}
+
+function setActiveNav(el) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  el.closest('.nav-item')?.classList.add('active');
+}
+
+function askAbout(artNum) {
+  const q = `Erklären Sie mir ${artNum} BZO Oberrieden — was hat sich geändert?`;
+  document.getElementById('chatInput').value = q;
+  sendMessage();
+}
+
+// ═══════════════════════════════════════════════
+// CHAT
+// ═══════════════════════════════════════════════
+let apiKey = '';
+let conversationHistory = [];
+
+function saveApiKey() {
+  apiKey = document.getElementById('apiKeyInput').value.trim();
+  if (apiKey) {
+    document.getElementById('apiKeyInput').value = '●'.repeat(20);
+    addSystemMessage('API-Key gespeichert. Stellen Sie jetzt Ihre Frage.');
+  }
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+function sendQuick(q) {
+  document.getElementById('chatInput').value = q;
+  sendMessage();
+}
+
+async function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+  if (!apiKey) { addSystemMessage('Bitte zuerst den Anthropic API-Key eingeben.'); return; }
+
+  input.value = '';
+  hideWelcome();
+  addMessage('user', text);
+  conversationHistory.push({ role: 'user', content: text });
+
+  const btn = document.getElementById('sendBtn');
+  btn.disabled = true;
+
+  const typingId = addTyping();
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: buildSystemPrompt(),
+        messages: conversationHistory
+      })
+    });
+
+    const data = await response.json();
+    removeTyping(typingId);
+
+    if (data.error) {
+      addMessage('assistant', '⚠️ API-Fehler: ' + (data.error.message || JSON.stringify(data.error)));
+    } else {
+      const reply = data.content?.[0]?.text || 'Keine Antwort erhalten.';
+      conversationHistory.push({ role: 'assistant', content: reply });
+      addMessage('assistant', reply);
+    }
+  } catch (err) {
+    removeTyping(typingId);
+    addMessage('assistant', '⚠️ Verbindungsfehler: ' + err.message);
+  }
+
+  btn.disabled = false;
+}
+
+function addMessage(role, text) {
+  const msgs = document.getElementById('chatMessages');
+  const label = role === 'user' ? 'Sie / Vous' : 'BZO-Assistent';
+  const formatted = role === 'assistant'
+    ? text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+         .replace(/\*(.*?)\*/g, '<em>$1</em>')
+         .replace(/⚠️/g, '<strong style="color:#f59e0b">⚠️</strong>')
+    : text;
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+  div.innerHTML = `
+    <div class="msg-label">${label}</div>
+    <div class="msg-bubble">${role === 'assistant' ? formatted : text}</div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function addSystemMessage(text) {
+  const msgs = document.getElementById('chatMessages');
+  hideWelcome();
+  const div = document.createElement('div');
+  div.style.cssText = 'font-family:IBM Plex Mono,monospace;font-size:0.62rem;color:rgba(255,255,255,0.35);text-align:center;padding:0.4rem';
+  div.textContent = '— ' + text + ' —';
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function addTyping() {
+  const msgs = document.getElementById('chatMessages');
+  const id = 'typing-' + Date.now();
+  const div = document.createElement('div');
+  div.id = id;
+  div.innerHTML = `<div class="msg-label" style="color:var(--gray);font-family:'IBM Plex Mono',monospace;font-size:0.55rem;margin-bottom:0.2rem">BZO-Assistent</div><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return id;
+}
+
+function removeTyping(id) {
+  document.getElementById(id)?.remove();
+}
+
+function hideWelcome() {
+  const w = document.getElementById('welcomeScreen');
+  if (w) w.style.display = 'none';
+}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+renderArticles();
+</script>
+</body>
+</html>
