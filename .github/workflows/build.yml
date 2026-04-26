@@ -22,10 +22,23 @@ permissions:
   contents: read
 
 jobs:
-  docker-build:
-    name: Docker build (sanity)
+  build:
+    name: Build image and validate Terraform
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - name: Build image
+
+      - name: Build image (Vue SPA + FastAPI)
         run: docker build -t bzo-app:ci-${{ github.sha }} app/
+
+      - uses: hashicorp/setup-terraform@v4
+
+      - name: Terraform init (no backend)
+        working-directory: tf/prod/app
+        run: terraform init -input=false -backend=false
+
+      - name: Terraform validate
+        working-directory: tf/prod/app
+        env:
+          TF_VAR_image_name: validate-only
+        run: terraform validate
