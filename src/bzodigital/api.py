@@ -598,8 +598,11 @@ async def _process_job(job_id: str, municipality_name: str, queue: asyncio.Queue
 
         except Exception as e:
             file_state.status = "failed"
-            file_state.error = str(e)
-            await queue.put({"type": "file_error", "data": {"file_index": i, "error": str(e)}})
+            err_msg = str(e) or f"{type(e).__name__}: (no message)"
+            file_state.error = err_msg
+            import traceback
+            traceback.print_exc()
+            await queue.put({"type": "file_error", "data": {"file_index": i, "error": err_msg}})
 
     # Mark job complete
     job.status = "failed" if all(f.status == "failed" for f in job.files) else "done"

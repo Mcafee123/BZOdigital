@@ -71,7 +71,8 @@ async def convert_pdf_stream(
 
     url = f"{base}/api/convert/stream"
 
-    async with httpx.AsyncClient(auth=_auth(), timeout=httpx.Timeout(300, connect=30)) as client:
+    # SSE stream: no read timeout (result assembly for large PDFs can take many minutes)
+    async with httpx.AsyncClient(auth=_auth(), timeout=httpx.Timeout(None, connect=30)) as client:
         files = {"file": (filename, pdf_bytes, "application/pdf")}
         async with client.stream("POST", url, files=files) as response:
             response.raise_for_status()
