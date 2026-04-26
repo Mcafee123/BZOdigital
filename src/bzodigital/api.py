@@ -1,12 +1,15 @@
 """FastAPI REST API for BZO document search."""
 
 import asyncio
+import os
+import secrets
 from datetime import datetime
 from hashlib import sha256
 from pathlib import Path
 
-from fastapi import BackgroundTasks, FastAPI, HTTPException, Query
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Query, Request
 from fastapi.responses import FileResponse
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -33,13 +36,46 @@ from bzodigital.search import (
     search_or_crawl_site,
 )
 
+security = HTTPBasic()
+
+AUTH_USER = os.environ.get("BASIC_AUTH_USER", "")
+AUTH_PASS = os.environ.get("BASIC_AUTH_PASS", "")
+
+
+def verify_credentials(credentials: HTTPBasicCredentials = Depends(security)):
+    if not AUTH_USER:
+        return  # auth disabled when env vars are not set
+    correct_user = secrets.compare_digest(credentials.username.encode(), AUTH_USER.encode())
+    correct_pass = secrets.compare_digest(credentials.password.encode(), AUTH_PASS.encode())
+    if not (correct_user and correct_pass):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid credentials",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+
+
 app = FastAPI(
     title="BZO Digital API",
     description="REST API for finding Bau- und Zonenordnungen of Swiss municipalities.",
+    dependencies=[Depends(verify_credentials)],
 )
 
 STATIC_DIR = Path(__file__).parent / "static"
-app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+
+class AuthStaticFiles(StaticFiles):
+    """StaticFiles that inherits Basic Auth from the app-level dependency."""
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http":
+            request = Request(scope, receive)
+            credentials = await security(request)
+            verify_credentials(credentials)
+        await super().__call__(scope, receive, send)
+
+
+app.mount("/static", AuthStaticFiles(directory=STATIC_DIR), name="static")
 
 
 @app.get("/")
