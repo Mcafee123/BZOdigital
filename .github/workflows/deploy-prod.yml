@@ -19,14 +19,21 @@ env:
   ACR_LOGIN_SERVER: anplatformacr.azurecr.io
 
 jobs:
-  build-and-push:
-    name: Build and push image
+  deploy:
+    name: Build, push, and apply
     runs-on: ubuntu-latest
     environment: production
-    outputs:
-      image-ref: ${{ steps.compose.outputs.image-ref }}
+    env:
+      ARM_CLIENT_ID:       ${{ secrets.ARM_CLIENT_ID }}
+      ARM_CLIENT_SECRET:   ${{ secrets.ARM_CLIENT_SECRET }}
+      ARM_TENANT_ID:       ${{ secrets.ARM_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
     steps:
       - uses: actions/checkout@v5
+      - uses: webfactory/ssh-agent@v0.10.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - uses: hashicorp/setup-terraform@v3
 
       - name: Azure login
         uses: azure/login@v3
@@ -52,7 +59,7 @@ jobs:
       - name: Build and push image
         uses: affolterNET/affolterNET.Github.SharedWorkflows/actions/build-backend@main
         with:
-          project-root:  app
+          project-root:   app
           project-folder: .
           project-file:   pyproject.toml
           version:        ${{ steps.compose.outputs.tag }}
@@ -72,33 +79,16 @@ jobs:
           git tag "v${{ steps.compose.outputs.tag }}"
           git push origin "v${{ steps.compose.outputs.tag }}"
 
-  deploy:
-    name: Terraform apply
-    needs: [build-and-push]
-    runs-on: ubuntu-latest
-    environment: production
-    defaults:
-      run:
-        working-directory: tf/prod/app
-    env:
-      ARM_CLIENT_ID:       ${{ secrets.ARM_CLIENT_ID }}
-      ARM_CLIENT_SECRET:   ${{ secrets.ARM_CLIENT_SECRET }}
-      ARM_TENANT_ID:       ${{ secrets.ARM_TENANT_ID }}
-      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-    steps:
-      - uses: actions/checkout@v5
-      - uses: webfactory/ssh-agent@v0.10.0
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-      - uses: hashicorp/setup-terraform@v3
-
       - name: Terraform init
+        working-directory: tf/prod/app
         run: terraform init -input=false -backend-config=_backend.hcl
 
       - name: Terraform plan
+        working-directory: tf/prod/app
         run: |
           terraform plan -input=false -out=tfplan \
-            -var "image_name=${{ needs.build-and-push.outputs.image-ref }}"
+            -var "image_name=${{ steps.compose.outputs.image-ref }}"
 
       - name: Terraform apply
+        working-directory: tf/prod/app
         run: terraform apply -input=false -auto-approve tfplan
