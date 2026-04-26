@@ -1158,7 +1158,8 @@
         const section = document.createElement('div');
         section.id = 'existing-files';
         section.className = 'existing-files-section';
-        section.innerHTML = `<h3>Bereits konvertierte Dateien (${data.files.length})</h3>` +
+        section.innerHTML = `<h3>Bereits konvertierte Dateien (${data.files.length})
+          <a href="/viewer?municipality=${encodeURIComponent(muniName)}" style="font-size:0.85rem;font-weight:normal;margin-left:12px;color:#2563eb;text-decoration:none" target="_blank">Querverweise &rarr;</a></h3>` +
           data.files.map(f => {
             const sizeKB = Math.round(f.size / 1024);
             return `<div class="existing-file">

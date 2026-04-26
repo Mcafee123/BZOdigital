@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BZO Querverweise</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      height: 100vh;
+      overflow: hidden;
+      color: #1a1a1a;
+    }
+
+    #loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      font-size: 1.1rem;
+      color: #6b7280;
+    }
+    #loading .spinner {
+      width: 20px; height: 20px;
+      border: 2px solid #e5e7eb;
+      border-top-color: #2563eb;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-right: 10px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #error {
+      display: none;
+      padding: 40px;
+      text-align: center;
+      color: #dc2626;
+      font-size: 1.1rem;
+    }
+
+    #viewer {
+      display: none;
+      height: 100vh;
+      grid-template-columns: 3fr 2fr;
+      grid-template-rows: auto 1fr;
+    }
+
+    /* Header bar */
+    #header {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 20px;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      font-size: 0.9rem;
+    }
+    #header h1 {
+      font-size: 1rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    #header .subtitle {
+      color: #6b7280;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    #header a {
+      margin-left: auto;
+      color: #2563eb;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    #header a:hover { text-decoration: underline; }
+
+    /* Left panel: BZO document */
+    #bzo-panel {
+      overflow-y: auto;
+      padding: 20px 32px 80px;
+      border-right: 1px solid #e2e8f0;
+    }
+    #bzo-panel h1, #bzo-panel h2, #bzo-panel h3 {
+      margin-top: 1.5em;
+      margin-bottom: 0.5em;
+      scroll-margin-top: 20px;
+    }
+    #bzo-panel h1 { font-size: 1.25rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; }
+    #bzo-panel h2 { font-size: 1.1rem; }
+    #bzo-panel p, #bzo-panel li, #bzo-panel td { font-size: 0.95rem; line-height: 1.6; }
+    #bzo-panel table { border-collapse: collapse; margin: 0.5em 0; width: 100%; font-size: 0.85rem; }
+    #bzo-panel th, #bzo-panel td { border: 1px solid #d1d5db; padding: 4px 8px; text-align: left; }
+    #bzo-panel th { background: #f3f4f6; }
+    #bzo-panel blockquote {
+      margin: 0.5em 0;
+      padding: 4px 12px;
+      border-left: 3px solid #d1d5db;
+      color: #4b5563;
+    }
+    #bzo-panel .article-active {
+      background: #eff6ff;
+      margin-left: -12px;
+      padding-left: 12px;
+      border-radius: 4px;
+    }
+
+    /* Right panel: cross-references */
+    #refs-panel {
+      overflow-y: auto;
+      padding: 20px;
+      background: #fafafa;
+    }
+
+    #refs-header {
+      position: sticky;
+      top: 0;
+      background: #fafafa;
+      padding-bottom: 12px;
+      z-index: 1;
+    }
+    #refs-header h2 {
+      font-size: 1.05rem;
+      font-weight: 600;
+    }
+    #refs-count {
+      font-size: 0.85rem;
+      color: #6b7280;
+      margin-top: 2px;
+    }
+
+    .no-refs {
+      color: #9ca3af;
+      font-style: italic;
+      margin-top: 20px;
+    }
+
+    /* Article table of contents in side panel */
+    #article-toc {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 10px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e2e8f0;
+      margin-bottom: 12px;
+    }
+    .toc-btn {
+      display: inline-block;
+      padding: 2px 8px;
+      font-size: 0.75rem;
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      background: white;
+      color: #374151;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.15s;
+    }
+    .toc-btn:hover { border-color: #2563eb; color: #2563eb; }
+    .toc-btn.has-refs { background: #dbeafe; border-color: #93c5fd; font-weight: 500; }
+    .toc-btn.active { background: #2563eb; color: white; border-color: #2563eb; }
+
+    /* Document filter */
+    #doc-filter {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #e2e8f0;
+      margin-bottom: 12px;
+    }
+    #doc-filter-label {
+      width: 100%;
+      font-size: 0.75rem;
+      color: #9ca3af;
+      margin-bottom: 2px;
+    }
+    .doc-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      font-size: 0.75rem;
+      border: 1px solid #d1d5db;
+      border-radius: 12px;
+      background: white;
+      color: #374151;
+      cursor: pointer;
+      transition: all 0.15s;
+      user-select: none;
+    }
+    .doc-chip:hover { border-color: #93c5fd; }
+    .doc-chip.enabled { background: #dbeafe; border-color: #93c5fd; }
+    .doc-chip.disabled { background: #f3f4f6; color: #9ca3af; border-color: #e5e7eb; text-decoration: line-through; }
+    .doc-chip .chip-count {
+      font-size: 0.7rem;
+      color: #6b7280;
+    }
+
+    /* Source document group */
+    .xref-group {
+      margin-bottom: 16px;
+    }
+    .xref-group-header {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #1e3a5f;
+      padding: 6px 0;
+      border-bottom: 1px solid #e2e8f0;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+    .xref-group-label {
+      font-size: 0.75rem;
+      font-weight: 500;
+      background: #dbeafe;
+      color: #1d4ed8;
+      padding: 1px 8px;
+      border-radius: 10px;
+      white-space: nowrap;
+    }
+    .xref-group-filename {
+      color: #6b7280;
+      font-weight: 400;
+      font-size: 0.78rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .xref-group-count {
+      font-size: 0.75rem;
+      color: #9ca3af;
+      margin-left: auto;
+      white-space: nowrap;
+    }
+
+    /* Reference cards */
+    .xref-card {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 8px;
+      margin-left: 8px;
+    }
+    .xref-paragraph {
+      font-size: 0.85rem;
+      line-height: 1.55;
+      color: #374151;
+    }
+    .xref-paragraph p { margin: 0.3em 0; }
+    .xref-paragraph mark {
+      background: #fef08a;
+      padding: 1px 2px;
+      border-radius: 2px;
+    }
+    .xref-paragraph table { font-size: 0.8rem; border-collapse: collapse; margin: 0.3em 0; }
+    .xref-paragraph th, .xref-paragraph td { border: 1px solid #d1d5db; padding: 2px 6px; }
+  </style>
+</head>
+<body>
+  <div id="loading"><div class="spinner"></div> Querverweise werden geladen...</div>
+  <div id="error"></div>
+  <div id="viewer">
+    <div id="header">
+      <h1>BZO Querverweise</h1>
+      <span class="subtitle" id="header-subtitle"></span>
+      <a id="back-link" href="/">Zurück</a>
+    </div>
+    <div id="bzo-panel"></div>
+    <div id="refs-panel">
+      <div id="refs-header">
+        <h2 id="refs-title">Querverweise</h2>
+        <div id="refs-count"></div>
+        <div id="article-toc"></div>
+        <div id="doc-filter"><span id="doc-filter-label">Dokumente</span></div>
+      </div>
+      <div id="refs-body"></div>
+    </div>
+  </div>
+
+  <script>
+    // --- State ---
+    let crossRefs = {};        // provision -> [{source_file, source_labels, citation_text, paragraph}]
+    let excludedDocs = new Set();  // filenames toggled off
+    let currentProvision = null;
+
+    const params = new URLSearchParams(location.search);
+    const municipality = params.get('municipality');
+
+    if (!municipality) {
+      showError('Kein Municipality angegeben. URL: /viewer?municipality=Name');
+    } else {
+      loadCrossRefs(municipality);
+    }
+
+    function showError(msg) {
+      document.getElementById('loading').style.display = 'none';
+      const el = document.getElementById('error');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+
+    async function loadCrossRefs(muni) {
+      try {
+        const resp = await fetch(`/api/crossrefs/${encodeURIComponent(muni)}`);
+        if (!resp.ok) {
+          const detail = await resp.json().catch(() => ({}));
+          throw new Error(detail.detail || `HTTP ${resp.status}`);
+        }
+        const data = await resp.json();
+        render(data);
+      } catch (err) {
+        showError(`Fehler: ${err.message}`);
+      }
+    }
+
+    function render(data) {
+      document.getElementById('loading').style.display = 'none';
+      const viewer = document.getElementById('viewer');
+      viewer.style.display = 'grid';
+      crossRefs = data.cross_references;
+
+      // Header
+      document.getElementById('header-subtitle').textContent =
+        `${data.municipality} — ${data.bzo_filename}`;
+      document.getElementById('back-link').href =
+        `/?municipality=${encodeURIComponent(data.municipality)}`;
+
+      // Render BZO
+      const bzoPanel = document.getElementById('bzo-panel');
+      bzoPanel.innerHTML = marked.parse(data.bzo_markdown);
+
+      // Build article TOC
+      buildArticleToc(data.articles, bzoPanel);
+
+      // Build document filter
+      buildDocFilter(crossRefs);
+
+      // Set up scroll tracking
+      setupScrollTracking(bzoPanel, data.articles);
+
+      // Show first article's refs
+      if (data.articles.length > 0) {
+        showArticle(data.articles[0], bzoPanel);
+      }
+    }
+
+    function buildArticleToc(articles, bzoPanel) {
+      const tocEl = document.getElementById('article-toc');
+      articles.forEach(art => {
+        const btn = document.createElement('a');
+        btn.className = 'toc-btn' + (crossRefs[art] ? ' has-refs' : '');
+        btn.textContent = art;
+        btn.href = '#';
+        btn.dataset.article = art;
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          scrollToArticle(art, bzoPanel);
+        });
+        tocEl.appendChild(btn);
+      });
+    }
+
+    function buildDocFilter(crossRefs) {
+      // Collect all source documents with total reference counts
+      const docs = new Map(); // filename -> {labels, count}
+      for (const refs of Object.values(crossRefs)) {
+        for (const ref of refs) {
+          if (!docs.has(ref.source_file)) {
+            docs.set(ref.source_file, { labels: ref.source_labels || [], count: 0 });
+          }
+          docs.get(ref.source_file).count++;
+        }
+      }
+
+      const filterEl = document.getElementById('doc-filter');
+      for (const [file, info] of docs) {
+        const chip = document.createElement('span');
+        const displayName = info.labels.length > 0 ? info.labels[0] : file.replace(/\.md$/, '');
+        chip.className = 'doc-chip enabled';
+        chip.innerHTML = `${esc(displayName)} <span class="chip-count">${info.count}</span>`;
+        chip.dataset.file = file;
+        chip.title = file;
+        chip.addEventListener('click', () => toggleDoc(file, chip));
+        filterEl.appendChild(chip);
+      }
+    }
+
+    function toggleDoc(file, chip) {
+      if (excludedDocs.has(file)) {
+        excludedDocs.delete(file);
+        chip.className = 'doc-chip enabled';
+      } else {
+        excludedDocs.add(file);
+        chip.className = 'doc-chip disabled';
+      }
+      // Re-render current article's panel and update TOC badges
+      if (currentProvision) {
+        updateSidePanel(currentProvision);
+      }
+      updateTocBadges();
+    }
+
+    function updateTocBadges() {
+      document.querySelectorAll('.toc-btn').forEach(btn => {
+        const art = btn.dataset.article;
+        const hasRefs = filteredRefs(art).length > 0;
+        btn.classList.toggle('has-refs', hasRefs);
+      });
+    }
+
+    function filteredRefs(provision) {
+      const refs = crossRefs[provision] || [];
+      if (excludedDocs.size === 0) return refs;
+      return refs.filter(r => !excludedDocs.has(r.source_file));
+    }
+
+    function scrollToArticle(provision, panel) {
+      const anchor = panel.querySelector(`a[name="art-${provision.toLowerCase()}"]`);
+      if (anchor) {
+        anchor.parentElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    function setupScrollTracking(panel, articles) {
+      const anchors = panel.querySelectorAll('a[name^="art-"]');
+      if (anchors.length === 0) return;
+
+      const observer = new IntersectionObserver((entries) => {
+        const visible = [];
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            visible.push(entry.target);
+          }
+        });
+        if (visible.length === 0) return;
+
+        const first = visible[0];
+        const provision = first.getAttribute('name').replace('art-', '');
+        if (provision !== currentProvision) {
+          showArticle(provision, panel);
+        }
+      }, {
+        root: panel,
+        rootMargin: '0px 0px -80% 0px',
+        threshold: 0,
+      });
+
+      anchors.forEach(a => observer.observe(a));
+    }
+
+    function showArticle(provision, panel) {
+      currentProvision = provision;
+      updateSidePanel(provision);
+      highlightArticle(provision, panel);
+    }
+
+    function highlightArticle(provision, panel) {
+      const prev = panel.querySelector('.article-active');
+      if (prev) prev.classList.remove('article-active');
+
+      const anchor = panel.querySelector(`a[name="art-${provision.toLowerCase()}"]`);
+      if (anchor && anchor.parentElement) {
+        anchor.parentElement.classList.add('article-active');
+      }
+
+      document.querySelectorAll('.toc-btn.active').forEach(b => b.classList.remove('active'));
+      const tocBtn = document.querySelector(`.toc-btn[data-article="${provision}"]`);
+      if (tocBtn) tocBtn.classList.add('active');
+    }
+
+    function updateSidePanel(provision) {
+      const refs = filteredRefs(provision);
+      const titleEl = document.getElementById('refs-title');
+      const countEl = document.getElementById('refs-count');
+      const bodyEl = document.getElementById('refs-body');
+
+      titleEl.textContent = `Art. ${provision}`;
+      countEl.textContent = refs.length === 0
+        ? 'Keine Querverweise'
+        : `${refs.length} ${refs.length === 1 ? 'Querverweis' : 'Querverweise'}`;
+
+      if (refs.length === 0) {
+        bodyEl.innerHTML = '<div class="no-refs">Dieser Artikel wird in keinem Begleitdokument referenziert.</div>';
+        return;
+      }
+
+      // Group references by source document
+      const groups = new Map();
+      refs.forEach(ref => {
+        const key = ref.source_file;
+        if (!groups.has(key)) {
+          groups.set(key, { labels: ref.source_labels || [], refs: [] });
+        }
+        groups.get(key).refs.push(ref);
+      });
+
+      bodyEl.innerHTML = Array.from(groups.entries()).map(([file, group]) => {
+        const labels = group.labels;
+        const displayName = labels.length > 0 ? labels[0] : file.replace(/\.md$/, '');
+        const labelBadges = labels.map(l => `<span class="xref-group-label">${esc(l)}</span>`).join('');
+        const showFilename = labels.length > 0
+          ? `<span class="xref-group-filename">${esc(file.replace(/\.md$/, ''))}</span>`
+          : '';
+
+        const cards = group.refs.map(ref => {
+          const paragraph = highlightCitation(ref.paragraph, ref.citation_text);
+          return `<div class="xref-card"><div class="xref-paragraph">${marked.parse(paragraph)}</div></div>`;
+        }).join('');
+
+        return `
+          <div class="xref-group">
+            <div class="xref-group-header">
+              ${labelBadges || `<span>${esc(displayName)}</span>`}
+              ${showFilename}
+              <span class="xref-group-count">${group.refs.length}x</span>
+            </div>
+            ${cards}
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('refs-panel').scrollTop = 0;
+    }
+
+    function highlightCitation(paragraph, citationText) {
+      if (!citationText) return paragraph;
+      const idx = paragraph.indexOf(citationText);
+      if (idx === -1) return paragraph;
+      return paragraph.slice(0, idx)
+        + '<mark>' + paragraph.slice(idx, idx + citationText.length) + '</mark>'
+        + paragraph.slice(idx + citationText.length);
+    }
+
+    function esc(str) {
+      const el = document.createElement('span');
+      el.textContent = str;
+      return el.innerHTML;
+    }
+  </script>
+</body>
+</html>

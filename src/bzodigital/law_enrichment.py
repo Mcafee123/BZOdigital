@@ -61,8 +61,8 @@ REGEX_BGE = re.compile(
 )
 REGEX_BGER = re.compile(r"(\d+)([A-Z])_(\d+/\d+)")
 REGEX_HEADING_LAW_REFERENCE = re.compile(
-    rf"^(?P<heading>#{1,6}\s+)(?P<reference>(?P<marker>{CITATION_MARKER_PATTERN})\.?\s*"
-    rf"(?P<provision>{PROVISION_PATTERN}){CITATION_DETAIL_PATTERN})(?P<suffix>\s*)$",
+    rf"^(?P<heading>#{{1,6}}\s+)(?P<reference>(?P<marker>{CITATION_MARKER_PATTERN})\.?\s*"
+    rf"(?P<provision>{PROVISION_PATTERN}){CITATION_DETAIL_PATTERN})(?P<suffix>.*)$",
     re.MULTILINE | re.UNICODE,
 )
 
@@ -215,7 +215,7 @@ def build_custom_law_entry(custom_law: Mapping[str, Any]) -> Optional[LawEntry]:
         "refno_law": custom_law.get("refno", custom_law.get("refno_law")),
     }
 
-    return {
+    entry: LawEntry = {
         "abbreviation": abbreviation,
         "dynamic_prod_url": custom_law.get("base_url"),
         "dynamic_source_url": custom_law.get("source_url"),
@@ -224,6 +224,11 @@ def build_custom_law_entry(custom_law: Mapping[str, Any]) -> Optional[LawEntry]:
         "link_template": link_template,
         "scope": "custom",
     }
+
+    if custom_law.get("default_markers") is not None:
+        entry["default_markers"] = list(custom_law["default_markers"])
+
+    return entry
 
 def set_anchors(markdown: str) -> str:
     """Add stable HTML anchors to headings that consist of a law reference."""
@@ -242,6 +247,19 @@ def set_ancors(markdown: str) -> str:
 
 
 def build_heading_anchor(reference: str) -> str:
+    """Build a stable, predictable anchor from a law reference.
+
+    Extracts marker + provision to produce anchors like 'art-5', 'art-36a', '§-49'.
+    """
+    match = re.match(
+        rf"({CITATION_MARKER_PATTERN})\.?\s*({PROVISION_PATTERN})",
+        reference.strip(),
+        re.UNICODE,
+    )
+    if match:
+        marker = match.group(1).lower()
+        provision = match.group(2).lower()
+        return f"{marker}-{provision}"
     return re.sub(r"\s+", "-", reference.strip()).lower()
 
 def enrich_markdown(
@@ -406,6 +424,14 @@ def parse_law_reference(
 
     if not default_law or has_unsafe_trailing_unit(text, end_index):
         return None
+
+    # If the default law restricts which markers it applies to, check it.
+    # E.g. BZO uses "Art." only, so bare "§ 278" should not fall back to BZO.
+    allowed_markers = default_law.get("default_markers")
+    if allowed_markers is not None:
+        marker = first_chunk["marker"]
+        if marker not in allowed_markers:
+            return None
 
     return {
         "chunks": chunks,
