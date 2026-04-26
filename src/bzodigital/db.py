@@ -44,12 +44,49 @@ class SearchCache(SQLModel, table=True):
     last_searched: datetime = Field(default_factory=datetime.utcnow)
 
 
+class Label(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str = Field(unique=True, index=True)
+
+
+class PdfAnnotation(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    municipality_bfs_nr: int = Field(index=True)
+    pdf_url: str
+    pdf_title: str = ""
+    labels_json: str = "[]"
+    selected: bool = False
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+DEFAULT_LABELS = [
+    "Synopse",
+    "Bau- und Zonenordnung alt",
+    "Bau- und Zonenordnung neu",
+    "Einwendungsbericht gemäss § 7 PBG",
+    "Erläuterungsbericht gemäss Art. 47 RPV",
+    "Gemeindeversammlungsbeschluss",
+]
+
+
 # --- DB init ---
 
 
 def init_db():
-    """Create tables if they don't exist."""
+    """Create tables if they don't exist, seed default labels."""
     SQLModel.metadata.create_all(get_engine())
+    _seed_default_labels()
+
+
+def _seed_default_labels():
+    """Insert default labels if they don't exist yet."""
+    with get_session() as session:
+        existing = {l.name for l in session.exec(select(Label)).all()}
+        for name in DEFAULT_LABELS:
+            if name not in existing:
+                session.add(Label(name=name))
+        session.commit()
 
 
 def get_session():
@@ -151,3 +188,104 @@ def clear_search_cache():
         session.commit()
 
 
+# --- Label operations ---
+
+
+def get_labels() -> list[str]:
+    """Get all label names."""
+    with get_session() as session:
+        return [l.name for l in session.exec(select(Label)).all()]
+
+
+def add_label(name: str) -> str:
+    """Add a new label. Returns the name. Raises ValueError if duplicate."""
+    with get_session() as session:
+        existing = session.exec(select(Label).where(Label.name == name)).first()
+        if existing:
+            raise ValueError(f"Label '{name}' already exists.")
+        session.add(Label(name=name))
+        session.commit()
+    return name
+
+
+# --- Annotation operations ---
+
+
+def get_annotations(bfs_nr: int) -> list[dict]:
+    """Get all annotations for a municipality."""
+    with get_session() as session:
+        results = session.exec(
+            select(PdfAnnotation).where(PdfAnnotation.municipality_bfs_nr == bfs_nr)
+        ).all()
+        return [
+            {
+                "id": a.id,
+                "municipality_bfs_nr": a.municipality_bfs_nr,
+                "pdf_url": a.pdf_url,
+                "pdf_title": a.pdf_title,
+                "labels": json.loads(a.labels_json),
+                "selected": a.selected,
+                "created_at": a.created_at.isoformat(),
+                "updated_at": a.updated_at.isoformat(),
+            }
+            for a in results
+        ]
+
+
+def upsert_annotation(
+    bfs_nr: int, pdf_url: str, pdf_title: str, labels: list[str], selected: bool
+) -> dict:
+    """Create or update an annotation for a PDF. Keyed by (bfs_nr, pdf_url)."""
+    with get_session() as session:
+        existing = session.exec(
+            select(PdfAnnotation).where(
+                PdfAnnotation.municipality_bfs_nr == bfs_nr,
+                PdfAnnotation.pdf_url == pdf_url,
+            )
+        ).first()
+
+        now = datetime.utcnow()
+        if existing:
+            existing.pdf_title = pdf_title
+            existing.labels_json = json.dumps(labels)
+            existing.selected = selected
+            existing.updated_at = now
+            session.add(existing)
+            session.commit()
+            session.refresh(existing)
+            ann = existing
+        else:
+            ann = PdfAnnotation(
+                municipality_bfs_nr=bfs_nr,
+                pdf_url=pdf_url,
+                pdf_title=pdf_title,
+                labels_json=json.dumps(labels),
+                selected=selected,
+                created_at=now,
+                updated_at=now,
+            )
+            session.add(ann)
+            session.commit()
+            session.refresh(ann)
+
+        return {
+            "id": ann.id,
+            "municipality_bfs_nr": ann.municipality_bfs_nr,
+            "pdf_url": ann.pdf_url,
+            "pdf_title": ann.pdf_title,
+            "labels": json.loads(ann.labels_json),
+            "selected": ann.selected,
+            "created_at": ann.created_at.isoformat(),
+            "updated_at": ann.updated_at.isoformat(),
+        }
+
+
+def delete_annotation(annotation_id: int):
+    """Delete an annotation by ID."""
+    with get_session() as session:
+        ann = session.exec(
+            select(PdfAnnotation).where(PdfAnnotation.id == annotation_id)
+        ).first()
+        if ann:
+            session.delete(ann)
+            session.commit()

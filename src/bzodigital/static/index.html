@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BZO Digital</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f5f5f5;
+      color: #1a1a1a;
+      padding: 2rem;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    h1 { font-size: 1.5rem; margin-bottom: 1.5rem; }
+
+    .search-box {
+      position: relative;
+      margin-bottom: 1.5rem;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      font-size: 1rem;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    input[type="text"]:focus { border-color: #2563eb; }
+
+    .suggestions {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 0 0 8px 8px;
+      max-height: 280px;
+      overflow-y: auto;
+      z-index: 10;
+      display: none;
+    }
+
+    .suggestions.open { display: block; }
+
+    .suggestion {
+      padding: 0.6rem 1rem;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .suggestion:hover, .suggestion.active { background: #eef2ff; }
+    .suggestion .canton { color: #6b7280; font-size: 0.85rem; }
+
+    .status {
+      padding: 1rem 0;
+      color: #6b7280;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .status.error { color: #dc2626; }
+
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #ccc;
+      border-top-color: #2563eb;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .results { list-style: none; }
+
+    .result-item {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.75rem;
+      transition: border-color 0.15s;
+    }
+
+    .result-item.selected { border-color: #2563eb; background: #f8faff; }
+
+    .result-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .result-header input[type="checkbox"] {
+      margin-top: 0.2rem;
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .result-title {
+      font-weight: 500;
+      font-size: 0.95rem;
+      flex: 1;
+    }
+
+    .result-item a {
+      color: #2563eb;
+      text-decoration: none;
+      word-break: break-all;
+      font-size: 0.85rem;
+    }
+
+    .result-item a:hover { text-decoration: underline; }
+
+    .label-section {
+      margin-top: 0.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      align-items: center;
+    }
+
+    .label-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      border: 1px solid #d1d5db;
+      background: #f9fafb;
+      color: #374151;
+      transition: all 0.1s;
+    }
+
+    .label-tag.active {
+      background: #2563eb;
+      color: #fff;
+      border-color: #2563eb;
+    }
+
+    .label-tag:hover { border-color: #9ca3af; }
+
+    .label-tag.used-elsewhere {
+      opacity: 0.45;
+      font-style: italic;
+    }
+
+    .label-tag.used-elsewhere::after {
+      content: ' \2713';
+      font-size: 0.65rem;
+    }
+
+    .add-label-btn {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      border: 1px dashed #9ca3af;
+      background: transparent;
+      color: #6b7280;
+    }
+
+    .add-label-btn:hover { border-color: #2563eb; color: #2563eb; }
+
+    .add-label-input {
+      font-size: 0.75rem;
+      padding: 0.2rem 0.4rem;
+      border: 1px solid #2563eb;
+      border-radius: 4px;
+      outline: none;
+      width: 140px;
+    }
+
+    .save-indicator {
+      font-size: 0.7rem;
+      color: #16a34a;
+      margin-left: auto;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .save-indicator.show { opacity: 1; }
+  </style>
+</head>
+<body>
+  <h1>BZO Digital</h1>
+
+  <div id="seeding-banner" class="status" style="display:none">
+    <span class="spinner"></span>Initializing — downloading municipality data...
+  </div>
+
+  <div class="search-box">
+    <input type="text" id="search" placeholder="Gemeinde suchen..." autocomplete="off">
+    <div class="suggestions" id="suggestions"></div>
+  </div>
+
+  <div id="status" class="status"></div>
+  <ul id="results" class="results"></ul>
+
+  <script>
+    const searchInput = document.getElementById('search');
+    const suggestionsEl = document.getElementById('suggestions');
+    const statusEl = document.getElementById('status');
+    const resultsEl = document.getElementById('results');
+    const seedingBanner = document.getElementById('seeding-banner');
+
+    let allLabels = [];
+    let currentMuni = null;
+    let annotations = {};  // keyed by pdf_url
+
+    // Poll for readiness
+    (async function checkReady() {
+      try {
+        const resp = await fetch('/api/status');
+        const data = await resp.json();
+        if (data.seeding) {
+          seedingBanner.style.display = 'flex';
+          searchInput.disabled = true;
+          setTimeout(checkReady, 2000);
+        } else {
+          seedingBanner.style.display = 'none';
+          searchInput.disabled = false;
+          searchInput.focus();
+          loadLabels();
+        }
+      } catch {
+        setTimeout(checkReady, 2000);
+      }
+    })();
+
+    async function loadLabels() {
+      try {
+        const resp = await fetch('/api/labels');
+        allLabels = await resp.json();
+      } catch {}
+    }
+
+    let debounceTimer = null;
+    let activeIndex = -1;
+    let currentSuggestions = [];
+
+    searchInput.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      const q = searchInput.value.trim();
+      if (q.length < 2) { closeSuggestions(); return; }
+      debounceTimer = setTimeout(() => fetchSuggestions(q), 200);
+    });
+
+    searchInput.addEventListener('keydown', (e) => {
+      if (!suggestionsEl.classList.contains('open')) return;
+      const items = suggestionsEl.querySelectorAll('.suggestion');
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        activeIndex = Math.min(activeIndex + 1, items.length - 1);
+        updateActive(items);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        activeIndex = Math.max(activeIndex - 1, 0);
+        updateActive(items);
+      } else if (e.key === 'Enter' && activeIndex >= 0) {
+        e.preventDefault();
+        selectMunicipality(currentSuggestions[activeIndex]);
+      } else if (e.key === 'Escape') {
+        closeSuggestions();
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.search-box')) closeSuggestions();
+    });
+
+    function updateActive(items) {
+      items.forEach((el, i) => el.classList.toggle('active', i === activeIndex));
+    }
+
+    function closeSuggestions() {
+      suggestionsEl.classList.remove('open');
+      activeIndex = -1;
+      currentSuggestions = [];
+    }
+
+    async function fetchSuggestions(q) {
+      try {
+        const resp = await fetch(`/api/municipalities?q=${encodeURIComponent(q)}&limit=8`);
+        const data = await resp.json();
+        currentSuggestions = data;
+        activeIndex = -1;
+
+        if (data.length === 0) { closeSuggestions(); return; }
+
+        suggestionsEl.innerHTML = data.map((m, i) =>
+          `<div class="suggestion" data-index="${i}">
+            <span>${m.name}</span>
+            <span class="canton">${m.canton}</span>
+          </div>`
+        ).join('');
+
+        suggestionsEl.querySelectorAll('.suggestion').forEach(el => {
+          el.addEventListener('click', () => {
+            selectMunicipality(currentSuggestions[parseInt(el.dataset.index)]);
+          });
+        });
+
+        suggestionsEl.classList.add('open');
+      } catch { closeSuggestions(); }
+    }
+
+    async function selectMunicipality(muni) {
+      searchInput.value = muni.name;
+      closeSuggestions();
+      resultsEl.innerHTML = '';
+      currentMuni = muni;
+      annotations = {};
+      statusEl.className = 'status';
+      statusEl.innerHTML = `<span class="spinner"></span>Searching for BZO documents in ${muni.name} (${muni.canton})...`;
+
+      try {
+        // Load existing annotations in parallel with search
+        const [bzoResp, annResp] = await Promise.all([
+          fetch(`/api/bzo/${encodeURIComponent(muni.name)}?pdfs=true`),
+          fetch(`/api/bzo/${encodeURIComponent(muni.name)}/annotations`),
+        ]);
+
+        if (!bzoResp.ok) {
+          const err = await bzoResp.json();
+          statusEl.className = 'status error';
+          statusEl.textContent = err.detail || 'Search failed.';
+          return;
+        }
+
+        const data = await bzoResp.json();
+        const anns = annResp.ok ? await annResp.json() : [];
+
+        // Index annotations by url
+        for (const a of anns) {
+          annotations[a.pdf_url] = a;
+        }
+
+        const method = data.search_method;
+        const cached = data.cached ? ' (cached)' : '';
+
+        if (!data.pdfs || data.pdfs.length === 0) {
+          statusEl.textContent = `No BZO documents found for ${data.municipality}. [${method}${cached}]`;
+          return;
+        }
+
+        statusEl.textContent = `${data.pdfs.length} BZO document(s) for ${data.municipality} (${data.canton}). [${method}${cached}]`;
+
+        resultsEl.innerHTML = data.pdfs.map((pdf, idx) => {
+          const filename = decodeURIComponent(pdf.url.split('/').pop().split('?')[0]);
+          const title = pdf.title || filename;
+          const ann = annotations[pdf.url];
+          const isSelected = ann ? ann.selected : false;
+          const activeLabels = ann ? ann.labels : [];
+
+          return `<li class="result-item ${isSelected ? 'selected' : ''}" data-idx="${idx}" data-url="${encodeAttr(pdf.url)}" data-title="${encodeAttr(title)}">
+            <div class="result-header">
+              <input type="checkbox" class="select-cb" ${isSelected ? 'checked' : ''} title="Select for processing">
+              <div>
+                <div class="result-title">${esc(title)}</div>
+                <a href="${pdf.url}" target="_blank" rel="noopener">${esc(pdf.url)}</a>
+              </div>
+              <span class="save-indicator">saved</span>
+            </div>
+            <div class="label-section">
+              ${allLabels.map(l =>
+                `<span class="label-tag ${activeLabels.includes(l) ? 'active' : ''}" data-label="${encodeAttr(l)}">${esc(l)}</span>`
+              ).join('')}
+              <button class="add-label-btn" title="Add new label">+ label</button>
+            </div>
+          </li>`;
+        }).join('');
+
+        // Wire up events
+        resultsEl.querySelectorAll('.result-item').forEach(item => {
+          const url = decodeAttr(item.dataset.url);
+          const title = decodeAttr(item.dataset.title);
+
+          item.querySelector('.select-cb').addEventListener('change', (e) => {
+            item.classList.toggle('selected', e.target.checked);
+            saveAnnotation(item, url, title);
+          });
+
+          item.querySelectorAll('.label-tag').forEach(tag => {
+            tag.addEventListener('click', () => {
+              tag.classList.toggle('active');
+              // Auto-select when any label is assigned
+              const hasLabels = item.querySelectorAll('.label-tag.active').length > 0;
+              if (hasLabels) {
+                const cb = item.querySelector('.select-cb');
+                if (!cb.checked) {
+                  cb.checked = true;
+                  item.classList.add('selected');
+                }
+              }
+              saveAnnotation(item, url, title);
+              refreshUsedLabels();
+            });
+          });
+
+          item.querySelector('.add-label-btn').addEventListener('click', (e) => {
+            const btn = e.target;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'add-label-input';
+            input.placeholder = 'Label name...';
+            btn.replaceWith(input);
+            input.focus();
+
+            async function commit() {
+              const name = input.value.trim();
+              if (!name) { input.replaceWith(btn); return; }
+
+              await fetch('/api/labels', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({name}),
+              });
+
+              await loadLabels();
+              // Add tag to this item
+              const tag = document.createElement('span');
+              tag.className = 'label-tag active';
+              tag.dataset.label = name;
+              tag.textContent = name;
+              tag.addEventListener('click', () => {
+                tag.classList.toggle('active');
+                saveAnnotation(item, url, title);
+              });
+
+              input.replaceWith(tag);
+              // Re-add the button
+              const newBtn = document.createElement('button');
+              newBtn.className = 'add-label-btn';
+              newBtn.title = 'Add new label';
+              newBtn.textContent = '+ label';
+              tag.after(newBtn);
+              newBtn.addEventListener('click', item.querySelector('.add-label-btn')?.onclick || (() => {}));
+
+              // Also add to all other items that don't have it
+              resultsEl.querySelectorAll('.result-item').forEach(otherItem => {
+                if (otherItem === item) return;
+                const section = otherItem.querySelector('.label-section');
+                if ([...section.querySelectorAll('.label-tag')].some(t => t.dataset.label === name)) return;
+                const otherTag = document.createElement('span');
+                otherTag.className = 'label-tag';
+                otherTag.dataset.label = name;
+                otherTag.textContent = name;
+                const otherUrl = decodeAttr(otherItem.dataset.url);
+                const otherTitle = decodeAttr(otherItem.dataset.title);
+                otherTag.addEventListener('click', () => {
+                  otherTag.classList.toggle('active');
+                  saveAnnotation(otherItem, otherUrl, otherTitle);
+                });
+                section.querySelector('.add-label-btn').before(otherTag);
+              });
+
+              // Auto-select when labeling
+              const cb = item.querySelector('.select-cb');
+              if (!cb.checked) {
+                cb.checked = true;
+                item.classList.add('selected');
+              }
+              saveAnnotation(item, url, title);
+              refreshUsedLabels();
+            }
+
+            input.addEventListener('keydown', (e) => {
+              if (e.key === 'Enter') commit();
+              if (e.key === 'Escape') input.replaceWith(btn);
+            });
+            input.addEventListener('blur', commit);
+          });
+        });
+
+        refreshUsedLabels();
+
+      } catch (err) {
+        statusEl.className = 'status error';
+        statusEl.textContent = 'Network error. Is the API running?';
+      }
+    }
+
+    function refreshUsedLabels() {
+      // Build set of labels that are assigned somewhere
+      const assignedLabels = new Set();
+      resultsEl.querySelectorAll('.label-tag.active').forEach(tag => {
+        assignedLabels.add(tag.dataset.label);
+      });
+
+      // For each inactive tag, mark as used-elsewhere if that label is assigned on any other item
+      resultsEl.querySelectorAll('.result-item').forEach(item => {
+        item.querySelectorAll('.label-tag').forEach(tag => {
+          if (tag.classList.contains('active')) {
+            tag.classList.remove('used-elsewhere');
+          } else {
+            tag.classList.toggle('used-elsewhere', assignedLabels.has(tag.dataset.label));
+          }
+        });
+      });
+    }
+
+    async function saveAnnotation(item, pdfUrl, pdfTitle) {
+      if (!currentMuni) return;
+
+      const selected = item.querySelector('.select-cb').checked;
+      const labels = [...item.querySelectorAll('.label-tag.active')].map(t => t.dataset.label);
+
+      const indicator = item.querySelector('.save-indicator');
+
+      try {
+        const resp = await fetch(`/api/bzo/${encodeURIComponent(currentMuni.name)}/annotations`, {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            pdf_url: pdfUrl,
+            pdf_title: pdfTitle,
+            labels,
+            selected,
+          }),
+        });
+
+        if (resp.ok) {
+          const ann = await resp.json();
+          annotations[pdfUrl] = ann;
+          indicator.classList.add('show');
+          setTimeout(() => indicator.classList.remove('show'), 1500);
+        }
+      } catch {}
+    }
+
+    function esc(s) {
+      const d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    function encodeAttr(s) {
+      return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+    }
+
+    function decodeAttr(s) {
+      return s.replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+    }
+  </script>
+</body>
+</html>

@@ -3,17 +3,25 @@
 import asyncio
 from datetime import datetime
 from hashlib import sha256
+from pathlib import Path
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Query
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from bzodigital.bfs import Municipality, fuzzy_find_municipality, load_bfs
+from bzodigital.bfs import Municipality, fuzzy_find_municipality, load_bfs, update_bfs_register
 from bzodigital.cantons import find_url, get_canton
 from bzodigital.db import (
+    add_label,
     clear_search_cache,
+    delete_annotation,
+    get_annotations,
     get_cached_search,
+    get_labels,
     init_db,
     save_search_cache,
+    upsert_annotation,
 )
 from bzodigital.profiles import DEFAULT_PROFILE, PROFILES
 from bzodigital.search import (
@@ -29,6 +37,14 @@ app = FastAPI(
     title="BZO Digital API",
     description="REST API for finding Bau- und Zonenordnungen of Swiss municipalities.",
 )
+
+STATIC_DIR = Path(__file__).parent / "static"
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+
+@app.get("/")
+async def index():
+    return FileResponse(STATIC_DIR / "index.html")
 
 
 # --- Models ---
@@ -66,12 +82,67 @@ class BatchRequest(BaseModel):
     municipalities: list[str]
 
 
+class LabelCreate(BaseModel):
+    name: str
+
+
+class AnnotationRequest(BaseModel):
+    pdf_url: str
+    pdf_title: str = ""
+    labels: list[str] = []
+    selected: bool = False
+
+
+class AnnotationResponse(BaseModel):
+    id: int
+    municipality_bfs_nr: int
+    pdf_url: str
+    pdf_title: str
+    labels: list[str]
+    selected: bool
+    created_at: str
+    updated_at: str
+
+
+class ProcessedPdfResponse(BaseModel):
+    municipality: str
+    canton: str
+    bfs_nr: int
+    pdfs: list[AnnotationResponse]
+    has_annotations: bool
+
+
 # --- Startup ---
+
+_seeding = False
 
 
 @app.on_event("startup")
-def on_startup():
+async def on_startup():
     init_db()
+    if not load_bfs():
+        asyncio.create_task(_seed_in_background())
+
+
+async def _seed_in_background():
+    global _seeding
+    _seeding = True
+    try:
+        print("[startup] BFS register empty, downloading...")
+        await update_bfs_register()
+        print("[startup] BFS register loaded. Refreshing ZH canton mapping...")
+        await get_canton("zh", force_refresh=True)
+        print("[startup] Seeding complete.")
+    except Exception as e:
+        print(f"[startup] Seeding failed: {e}")
+    finally:
+        _seeding = False
+
+
+@app.get("/api/status")
+def get_status():
+    """Check if the API is ready (seeding may be in progress)."""
+    return {"ready": not _seeding, "seeding": _seeding}
 
 
 # --- Endpoints ---
@@ -154,7 +225,125 @@ def list_municipalities(
     return [MunicipalityResponse(bfs_nr=m.bfs_nr, name=m.name, canton=m.canton) for m in municipalities[:limit]]
 
 
+# --- Labels ---
+
+
+@app.get("/api/labels", response_model=list[str])
+def list_labels():
+    """List all available labels."""
+    return get_labels()
+
+
+@app.post("/api/labels")
+def create_label(body: LabelCreate):
+    """Create a new label."""
+    try:
+        name = add_label(body.name.strip())
+        return {"name": name}
+    except ValueError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+
+
+# --- Annotations ---
+
+
+@app.get("/api/bzo/{municipality_name}/annotations", response_model=list[AnnotationResponse])
+def get_municipality_annotations(municipality_name: str):
+    """Get all PDF annotations for a municipality."""
+    muni = _resolve_municipality(municipality_name)
+    return get_annotations(muni.bfs_nr)
+
+
+@app.put("/api/bzo/{municipality_name}/annotations", response_model=AnnotationResponse)
+def put_annotation(municipality_name: str, body: AnnotationRequest):
+    """Create or update a PDF annotation (keyed by municipality + pdf_url)."""
+    muni = _resolve_municipality(municipality_name)
+    return upsert_annotation(
+        bfs_nr=muni.bfs_nr,
+        pdf_url=body.pdf_url,
+        pdf_title=body.pdf_title,
+        labels=body.labels,
+        selected=body.selected,
+    )
+
+
+@app.delete("/api/bzo/{municipality_name}/annotations/{annotation_id}")
+def remove_annotation(municipality_name: str, annotation_id: int):
+    """Delete an annotation."""
+    _resolve_municipality(municipality_name)  # validate name
+    delete_annotation(annotation_id)
+    return {"message": "Deleted."}
+
+
+@app.get("/api/bzo/{municipality_name}/processed", response_model=ProcessedPdfResponse)
+async def get_processed(municipality_name: str):
+    """Get labeled/selected PDFs for a municipality. Returns all PDFs if none are annotated."""
+    muni = _resolve_municipality(municipality_name)
+    annotations = get_annotations(muni.bfs_nr)
+
+    has_annotations = len(annotations) > 0
+    if has_annotations:
+        # Return only selected ones
+        selected = [a for a in annotations if a["selected"]]
+        return ProcessedPdfResponse(
+            municipality=muni.name,
+            canton=muni.canton,
+            bfs_nr=muni.bfs_nr,
+            pdfs=[AnnotationResponse(**a) for a in selected],
+            has_annotations=True,
+        )
+
+    # No annotations — return all PDFs from search results
+    profile = PROFILES[DEFAULT_PROFILE]
+    cache_key = _make_cache_key(muni, DEFAULT_PROFILE)
+    cached_results = get_cached_search(cache_key)
+
+    all_pdfs: list[AnnotationResponse] = []
+    if cached_results:
+        from bzodigital.search import extract_pdfs, filter_pdfs_by_metadata
+        seen: set[str] = set()
+        raw_pdfs: list[dict] = []
+        tasks = [extract_pdfs(r["url"]) for r in cached_results]
+        results_pdfs = await asyncio.gather(*tasks, return_exceptions=True)
+        for page_pdfs in results_pdfs:
+            if isinstance(page_pdfs, Exception):
+                continue
+            for pdf in page_pdfs:
+                if pdf["url"] not in seen:
+                    seen.add(pdf["url"])
+                    raw_pdfs.append(pdf)
+        matched, _ = filter_pdfs_by_metadata(raw_pdfs, profile)
+        now = datetime.utcnow().isoformat()
+        all_pdfs = [
+            AnnotationResponse(
+                id=0, municipality_bfs_nr=muni.bfs_nr,
+                pdf_url=p["url"], pdf_title=p.get("title", ""),
+                labels=[], selected=False, created_at=now, updated_at=now,
+            )
+            for p in matched
+        ]
+
+    return ProcessedPdfResponse(
+        municipality=muni.name,
+        canton=muni.canton,
+        bfs_nr=muni.bfs_nr,
+        pdfs=all_pdfs,
+        has_annotations=False,
+    )
+
+
 # --- Helpers ---
+
+
+def _resolve_municipality(name: str) -> Municipality:
+    """Fuzzy-resolve a municipality name, raise 404 if not found."""
+    municipalities = load_bfs()
+    if not municipalities:
+        raise HTTPException(status_code=500, detail="BFS register not loaded.")
+    matches = fuzzy_find_municipality(name, municipalities, limit=1)
+    if not matches or matches[0][1] < 60:
+        raise HTTPException(status_code=404, detail=f"Municipality '{name}' not found.")
+    return matches[0][0]
 
 
 def _make_cache_key(muni: Municipality, profile: str) -> str:
