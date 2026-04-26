@@ -242,6 +242,56 @@
       border-color: #9ca3af;
       background: #f9fafb;
     }
+
+    .beaver-score {
+      position: fixed;
+      right: 1rem;
+      bottom: 3.9rem;
+      z-index: 1001;
+      padding: 0.45rem 0.7rem;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      background: #fff;
+      color: #374151;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    .beaver-log {
+      position: fixed;
+      z-index: 999;
+      width: 42px;
+      height: 42px;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      font-size: 28px;
+      line-height: 42px;
+      text-align: center;
+      transform: translate(-50%, -50%) rotate(var(--log-rotation, 0deg));
+      transition: opacity 0.2s, transform 0.2s;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25));
+    }
+
+    .beaver-log:hover {
+      transform: translate(-50%, -50%) scale(1.15) rotate(var(--log-rotation, 0deg));
+    }
+
+    .beaver-log.found {
+      transform: translate(-50%, -50%) scale(1.2) rotate(var(--log-rotation, 0deg));
+    }
+
+    .beaver-log.hidden {
+      display: none;
+    }
+
+    .beaver-log.eaten {
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, -50%) scale(0.35) rotate(var(--log-rotation, 0deg));
+    }
+
     /* Processing */
     .process-bar {
       display: flex;
@@ -473,6 +523,8 @@
   <div id="process-status" class="process-status" style="display:none"></div>
 
   <ul id="results" class="results"></ul>
+  <div id="beaver-score" class="beaver-score">Dam snacks: 0</div>
+  <button type="button" id="beaver-log" class="beaver-log" aria-label="Feed the beavers">🪵</button>
   <button type="button" id="beaver-toggle" class="beaver-toggle">Please, no Beavers</button>
 
   <div class="modal-overlay" id="preview-modal">
@@ -1228,6 +1280,7 @@
       const BEAVER_HALF_SIZE = 18;
       const OFF_LABEL = 'Bring back the Beavers!';
       const ON_LABEL = 'Please, no Beavers';
+      const SCORE_LABELS = ['Dam snacks', 'Timber treats', 'Logs munched', 'Wood wins'];
 
       const target = {
         x: window.innerWidth / 2,
@@ -1236,16 +1289,37 @@
 
       const beavers = [];
       const toggleButton = document.getElementById('beaver-toggle');
+      const logButton = document.getElementById('beaver-log');
+      const scoreEl = document.getElementById('beaver-score');
       let enabled = true;
+      let feeding = false;
+      let score = 0;
+      let logTimer = null;
 
       window.addEventListener('pointermove', (event) => {
+        if (feeding) return;
         target.x = event.clientX;
         target.y = event.clientY;
       }, { passive: true });
 
       window.addEventListener('click', (event) => {
-        if (!enabled || event.target.closest('#beaver-toggle')) return;
+        if (!enabled || event.target.closest('#beaver-toggle, #beaver-log')) return;
         spawn(event.clientX, event.clientY);
+      });
+
+      logButton.addEventListener('click', (event) => {
+        event.stopPropagation();
+        if (!enabled || feeding) return;
+
+        const rect = logButton.getBoundingClientRect();
+        target.x = rect.left + rect.width / 2;
+        target.y = rect.top + rect.height / 2;
+        feeding = true;
+        logButton.classList.add('found');
+
+        logTimer = window.setTimeout(() => {
+          finishSnack();
+        }, 2500);
       });
 
       toggleButton.addEventListener('click', (event) => {
@@ -1255,12 +1329,20 @@
 
         if (enabled) {
           for (let i = 0; i < COUNT; i++) spawn();
+          placeLog();
           return;
         }
 
+        window.clearTimeout(logTimer);
+        feeding = false;
+        logButton.classList.add('hidden');
         while (beavers.length > 0) {
           beavers.pop().el.remove();
         }
+      });
+
+      window.addEventListener('resize', () => {
+        if (enabled && !feeding) placeLog();
       });
 
       function spawn(x, y) {
@@ -1282,6 +1364,45 @@
           maxSpeed: MAX_SPEED * (0.45 + Math.random() * 0.6),
           scale: 0.6 + Math.random() * 0.8,
         });
+      }
+
+      function finishSnack() {
+        if (!feeding) return;
+
+        feeding = false;
+        score++;
+        updateScore();
+        window.clearTimeout(logTimer);
+        logButton.classList.remove('found');
+        logButton.classList.add('eaten');
+
+        logTimer = window.setTimeout(() => {
+          if (enabled) placeLog();
+        }, 650);
+      }
+
+      function placeLog() {
+        const margin = 52;
+        const maxX = Math.max(margin, window.innerWidth - margin);
+        const maxY = Math.max(margin, window.innerHeight - margin);
+        let x = window.innerWidth / 2;
+        let y = window.innerHeight / 2;
+
+        for (let attempt = 0; attempt < 24; attempt++) {
+          x = margin + Math.random() * Math.max(1, maxX - margin);
+          y = margin + Math.random() * Math.max(1, maxY - margin);
+          const overlapsControls = x > window.innerWidth - 260 && y > window.innerHeight - 170;
+          if (!overlapsControls) break;
+        }
+
+        logButton.style.left = `${x}px`;
+        logButton.style.top = `${y}px`;
+        logButton.style.setProperty('--log-rotation', `${Math.round(Math.random() * 80 - 40)}deg`);
+        logButton.classList.remove('hidden', 'found', 'eaten');
+      }
+
+      function updateScore() {
+        scoreEl.textContent = `${SCORE_LABELS[score % SCORE_LABELS.length]}: ${score}`;
       }
 
       function limit(vx, vy, max) {
@@ -1340,12 +1461,17 @@
           beaver.el.style.transform =
             `translate(${beaver.x - BEAVER_HALF_SIZE}px, ${beaver.y - BEAVER_HALF_SIZE}px) ` +
             `rotate(${beaver.angle}rad) scale(${beaver.scale})`;
+
+          if (feeding && Math.hypot(target.x - beaver.x, target.y - beaver.y) < 28) {
+            finishSnack();
+          }
         }
 
         window.requestAnimationFrame(tick);
       }
 
       for (let i = 0; i < COUNT; i++) spawn();
+      placeLog();
       tick();
     })();
   </script>

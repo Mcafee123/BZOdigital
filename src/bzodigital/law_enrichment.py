@@ -160,14 +160,81 @@ def get_law_abbreviation_aliases(abbreviation: str) -> List[str]:
     return aliases
 
 
+def add_custom_laws(
+    laws_by_abbreviation: Dict[str, LawEntry],
+    custom_laws: Optional[Any],
+) -> None:
+    """Add call-time laws, overriding built-in abbreviations when they collide."""
+    for custom_law in iter_custom_laws(custom_laws):
+        law_entry = build_custom_law_entry(custom_law)
+
+        if not law_entry:
+            continue
+
+        for abbreviation in get_law_abbreviation_aliases(law_entry["abbreviation"]):
+            laws_by_abbreviation[abbreviation] = law_entry
+
+
+def iter_custom_laws(custom_laws: Optional[Any]) -> Iterable[Mapping[str, Any]]:
+    if custom_laws is None:
+        return []
+
+    if isinstance(custom_laws, Mapping):
+        nested_laws = custom_laws.get("custom-laws", custom_laws.get("custom_laws"))
+
+        if nested_laws is not None:
+            return iter_custom_laws(nested_laws)
+
+        return [custom_laws]
+
+    return [custom_law for custom_law in custom_laws if isinstance(custom_law, Mapping)]
+
+
+def build_custom_law_entry(custom_law: Mapping[str, Any]) -> Optional[LawEntry]:
+    abbreviation = normalize_law_abbreviation(
+        custom_law.get("abbreviation", custom_law.get("abbrevation"))
+    )
+    link_template = str(
+        custom_law.get("link_template", custom_law.get("url_template", custom_law.get("link", "")))
+        or ""
+    ).strip()
+
+    if not abbreviation or not link_template:
+        return None
+
+    law = {
+        "custom": True,
+        "law_title_abbreviation": abbreviation,
+        "law_title_full": custom_law.get("title", custom_law.get("name", abbreviation)),
+        "law_title_short": custom_law.get("short_title", ""),
+        "refno_law": custom_law.get("refno", custom_law.get("refno_law")),
+    }
+
+    return {
+        "abbreviation": abbreviation,
+        "dynamic_prod_url": custom_law.get("base_url"),
+        "dynamic_source_url": custom_law.get("source_url"),
+        "language": custom_law.get("language"),
+        "law": law,
+        "link_template": link_template,
+        "scope": "custom",
+    }
+
+
 def enrich_markdown(
     text: str,
     default_law: Optional[str | LawEntry] = None,
+    custom_laws: Optional[Any] = None,
     laws_by_abbreviation: Optional[Mapping[str, LawEntry]] = None,
     laws_path: Optional[Path | str] = None,
 ) -> Dict[str, Any]:
-    """Return enriched Markdown plus rule-based citation metadata."""
-    laws = get_laws_by_abbreviation(laws_by_abbreviation, laws_path)
+    """Return enriched Markdown plus rule-based citation metadata.
+
+    Custom laws can be supplied as a list or as {"custom-laws": [...]}.
+    Each entry needs an "abbrevation" or "abbreviation" and a templated
+    "link", "link_template", or "url_template" value.
+    """
+    laws = get_laws_by_abbreviation(laws_by_abbreviation, laws_path, custom_laws)
     default_law_entry = resolve_default_law(default_law, laws)
     law_result = enrich_law_references(text, default_law_entry, laws)
     court_citations = collect_court_citations(text)
@@ -206,12 +273,16 @@ def enrich_markdown(
 def get_laws_by_abbreviation(
     laws_by_abbreviation: Optional[Mapping[str, LawEntry]],
     laws_path: Optional[Path | str],
+    custom_laws: Optional[Any] = None,
 ) -> Mapping[str, LawEntry]:
     if laws_by_abbreviation is not None:
-        return laws_by_abbreviation
+        laws = dict(laws_by_abbreviation)
+    else:
+        path = str(Path(laws_path)) if laws_path is not None else str(DEFAULT_LAWS_PATH)
+        laws = dict(load_official_laws_by_abbreviation(path))
 
-    path = str(Path(laws_path)) if laws_path is not None else str(DEFAULT_LAWS_PATH)
-    return load_official_laws_by_abbreviation(path)
+    add_custom_laws(laws, custom_laws)
+    return laws
 
 
 def resolve_default_law(
@@ -523,6 +594,7 @@ def build_law_metadata(law_entry: Optional[LawEntry]) -> Dict[str, Any]:
             "law_dynamic_prod_url": None,
             "law_dynamic_source_url": None,
             "law_language": None,
+            "law_link_template": None,
             "law_refno": None,
             "law_scope": None,
             "law_title_abbreviation": None,
@@ -535,6 +607,7 @@ def build_law_metadata(law_entry: Optional[LawEntry]) -> Dict[str, Any]:
         "law_dynamic_prod_url": law_entry.get("dynamic_prod_url"),
         "law_dynamic_source_url": law_entry.get("dynamic_source_url"),
         "law_language": law_entry.get("language"),
+        "law_link_template": law_entry.get("link_template"),
         "law_refno": law.get("refno_law"),
         "law_scope": law_entry.get("scope"),
         "law_title_abbreviation": law_entry.get("abbreviation"),
@@ -558,6 +631,9 @@ def get_localized_law_value(value: Any, preferred_language: Optional[str]) -> st
 
 
 def build_provision_url(law: LawEntry, provision: str) -> str:
+    if law["scope"] == "custom":
+        return build_custom_provision_url(law, provision)
+
     if law["scope"] == "ch":
         return build_fedlex_provision_url(law, provision)
 
@@ -570,6 +646,44 @@ def build_odat_provision_url(law: LawEntry, provision: str) -> str:
 
 def build_fedlex_provision_url(law: LawEntry, provision: str) -> str:
     return f"{law['dynamic_source_url']}#art_{quote(provision.lower(), safe='')}"
+
+
+def build_custom_provision_url(law: LawEntry, provision: str) -> str:
+    return render_link_template(law["link_template"], law, provision)
+
+
+def render_link_template(template: str, law: LawEntry, provision: str) -> str:
+    context = build_link_template_context(law, provision)
+
+    try:
+        return template.format_map(DefaultFormatContext(context))
+    except (KeyError, ValueError):
+        return template
+
+
+def build_link_template_context(law: LawEntry, provision: str) -> Dict[str, Any]:
+    abbreviation = law.get("abbreviation", "")
+    refno = law.get("law", {}).get("refno_law") or ""
+    provision_lower = provision.lower()
+
+    return {
+        "abbreviation": abbreviation,
+        "abbrevation": abbreviation,
+        "article": provision,
+        "article_lower": provision_lower,
+        "article_urlencoded": quote(provision, safe=""),
+        "law_abbreviation": abbreviation,
+        "law_refno": refno,
+        "provision": provision,
+        "provision_lower": provision_lower,
+        "provision_urlencoded": quote(provision, safe=""),
+        "refno": refno,
+    }
+
+
+class DefaultFormatContext(dict):
+    def __missing__(self, key: str) -> str:
+        return "{" + key + "}"
 
 
 def collect_court_citations(text: str) -> List[Citation]:
