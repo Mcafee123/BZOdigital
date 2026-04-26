@@ -1,10 +1,10 @@
 output "container_app_id" {
-  value = azurerm_container_app.main.id
+  value = module.container_app.cfg.name
 }
 
 output "container_app_fqdn" {
-  value       = try(azurerm_container_app.main.ingress[0].fqdn, null)
-  description = "Public ingress FQDN of the Container App."
+  value       = module.container_app.cfg.fqdn
+  description = "Default Azure Container App ingress FQDN."
 }
 
 output "identity_principal_id" {
@@ -12,8 +12,8 @@ output "identity_principal_id" {
 }
 
 output "custom_domain_verification_id" {
-  value       = azurerm_container_app.main.custom_domain_verification_id
-  description = "Use this when binding the custom domain to the Container App as the asuid TXT record value (the cloudflare module already does this when custom_domain is set)."
+  value       = module.container_app.cfg.custom_domain_verification_id
+  description = "Used by the cloudflare module as the asuid TXT record value."
 }
 
 output "custom_domain_fqdn" {

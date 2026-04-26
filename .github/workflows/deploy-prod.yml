@@ -96,6 +96,7 @@ jobs:
           terraform plan -input=false -out=tfplan \
             -var "resource_group_name=${{ secrets.TF_RESOURCE_GROUP }}" \
             -var "container_app_environment_id=${{ secrets.TF_CONTAINER_APP_ENV_ID }}" \
+            -var "keyvault_id=${{ secrets.KEYVAULT_ID }}" \
             -var "acr_login_server=${{ secrets.ACR_LOGIN_SERVER }}" \
             -var "acr_id=${{ secrets.TF_ACR_ID }}" \
             -var "image_name=${{ needs.build-and-push.outputs.image-ref }}" \

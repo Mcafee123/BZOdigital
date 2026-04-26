@@ -14,6 +14,11 @@ variable "container_app_environment_id" {
   description = "Resource ID of an existing Azure Container Apps environment."
 }
 
+variable "keyvault_id" {
+  type        = string
+  description = "Resource ID of the Key Vault used by the shared Container App module."
+}
+
 variable "acr_login_server" {
   type        = string
   description = "Container registry login server (e.g. example.azurecr.io)."

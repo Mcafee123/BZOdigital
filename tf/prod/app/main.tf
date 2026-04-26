@@ -4,6 +4,7 @@ module "main" {
   app_name                       = var.app_name
   resource_group_name            = var.resource_group_name
   container_app_environment_id   = var.container_app_environment_id
+  keyvault_id                    = var.keyvault_id
   acr_login_server               = var.acr_login_server
   acr_id                         = var.acr_id
   image_name                     = var.image_name

@@ -119,6 +119,7 @@ Production deploys run via `.github/workflows/deploy-prod.yml` on push to `main`
    | `TF_RESOURCE_GROUP` | RG that will hold the Container App |
    | `TF_CONTAINER_APP_ENV_ID` | Resource ID of the Container Apps environment |
    | `TF_ACR_ID` | Resource ID of the registry |
+   | `KEYVAULT_ID` | Resource ID of the Key Vault (the shared Container App module writes `custom_domain_verification_id` here) |
    | `STORAGE_ACCOUNT_NAME` | Name of the storage account hosting the file share |
    | `STORAGE_ACCOUNT_RESOURCE_GROUP` | RG of that storage account |
    | `STORAGE_ACCOUNT_KEY` | Storage account key (used by `upload-data.yml` for SMB upload) |
