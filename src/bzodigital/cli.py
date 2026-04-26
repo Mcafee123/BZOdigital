@@ -48,7 +48,7 @@ def main():
     # Serve command
     serve = sub.add_parser("serve", help="Start the REST API server")
     serve.add_argument("--host", default="0.0.0.0", help="Host to bind to")
-    serve.add_argument("--port", type=int, default=8000, help="Port to bind to")
+    serve.add_argument("--port", type=int, default=7100, help="Port to bind to")
 
     args = parser.parse_args()
 
