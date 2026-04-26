@@ -19,14 +19,6 @@ locals {
   has_custom_domain = var.custom_domain != null && var.custom_domain != ""
 }
 
-# acr_config from platform state has {name, rg_name, identity_id, ...} but no
-# `id`. Look up the ACR by name+rg to get its resource ID for the role
-# assignment scope.
-data "azurerm_container_registry" "acr" {
-  name                = local.acr_config.name
-  resource_group_name = local.acr_config.rg_name
-}
-
 # Cloudflare credentials (read from platform KV; only fetched when custom domain is on).
 data "azurerm_key_vault_secret" "cloudflare_api_token" {
   count        = local.has_custom_domain ? 1 : 0
@@ -64,18 +56,6 @@ resource "azurerm_storage_share" "data" {
   quota              = 5
 }
 
-resource "azurerm_user_assigned_identity" "app" {
-  name                = "${var.basics.base_name}-id"
-  resource_group_name = azurerm_resource_group.app.name
-  location            = azurerm_resource_group.app.location
-}
-
-resource "azurerm_role_assignment" "acr_pull" {
-  scope                = data.azurerm_container_registry.acr.id
-  role_definition_name = "AcrPull"
-  principal_id         = azurerm_user_assigned_identity.app.principal_id
-}
-
 resource "azurerm_container_app_environment_storage" "data" {
   name                         = "${var.basics.base_name}-data"
   container_app_environment_id = local.cae_config.id
@@ -98,13 +78,13 @@ module "container_app" {
   identity_config = {
     type = "UserAssigned"
     user_assigned_identities = {
-      acr = azurerm_user_assigned_identity.app.id
+      acr = local.acr_config.identity_id
     }
   }
 
   registry_config = {
     server   = "${local.acr_config.name}.azurecr.io"
-    identity = azurerm_user_assigned_identity.app.id
+    identity = local.acr_config.identity_id
   }
 
   ingress_config = {
@@ -142,7 +122,6 @@ module "container_app" {
     ]
   }
 
-  depends_on = [azurerm_role_assignment.acr_pull]
 }
 
 # --- Custom domain (DNS + hostname bind), conditional --------------------------

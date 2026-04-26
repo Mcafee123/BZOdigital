@@ -29,6 +29,3 @@ output "file_share_name" {
   value = azurerm_storage_share.data.name
 }
 
-output "identity_principal_id" {
-  value = azurerm_user_assigned_identity.app.principal_id
-}
