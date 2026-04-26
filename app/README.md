@@ -74,9 +74,11 @@ Production deploys run via `.github/workflows/deploy-prod.yml` on push to `main`
    - An Azure Container Registry
    - A storage account with a blob container for Terraform state **and** an Azure File share for repo data (can be the same storage account)
    - A service principal with `Contributor` on the resource group and `AcrPush` on the registry. It also needs to be able to read storage account keys (`Storage Account Key Operator Service Role`, or simply `Reader and Data Access`).
-2. **GitHub repo secrets** — two paths:
+2. **GitHub Actions secrets** — pushed to a deployment **environment** named `production` (not repo-level). The current gh user is added as a required reviewer, so any workflow run that targets this environment pauses until you approve it. This means write-access collaborators on the public repo cannot trigger the deploy or steal secrets via workflow modifications without your approval click.
 
-   **Path A — Key Vault driven (`tf/_project_init/`, gitignored)**: if you have access to the platform Key Vault, run the bootstrap module. It generates the per-env Terraform config (`_backend.hcl`, `_init.sh`, `_platform.auto.tfvars`, `_basics.tf`, `_platform_variables.tf` — all gitignored) and pushes the GH secrets from KV.
+   Two paths:
+
+   **Path A — Key Vault driven (`tf/_project_init/`, gitignored)**: if you have access to the platform Key Vault, run the bootstrap module. It generates the per-env Terraform config (`_backend.hcl`, `_init.sh`, `_platform.auto.tfvars`, `_basics.tf`, `_platform_variables.tf` — all gitignored), creates the `production` environment with you as required reviewer, and pushes the secrets there.
 
    ```bash
    cd tf/_project_init
@@ -98,10 +100,15 @@ Production deploys run via `.github/workflows/deploy-prod.yml` on push to `main`
    cd app/scripts
    cp secrets.env.example secrets.env   # gitignored
    # …fill in the values in secrets.env…
-   ./init_secrets.sh                    # pushes all 18 to the current repo
+   ./init_secrets.sh                    # creates env, pushes to environment "production"
+   # ./init_secrets.sh -e staging       # different environment
    ```
 
-   Requires `gh` authenticated (`gh auth login`). The full list, in case you'd rather set them via the GitHub UI (*Settings → Secrets and variables → Actions*):
+   Requires `gh` authenticated (`gh auth login`). The script idempotently creates/updates the GitHub environment with you as required reviewer.
+
+   **Approval UX:** every push to `main` (or merge of a PR) that triggers `deploy-prod.yml` will pause for **two approvals** (one for the build job, one for the deploy job — both reference the environment). `upload-data.yml` pauses for one approval. You'll get an email/notification each time. Approve via the workflow run's "Review deployments" button.
+
+   The full secret list, in case you'd rather set them via the GitHub UI (*Settings → Environments → production → Add secret*):
 
    | Secret | Purpose |
    |---|---|

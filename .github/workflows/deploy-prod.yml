@@ -20,6 +20,7 @@ jobs:
   build-and-push:
     name: Build and push image
     runs-on: ubuntu-latest
+    environment: production
     outputs:
       image-tag: ${{ steps.version.outputs.image-tag }}
       image-ref: ${{ steps.version.outputs.image-ref }}
@@ -64,6 +65,7 @@ jobs:
     name: Terraform apply
     needs: [build-and-push]
     runs-on: ubuntu-latest
+    environment: production
     defaults:
       run:
         working-directory: tf/prod/app

@@ -16,6 +16,7 @@ jobs:
   upload:
     name: Sync data/ and app/data/ to Azure File share
     runs-on: ubuntu-latest
+    environment: production
     steps:
       - uses: actions/checkout@v5
 
