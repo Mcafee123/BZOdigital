@@ -22,14 +22,35 @@ for (const law of zhLaws) {
 }
 
 // Regex for article and paragraph references in DE, FR and IT.
-const lawAbbreviationToken = String.raw`(?:[\p{Lu}\p{N}][\p{L}\p{N}/-]*|[\p{Ll}]+[\p{Lu}][\p{L}\p{N}/-]*)`;
-const regexLawReference = new RegExp(
-    String.raw`(?<![\p{L}\p{N}_])(?<marker>§+|Art|art|Artikel|article|Article|articolo|Articolo|Paragraph|Par|par)\.?\s*` +
-    String.raw`(?<provision>\d+[a-zA-Z]?)` +
-    String.raw`(?:\s*(?<paragraphLabel>Abs|Absatz|Al|al|Cpv|cpv)\.?\s*(?<paragraph>\d+[a-zA-Z]?))?` +
-    String.raw`(?:\s*(?<numberLabel>Ziff|Ziffer|Ch|ch|N|n)\.?\s*(?<number>\d+[a-zA-Z]?))?` +
-    String.raw`(?:\s*(?<letterLabel>Lit|lit|Buchstabe|Bchst|Let|let|Lett|lett)\.?\s*(?<letter>[A-Za-z]))?` +
+const citationMarkerPattern = String.raw`§+|Art|art|Artikel|article|Article|articolo|Articolo|Paragraph|Par|par`;
+const provisionPattern = String.raw`\d+(?:[a-zA-Z]\b)?`;
+const citationDetailPattern =
+    String.raw`(?:\s*(?:Abs|Absatz|Al|al|Cpv|cpv)\.?\s*${provisionPattern})?` +
+    String.raw`(?:\s*(?:Ziff|Ziffer|Ch|ch|N|n)\.?\s*${provisionPattern})?` +
+    String.raw`(?:\s*(?:Lit|lit|Buchstabe|Bchst|Let|let|Lett|lett)\.?\s*[A-Za-z])?`;
+const lawAbbreviationToken = String.raw`(?:[\p{Lu}\p{N}][\p{L}\p{N}/-]*|[\p{Ll}]+(?:[\p{Lu}\p{N}/-])[\p{L}\p{N}/-]*)`;
+const combinationConnectorPattern = String.raw`(?:,|;|\b(?:und|sowie|oder|respektive|et|ou|ainsi\s+que|soit|e|ed|o|oppure|nonché|nonche)\b|\bbzw\.?)`;
+const combinationSeparatorPattern = String.raw`\s*${combinationConnectorPattern}\s*`;
+const regexCombinedLawReference = new RegExp(
+    String.raw`(?<![\p{L}\p{N}_])` +
+    String.raw`(?<firstCitation>(?<marker>${citationMarkerPattern})\.?\s*(?<firstProvision>${provisionPattern})${citationDetailPattern})` +
+    String.raw`(?<tail>(?:${combinationSeparatorPattern}${provisionPattern})+)` +
     String.raw`\s+(?<law>${lawAbbreviationToken}(?:\s+${lawAbbreviationToken}){0,3})(?![\p{L}\p{N}_])`,
+    "gu"
+);
+const regexCombinedDefaultLawReference = new RegExp(
+    String.raw`(?<![\p{L}\p{N}_])` +
+    String.raw`(?<firstCitation>(?<marker>${citationMarkerPattern})\.?\s*(?<firstProvision>${provisionPattern})${citationDetailPattern})` +
+    String.raw`(?<tail>(?:${combinationSeparatorPattern}${provisionPattern})+)(?!\s+${lawAbbreviationToken})(?![\p{L}\p{N}_])`,
+    "gu"
+);
+const regexLawReference = new RegExp(
+    String.raw`(?<![\p{L}\p{N}_])(?<marker>${citationMarkerPattern})\.?\s*` +
+    String.raw`(?<provision>${provisionPattern})` +
+    String.raw`(?:\s*(?<paragraphLabel>Abs|Absatz|Al|al|Cpv|cpv)\.?\s*(?<paragraph>${provisionPattern}))?` +
+    String.raw`(?:\s*(?<numberLabel>Ziff|Ziffer|Ch|ch|N|n)\.?\s*(?<number>${provisionPattern}))?` +
+    String.raw`(?:\s*(?<letterLabel>Lit|lit|Buchstabe|Bchst|Let|let|Lett|lett)\.?\s*(?<letter>[A-Za-z]))?` +
+    String.raw`(?:\s+(?<law>${lawAbbreviationToken}(?:\s+${lawAbbreviationToken}){0,3})(?![\p{L}\p{N}_]))?`,
     "gu"
 );
 
@@ -39,11 +60,15 @@ const regexBGE = /(?:(?:(BGE|ATF|DTF)\.?\s*)?(\d+(?:\w\b)?)\s*M{0,4}(IV|V|I{1,3}
 //Regex for BGer reference Number (Geschäftsnr./Num. référence/N. riferimento)
 const regexBGer = /(\d+)([A-Z])_(\d+\/\d+)/g
 
-function enrichMarkdown(text) {
+function enrichMarkdown(text, options = {}) {
+    const protectedMarkdown = [];
+
+    text = protectCombinedLawReferences(text, protectedMarkdown, options.defaultLaw);
+
     // Match all article/paragraph references, then only link official Canton Zurich abbreviations.
     text = text.replace(regexLawReference, function (ref, ...args) {
         const groups = args.at(-1);
-        const law = officialZhLawsByAbbreviation.get(normalizeLawAbbreviation(groups.law));
+        const law = getLawForReference(groups.law, options.defaultLaw);
 
         if (!law) {
             return ref;
@@ -77,8 +102,67 @@ function enrichMarkdown(text) {
         }
         let link = "https://www.bger.ch/ext/eurospider/live/" + lang + "/php/aza/http/index.php?lang=" + lang + "&type=show_document&page=1&from_date=&to_date=&sort=relevance&insertion_date=&top_subcollection_aza=all&query_words=&rank=0&azaclir=aza&highlight_docid=atf%3A%2F%2F" + res[0][2] + "-" + res[0][3] + "-" + res[0][4] + "%3A" + lang + "&number_of_ranks=0#page" + res[0][4];
         return buildMarkdownLink(ref, link);
+    }).replace(/\uE000(\d+)\uE001/g, function (placeholder, index) {
+        return protectedMarkdown[Number(index)] || placeholder;
     })
 };
+
+function protectCombinedLawReferences(text, protectedMarkdown, defaultLaw) {
+    text = text.replace(regexCombinedLawReference, function (ref, ...args) {
+        const groups = args.at(-1);
+        const law = officialZhLawsByAbbreviation.get(normalizeLawAbbreviation(groups.law));
+
+        if (!law) {
+            return protectMarkdown(ref, protectedMarkdown);
+        }
+
+        const linkedReference = buildCombinedLawReferenceMarkdown(groups, law);
+        return protectMarkdown(linkedReference, protectedMarkdown);
+    });
+
+    if (!defaultLaw) {
+        return text;
+    }
+
+    return text.replace(regexCombinedDefaultLawReference, function (ref, ...args) {
+        const groups = args.at(-1);
+        const linkedReference = buildCombinedLawReferenceMarkdown(groups, defaultLaw);
+        return protectMarkdown(linkedReference, protectedMarkdown);
+    });
+}
+
+function buildCombinedLawReferenceMarkdown(groups, law) {
+    const linkedFirstCitation = buildMarkdownLink(
+        groups.firstCitation,
+        buildOdatProvisionUrl(law, groups.firstProvision)
+    );
+
+    const linkedTail = groups.tail.replace(
+        new RegExp(String.raw`(${combinationSeparatorPattern})(?<provision>${provisionPattern})`, "gu"),
+        function (ref, separator, ...args) {
+            const tailGroups = args.at(-1);
+            return separator + buildMarkdownLink(
+                tailGroups.provision,
+                buildOdatProvisionUrl(law, tailGroups.provision)
+            );
+        }
+    );
+
+    return linkedFirstCitation + linkedTail + (groups.law ? " " + groups.law : "");
+}
+
+function protectMarkdown(markdown, protectedMarkdown) {
+    const index = protectedMarkdown.push(markdown) - 1;
+    return "\uE000" + index + "\uE001";
+}
+
+function getLawForReference(referenceLawAbbreviation, defaultLaw) {
+    if (referenceLawAbbreviation) {
+        return officialZhLawsByAbbreviation.get(normalizeLawAbbreviation(referenceLawAbbreviation));
+    }
+
+    return defaultLaw || null;
+}
 
 function buildOdatProvisionUrl(law, provision) {
     return law.dynamic_prod_url + "-latest.html#seq-0-prov-" + encodeURIComponent(provision.toLowerCase());
@@ -112,6 +196,7 @@ app.get("/health", (request, response) => {
 
 app.post("/enrich", (request, response) => {
     const { text } = request.body || {};
+    const defaultLawInput = request.body?.["default-law"];
 
     if (typeof text !== "string") {
         response.status(400).json({ error: "Request body must include a string field named text." });
@@ -123,7 +208,21 @@ app.post("/enrich", (request, response) => {
         return;
     }
 
-    response.json({ markdown: enrichMarkdown(text) });
+    if (defaultLawInput !== undefined && typeof defaultLawInput !== "string") {
+        response.status(400).json({ error: "Optional default-law field must be a string." });
+        return;
+    }
+
+    const defaultLaw = defaultLawInput
+        ? officialZhLawsByAbbreviation.get(normalizeLawAbbreviation(defaultLawInput))
+        : null;
+
+    if (defaultLawInput && !defaultLaw) {
+        response.status(400).json({ error: "default-law must match an official Canton Zurich law abbreviation." });
+        return;
+    }
+
+    response.json({ markdown: enrichMarkdown(text, { defaultLaw }) });
 });
 
 app.listen(port, "0.0.0.0", () => {
