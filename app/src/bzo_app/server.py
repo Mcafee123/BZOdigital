@@ -13,8 +13,6 @@ import json
 
 from .database import get_session, BfsMunicipality, PdfAnnotation
 
-DATA_DIR = Path(os.environ.get("DATA_DIR", Path(__file__).resolve().parent.parent.parent.parent / "data"))
-
 DIFF_PATH = Path(os.environ.get("DIFF_PATH", "/app/data/sample.diff"))
 WEB_DIST = Path(os.environ.get("WEB_DIST", "/app/web/dist"))
 

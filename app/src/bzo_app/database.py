@@ -1,12 +1,9 @@
 """Database connection and models for the bzo-app backend."""
-import os
-from pathlib import Path
 from sqlmodel import Field, Session, SQLModel, create_engine
 
-# The path to the SQLite database
-# When running `uv run uvicorn src.bzo_app.server:app` from the `app` folder,
-# `../../data/bzo.db` would resolve to `<repo_root>/data/bzo.db`.
-DB_PATH = Path(os.environ.get("DB_PATH", Path(__file__).resolve().parent.parent.parent.parent / "data" / "bzo.db"))
+from .paths import get_data_path
+
+DB_PATH = get_data_path() / "bzo.db"
 
 sqlite_url = f"sqlite:///{DB_PATH}"
 
@@ -22,14 +19,14 @@ def get_session():
 
 class BfsMunicipality(SQLModel, table=True):
     __tablename__ = "bfsmunicipality"
-    
+
     bfs_nr: int = Field(primary_key=True)
     name: str
     canton: str
 
 class PdfAnnotation(SQLModel, table=True):
     __tablename__ = "pdfannotation"
-    
+
     id: int = Field(primary_key=True)
     municipality_bfs_nr: int
     pdf_url: str

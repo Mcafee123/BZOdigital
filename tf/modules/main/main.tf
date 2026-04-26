@@ -123,6 +123,9 @@ module "container_app" {
         image  = var.image_name
         cpu    = var.cpu
         memory = var.memory
+        env = [
+          { name = "DATA_PATH", value = "${var.mount_path}/data" },
+        ]
         volume_mounts = [
           { name = "repo-data", path = var.mount_path },
         ]
