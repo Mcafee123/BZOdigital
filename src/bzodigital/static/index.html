@@ -430,6 +430,29 @@
 
     .compare-info { font-size: 0.8rem; color: #6b7280; }
 
+    .upload-bar {
+      display: none;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .upload-btn {
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      border: 2px dashed #9ca3af;
+      border-radius: 8px;
+      background: #fff;
+      color: #6b7280;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .upload-btn:hover { border-color: #2563eb; color: #2563eb; }
+
+    .upload-info { font-size: 0.8rem; color: #6b7280; }
+
     /* Modal overlay */
     .modal-overlay {
       display: none;
@@ -547,6 +570,12 @@
     <span id="process-summary" class="process-summary"></span>
   </div>
   <div id="process-status" class="process-status" style="display:none"></div>
+
+  <div id="upload-bar" class="upload-bar">
+    <input type="file" id="upload-input" accept=".pdf" multiple style="display:none">
+    <button class="upload-btn" onclick="document.getElementById('upload-input').click()">+ PDF hochladen</button>
+    <span id="upload-info" class="upload-info"></span>
+  </div>
 
   <ul id="results" class="results"></ul>
   <div id="beaver-score" class="beaver-score">Dam snacks: 0</div>
@@ -772,14 +801,25 @@
         const method = data.search_method;
         const cached = data.cached ? ' (cached)' : '';
 
-        if (!data.pdfs || data.pdfs.length === 0) {
+        // Merge: annotations not in search results go first (uploads), then search results
+        const searchPdfs = data.pdfs ? [...data.pdfs] : [];
+        const seenUrls = new Set(searchPdfs.map(p => p.url));
+        const extraPdfs = [];
+        for (const a of anns) {
+          if (!seenUrls.has(a.pdf_url)) {
+            extraPdfs.push({ url: a.pdf_url, title: a.pdf_title, match: 'uploaded' });
+          }
+        }
+        const allPdfs = [...extraPdfs, ...searchPdfs];
+
+        if (allPdfs.length === 0) {
           statusEl.textContent = `No BZO documents found for ${data.municipality}. [${method}${cached}]`;
           return;
         }
 
-        statusEl.textContent = `${data.pdfs.length} BZO document(s) for ${data.municipality} (${data.canton}). [${method}${cached}]`;
+        statusEl.textContent = `${allPdfs.length} BZO document(s) for ${data.municipality} (${data.canton}). [${method}${cached}]`;
 
-        resultsEl.innerHTML = data.pdfs.map((pdf, idx) => {
+        resultsEl.innerHTML = allPdfs.map((pdf, idx) => {
           const filename = decodeURIComponent(pdf.url.split('/').pop().split('?')[0]);
           const title = pdf.title || filename;
           const ann = annotations[pdf.url];
@@ -908,6 +948,7 @@
 
         refreshUsedLabels();
         updateProcessBar();
+        showUploadBar();
         loadExistingFiles(muni.name);
         checkCompareStatus(muni.name);
 
@@ -1041,6 +1082,51 @@
     });
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && previewModal.classList.contains('open')) closePreview();
+    });
+
+    // --- Upload ---
+
+    const uploadBar = document.getElementById('upload-bar');
+    const uploadInput = document.getElementById('upload-input');
+    const uploadInfo = document.getElementById('upload-info');
+
+    function showUploadBar() {
+      if (currentMuni) uploadBar.style.display = 'flex';
+    }
+
+    uploadInput.addEventListener('change', async () => {
+      if (!currentMuni || !uploadInput.files.length) return;
+
+      const files = [...uploadInput.files];
+      uploadInfo.innerHTML = `<span class="spinner"></span> ${files.length} Datei(en) werden hochgeladen...`;
+
+      for (const file of files) {
+        const form = new FormData();
+        form.append('file', file);
+
+        try {
+          const resp = await fetch(`/api/upload/${encodeURIComponent(currentMuni.name)}`, {
+            method: 'POST',
+            body: form,
+          });
+
+          if (!resp.ok) {
+            const err = await resp.json();
+            uploadInfo.textContent = `Fehler: ${err.detail || 'Upload fehlgeschlagen'}`;
+            continue;
+          }
+        } catch (err) {
+          uploadInfo.textContent = 'Netzwerkfehler beim Upload.';
+          continue;
+        }
+      }
+
+      uploadInput.value = '';
+      uploadInfo.textContent = `${files.length} Datei(en) hochgeladen.`;
+      setTimeout(() => { uploadInfo.textContent = ''; }, 3000);
+
+      // Reload the municipality to show the new files in the list
+      await selectMunicipality(currentMuni);
     });
 
     // --- Existing files ---
