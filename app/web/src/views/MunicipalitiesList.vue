@@ -21,6 +21,12 @@ const selectMunicipality = (folder: string) => {
   router.push({ name: 'details', params: { folder } });
 };
 
+const handleFocusOut = () => {
+  setTimeout(() => {
+    isDropdownOpen.value = false;
+  }, 200);
+};
+
 onMounted(() => {
   fetchMunicipalities();
 });
@@ -31,7 +37,7 @@ onMounted(() => {
     <div class="logo">NUPLA</div>
     <div class="subtitle">Nutzungsplanungen einfach verstehen</div>
     
-    <div class="search-wrapper" @focusout="setTimeout(() => isDropdownOpen = false, 200)">
+    <div class="search-wrapper" @focusout="handleFocusOut">
       <input 
         type="text" 
         v-model="searchQuery"
