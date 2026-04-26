@@ -220,6 +220,13 @@ def build_custom_law_entry(custom_law: Mapping[str, Any]) -> Optional[LawEntry]:
         "scope": "custom",
     }
 
+def set_ancors(markdown: str) -> str:
+    # If the markdown contains a heading with a law reference without abbreviation, we add an anchor to the heading to make sure the link works
+    def add_anchor(match: re.Match[str]) -> str:
+        heading = match.group(1)
+        reference = match.group(2)
+        anchor = re.sub(r"\s+", "-", reference.strip()).lower()
+        return f"{heading} <a name=\"{anchor}\"></a>{reference}"
 
 def enrich_markdown(
     text: str,
@@ -239,6 +246,7 @@ def enrich_markdown(
     law_result = enrich_law_references(text, default_law_entry, laws)
     court_citations = collect_court_citations(text)
     markdown = law_result["markdown"]
+    markdown = set_ancors(markdown)
 
     markdown = REGEX_BGER.sub(
         lambda match: build_markdown_link(match.group(0), build_bger_url(match.group(0))),
