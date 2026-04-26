@@ -30,13 +30,7 @@ jobs:
       - uses: hashicorp/setup-terraform@v3
       - uses: azure/login@v3
         with:
-          creds: |
-            {
-              "clientId":     "${{ secrets.ARM_CLIENT_ID }}",
-              "clientSecret": "${{ secrets.ARM_CLIENT_SECRET }}",
-              "tenantId":     "${{ secrets.ARM_TENANT_ID }}",
-              "subscriptionId": "${{ secrets.ARM_SUBSCRIPTION_ID }}"
-            }
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Read storage outputs from Terraform state
         id: tf

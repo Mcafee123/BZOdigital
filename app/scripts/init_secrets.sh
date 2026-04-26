@@ -105,6 +105,22 @@ for name in "${REQUIRED[@]}"; do
   echo "  ✓ $name"
 done
 
+# Composite credentials for azure/login@v3. Built here as a single secret to
+# avoid in-workflow JSON construction (which mangles values into "Tenant '***'
+# not found" errors).
+cat <<EOF | gh secret set AZURE_CREDENTIALS \
+    --repo "$REPO_NWO" \
+    --env "$GH_ENVIRONMENT" \
+    --body -
+{
+  "clientId": "$ARM_CLIENT_ID",
+  "clientSecret": "$ARM_CLIENT_SECRET",
+  "tenantId": "$ARM_TENANT_ID",
+  "subscriptionId": "$ARM_SUBSCRIPTION_ID"
+}
+EOF
+echo "  ✓ AZURE_CREDENTIALS"
+
 # SSH deploy key from a file path (multi-line content), default ~/.ssh/id_ed25519.
 SSH_PRIVATE_KEY_PATH="${SSH_PRIVATE_KEY_PATH:-$HOME/.ssh/id_ed25519}"
 SSH_PRIVATE_KEY_PATH="${SSH_PRIVATE_KEY_PATH/#\~/$HOME}"
