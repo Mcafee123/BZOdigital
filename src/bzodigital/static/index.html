@@ -203,6 +203,44 @@
     }
 
     .save-indicator.show { opacity: 1; }
+
+    /* Beaver cursor swarm */
+    .beaver {
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 1000;
+      width: 36px;
+      height: 36px;
+      font-size: 30px;
+      line-height: 36px;
+      text-align: center;
+      user-select: none;
+      pointer-events: none;
+      will-change: transform;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+    }
+
+    .beaver-toggle {
+      position: fixed;
+      right: 1rem;
+      bottom: 1rem;
+      z-index: 1001;
+      padding: 0.55rem 0.8rem;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      background: #fff;
+      color: #1f2937;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+      cursor: pointer;
+      font: inherit;
+      font-size: 0.85rem;
+    }
+
+    .beaver-toggle:hover {
+      border-color: #9ca3af;
+      background: #f9fafb;
+    }
   </style>
 </head>
 <body>
@@ -219,6 +257,7 @@
 
   <div id="status" class="status"></div>
   <ul id="results" class="results"></ul>
+  <button type="button" id="beaver-toggle" class="beaver-toggle">Please, no Beavers</button>
 
   <script>
     const searchInput = document.getElementById('search');
@@ -565,6 +604,137 @@
     function decodeAttr(s) {
       return s.replace(/&quot;/g, '"').replace(/&amp;/g, '&');
     }
+
+    (() => {
+      const COUNT = 3;
+      const MAX_SPEED = 5;
+      const MAX_FORCE = 0.12;
+      const SEP_RADIUS = 30;
+      const ARRIVAL_RADIUS = 90;
+      const TURN_RATE = 0.18;
+      const BEAVER_HALF_SIZE = 18;
+      const OFF_LABEL = 'Bring back the Beavers!';
+      const ON_LABEL = 'Please, no Beavers';
+
+      const target = {
+        x: window.innerWidth / 2,
+        y: window.innerHeight / 2,
+      };
+
+      const beavers = [];
+      const toggleButton = document.getElementById('beaver-toggle');
+      let enabled = true;
+
+      window.addEventListener('pointermove', (event) => {
+        target.x = event.clientX;
+        target.y = event.clientY;
+      }, { passive: true });
+
+      window.addEventListener('click', (event) => {
+        if (!enabled || event.target.closest('#beaver-toggle')) return;
+        spawn(event.clientX, event.clientY);
+      });
+
+      toggleButton.addEventListener('click', (event) => {
+        event.stopPropagation();
+        enabled = !enabled;
+        toggleButton.textContent = enabled ? ON_LABEL : OFF_LABEL;
+
+        if (enabled) {
+          for (let i = 0; i < COUNT; i++) spawn();
+          return;
+        }
+
+        while (beavers.length > 0) {
+          beavers.pop().el.remove();
+        }
+      });
+
+      function spawn(x, y) {
+        if (!enabled) return;
+
+        const el = document.createElement('div');
+        el.className = 'beaver';
+        el.textContent = '🦫';
+        el.setAttribute('aria-hidden', 'true');
+        document.body.appendChild(el);
+
+        beavers.push({
+          el,
+          x: x ?? Math.random() * window.innerWidth,
+          y: y ?? Math.random() * window.innerHeight,
+          vx: (Math.random() - 0.5) * 2,
+          vy: (Math.random() - 0.5) * 2,
+          angle: 0,
+          maxSpeed: MAX_SPEED * (0.45 + Math.random() * 0.6),
+          scale: 0.6 + Math.random() * 0.8,
+        });
+      }
+
+      function limit(vx, vy, max) {
+        const magnitude = Math.hypot(vx, vy);
+        return magnitude > max ? [vx / magnitude * max, vy / magnitude * max] : [vx, vy];
+      }
+
+      function tick() {
+        for (let i = 0; i < beavers.length; i++) {
+          const beaver = beavers[i];
+          const dx = target.x - beaver.x;
+          const dy = target.y - beaver.y;
+          const distance = Math.hypot(dx, dy);
+          let seekX = 0;
+          let seekY = 0;
+
+          if (distance > 0.01) {
+            const speed = distance < ARRIVAL_RADIUS
+              ? beaver.maxSpeed * (distance / ARRIVAL_RADIUS)
+              : beaver.maxSpeed;
+            [seekX, seekY] = limit(
+              (dx / distance) * speed - beaver.vx,
+              (dy / distance) * speed - beaver.vy,
+              MAX_FORCE,
+            );
+          }
+
+          let sepX = 0;
+          let sepY = 0;
+          for (let j = 0; j < beavers.length; j++) {
+            if (j === i) continue;
+            const other = beavers[j];
+            const otherDx = beaver.x - other.x;
+            const otherDy = beaver.y - other.y;
+            const otherDistance = Math.hypot(otherDx, otherDy);
+            if (otherDistance > 0 && otherDistance < SEP_RADIUS) {
+              sepX += otherDx / (otherDistance * otherDistance);
+              sepY += otherDy / (otherDistance * otherDistance);
+            }
+          }
+          [sepX, sepY] = limit(sepX * 5, sepY * 5, MAX_FORCE * 1.5);
+
+          beaver.vx += seekX + sepX;
+          beaver.vy += seekY + sepY;
+          [beaver.vx, beaver.vy] = limit(beaver.vx, beaver.vy, beaver.maxSpeed);
+          beaver.x += beaver.vx;
+          beaver.y += beaver.vy;
+
+          let targetAngle = beaver.angle;
+          if (distance > 1) targetAngle = Math.atan2(-dy, -dx);
+          let angleDiff = targetAngle - beaver.angle;
+          while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
+          while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+          beaver.angle += angleDiff * TURN_RATE;
+
+          beaver.el.style.transform =
+            `translate(${beaver.x - BEAVER_HALF_SIZE}px, ${beaver.y - BEAVER_HALF_SIZE}px) ` +
+            `rotate(${beaver.angle}rad) scale(${beaver.scale})`;
+        }
+
+        window.requestAnimationFrame(tick);
+      }
+
+      for (let i = 0; i < COUNT; i++) spawn();
+      tick();
+    })();
   </script>
 </body>
 </html>
