@@ -85,3 +85,40 @@ resource "azurerm_container_app" "main" {
 
   depends_on = [azurerm_role_assignment.acr_pull]
 }
+
+# DNS records for the custom domain (TXT asuid + CNAME).
+# Uses the shared cloudflare helper module from affolterNET-Cloud-HelperModules.
+module "cloudflare" {
+  count  = var.custom_domain != null ? 1 : 0
+  source = "git@github.com:affolterNET/affolterNET-Cloud-HelperModules.git//cloudflare?ref=main"
+
+  cloudflare = {
+    zone_id         = var.cloudflare_zone_id
+    api_token       = var.cloudflare_api_token
+    domain_name     = var.custom_domain
+    fqdn            = azurerm_container_app.main.ingress[0].fqdn
+    verification_id = azurerm_container_app.main.custom_domain_verification_id
+  }
+
+  depends_on = [azurerm_container_app.main]
+}
+
+# Hostname binding + managed cert via the shared custom-domain helper module.
+# It runs add_hostname.sh + add_binding.sh, which wait for DNS propagation
+# (dig @8.8.8.8 with 20-min timeout) before calling `az containerapp hostname add/bind`.
+# Both scripts are idempotent.
+module "custom_domain" {
+  count  = var.custom_domain != null ? 1 : 0
+  source = "git@github.com:affolterNET/affolterNET-Cloud-HelperModules.git//custom-domain?ref=main"
+
+  container_app = {
+    name            = azurerm_container_app.main.name
+    domain_name     = var.custom_domain
+    fqdn            = azurerm_container_app.main.ingress[0].fqdn
+    verification_id = azurerm_container_app.main.custom_domain_verification_id
+    environment_id  = var.container_app_environment_id
+    resource_group  = data.azurerm_resource_group.main.name
+  }
+
+  depends_on = [module.cloudflare]
+}

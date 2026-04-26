@@ -125,7 +125,8 @@ Production deploys run via `.github/workflows/deploy-prod.yml` on push to `main`
    | `FILE_SHARE_NAME` | Name of the Azure File share whose tree mirrors the repo |
    | `CLOUDFLARE_API_TOKEN` | *(optional)* Cloudflare token with `Zone:DNS:Edit` for the target zone |
    | `CLOUDFLARE_ZONE_ID` | *(optional)* Zone ID containing `CUSTOM_DOMAIN` |
-   | `CUSTOM_DOMAIN` | *(optional)* Custom hostname (e.g. `bzo-app.example.com`); when set, the TF module creates the `asuid` TXT + CNAME records. Binding the domain + cert to the Container App is still a manual follow-up. |
+   | `CUSTOM_DOMAIN` | *(optional)* Custom hostname (e.g. `bzo-app.example.com`); when set, the TF module creates the `asuid` TXT + CNAME records, then runs `az containerapp hostname add/bind` via the shared `custom-domain` helper. |
+   | `SSH_PRIVATE_KEY` | Deploy-key private key with read access to `affolterNET/affolterNET-Cloud-HelperModules`. Required for `terraform init` to clone the shared `cloudflare` and `custom-domain` modules. Set manually with `gh secret set SSH_PRIVATE_KEY < ~/.ssh/id_ed25519`. |
 
 3. **Local Terraform setup** — for the very first apply you may want to run locally:
 
