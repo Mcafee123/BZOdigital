@@ -38,37 +38,32 @@ jobs:
         run: |
           terraform init -input=false -backend-config=_backend.hcl
           {
-            echo "rg=$(terraform output -raw resource_group_name)"
             echo "sa=$(terraform output -raw storage_account_name)"
             echo "share=$(terraform output -raw file_share_name)"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Resolve storage account key
-        id: key
+      - name: Install azcopy
         run: |
-          KEY=$(az storage account keys list \
-            -g "${{ steps.tf.outputs.rg }}" \
-            -n "${{ steps.tf.outputs.sa }}" \
-            --query '[0].value' -o tsv)
-          echo "::add-mask::$KEY"
-          echo "key=$KEY" >> "$GITHUB_OUTPUT"
+          curl -sSL https://aka.ms/downloadazcopy-v10-linux | \
+            sudo tar -xz --strip-components=1 -C /usr/local/bin --wildcards '*/azcopy'
+          azcopy --version
 
       - name: Sync top-level data/
         if: hashFiles('data/**') != ''
+        env:
+          AZCOPY_AUTO_LOGIN_TYPE: AZCLI
         run: |
-          az storage file upload-batch \
-            --account-name "${{ steps.tf.outputs.sa }}" \
-            --account-key "${{ steps.key.outputs.key }}" \
-            --destination "${{ steps.tf.outputs.share }}" \
-            --destination-path "data" \
-            --source "./data"
+          azcopy sync "./data" \
+            "https://${{ steps.tf.outputs.sa }}.file.core.windows.net/${{ steps.tf.outputs.share }}/data" \
+            --delete-destination=true \
+            --recursive
 
       - name: Sync app/data/
         if: hashFiles('app/data/**') != ''
+        env:
+          AZCOPY_AUTO_LOGIN_TYPE: AZCLI
         run: |
-          az storage file upload-batch \
-            --account-name "${{ steps.tf.outputs.sa }}" \
-            --account-key "${{ steps.key.outputs.key }}" \
-            --destination "${{ steps.tf.outputs.share }}" \
-            --destination-path "app/data" \
-            --source "./app/data"
+          azcopy sync "./app/data" \
+            "https://${{ steps.tf.outputs.sa }}.file.core.windows.net/${{ steps.tf.outputs.share }}/app/data" \
+            --delete-destination=true \
+            --recursive
