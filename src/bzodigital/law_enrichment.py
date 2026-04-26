@@ -60,6 +60,11 @@ REGEX_BGE = re.compile(
     re.IGNORECASE | re.UNICODE,
 )
 REGEX_BGER = re.compile(r"(\d+)([A-Z])_(\d+/\d+)")
+REGEX_HEADING_LAW_REFERENCE = re.compile(
+    rf"^(?P<heading>#{1,6}\s+)(?P<reference>(?P<marker>{CITATION_MARKER_PATTERN})\.?\s*"
+    rf"(?P<provision>{PROVISION_PATTERN}){CITATION_DETAIL_PATTERN})(?P<suffix>\s*)$",
+    re.MULTILINE | re.UNICODE,
+)
 
 
 def load_combined_laws(path: Optional[Path | str] = None) -> Dict[str, Any]:
@@ -220,13 +225,24 @@ def build_custom_law_entry(custom_law: Mapping[str, Any]) -> Optional[LawEntry]:
         "scope": "custom",
     }
 
-def set_ancors(markdown: str) -> str:
-    # If the markdown contains a heading with a law reference without abbreviation, we add an anchor to the heading to make sure the link works
+def set_anchors(markdown: str) -> str:
+    """Add stable HTML anchors to headings that consist of a law reference."""
     def add_anchor(match: re.Match[str]) -> str:
-        heading = match.group(1)
-        reference = match.group(2)
-        anchor = re.sub(r"\s+", "-", reference.strip()).lower()
-        return f"{heading} <a name=\"{anchor}\"></a>{reference}"
+        heading = match.group("heading")
+        reference = match.group("reference")
+        suffix = match.group("suffix")
+        anchor = build_heading_anchor(reference)
+        return f'{heading}<a name="{anchor}"></a>{reference}{suffix}'
+
+    return REGEX_HEADING_LAW_REFERENCE.sub(add_anchor, markdown)
+
+
+def set_ancors(markdown: str) -> str:
+    return set_anchors(markdown)
+
+
+def build_heading_anchor(reference: str) -> str:
+    return re.sub(r"\s+", "-", reference.strip()).lower()
 
 def enrich_markdown(
     text: str,
@@ -246,7 +262,7 @@ def enrich_markdown(
     law_result = enrich_law_references(text, default_law_entry, laws)
     court_citations = collect_court_citations(text)
     markdown = law_result["markdown"]
-    markdown = set_ancors(markdown)
+    markdown = set_anchors(markdown)
 
     markdown = REGEX_BGER.sub(
         lambda match: build_markdown_link(match.group(0), build_bger_url(match.group(0))),
