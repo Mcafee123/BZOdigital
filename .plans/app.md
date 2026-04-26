@@ -104,7 +104,7 @@ See `app/README.md` for the full prerequisite checklist before the first deploy.
 
 ## Verification
 
-- `cd app/web && npm i && npm run dev` — Vite serves on `http://localhost:5173`, proxies `/api/*` to `http://localhost:8000`.
-- `cd app && uv sync && uv run uvicorn bzo_app.server:app --reload --port 8000` — FastAPI on `:8000`.
+- `cd app/web && npm i && npm run dev` — Vite serves on `http://localhost:5173`, proxies `/api/*` to `http://localhost:7000`.
+- `cd app && uv sync && uv run uvicorn bzo_app.server:app --reload --port 7000` — FastAPI on `:7000`.
 - `docker build -t bzo-app:local app/ && docker run --rm -p 8080:8080 bzo-app:local` — full SPA + API on `:8080`.
 - `cd tf/prod/app && terraform init -backend=false && terraform validate` — TF parses cleanly.

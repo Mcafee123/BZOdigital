@@ -692,4 +692,4 @@ async def _batch_worker(municipality_names: list[str]):
 def start():
     """Entry point for bzo-api script."""
     import uvicorn
-    uvicorn.run("bzodigital.api:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("bzodigital.api:app", host="0.0.0.0", port=7000, reload=True)
