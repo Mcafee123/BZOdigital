@@ -8,14 +8,16 @@ from dotenv import load_dotenv
 
 from bzodigital.bfs import fuzzy_find_municipality, load_bfs, update_bfs_register
 from bzodigital.cantons import find_url, get_canton
+from bzodigital.db import init_db
 from bzodigital.profiles import DEFAULT_PROFILE, PROFILES
 from bzodigital.search import (
     check_pdf_content,
     extract_pdfs,
     filter_pdfs_by_metadata,
+    has_serper_key,
     infer_domain,
-    search_open,
-    search_site,
+    search_or_crawl_open,
+    search_or_crawl_site,
 )
 
 
@@ -43,6 +45,11 @@ def main():
     list_cmd = sub.add_parser("list", help="List municipalities")
     list_cmd.add_argument("--canton", help="Filter by canton (e.g. ZH, BE)")
 
+    # Serve command
+    serve = sub.add_parser("serve", help="Start the REST API server")
+    serve.add_argument("--host", default="0.0.0.0", help="Host to bind to")
+    serve.add_argument("--port", type=int, default=8000, help="Port to bind to")
+
     args = parser.parse_args()
 
     if args.command is None:
@@ -50,14 +57,21 @@ def main():
         sys.exit(1)
 
     load_dotenv()
-    asyncio.run(_dispatch(args))
+
+    if args.command == "serve":
+        import uvicorn
+        uvicorn.run("bzodigital.api:app", host=args.host, port=args.port, reload=True)
+    else:
+        asyncio.run(_dispatch(args))
 
 
 async def _dispatch(args):
+    init_db()
+
     if args.command == "bfs-update":
         path = await update_bfs_register()
         municipalities = load_bfs()
-        print(f"Updated BFS register: {len(municipalities)} municipalities → {path}")
+        print(f"Updated BFS register: {len(municipalities)} municipalities -> {path}")
 
     elif args.command == "refresh":
         canton_data = await get_canton(args.canton, force_refresh=True)
@@ -84,6 +98,7 @@ async def _dispatch(args):
             return
 
         profile = PROFILES[args.profile]
+        method = "Serper" if has_serper_key() else "Crawler"
 
         # Step 1: Find the municipality in BFS
         matches = fuzzy_find_municipality(args.gemeinde, municipalities, limit=args.num_matches)
@@ -102,13 +117,13 @@ async def _dispatch(args):
         if canton_data:
             base_url = find_url(best_muni.name, canton_data)
 
-        # Step 3: Search
+        # Step 3: Search or crawl
         if base_url:
-            print(f"\nSearching {base_url} (via {best_muni.canton} mapping)...")
-            results = await search_site(base_url, profile, max_results=args.max_results)
+            print(f"\n[{method}] Searching {base_url} (via {best_muni.canton} mapping)...")
+            results = await search_or_crawl_site(base_url, profile, max_results=args.max_results)
         else:
-            print(f"\nNo URL mapping for {best_muni.canton}. Searching openly for '{best_muni.name}'...")
-            results = await search_open(best_muni.name, profile, max_results=args.max_results)
+            print(f"\nNo URL mapping for {best_muni.canton}. [{method}] Searching for '{best_muni.name}'...")
+            results = await search_or_crawl_open(best_muni.name, None, profile, max_results=args.max_results)
             domain = infer_domain(results)
             if domain:
                 print(f"  (dominant domain: {domain})")

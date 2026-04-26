@@ -1,12 +1,10 @@
 """Canton scraper registry — generic cache and URL lookup for per-canton Gemeinde mappings."""
 
-import json
 from collections.abc import Awaitable, Callable
-from pathlib import Path
 
 from thefuzz import fuzz, process
 
-CANTON_CACHE_DIR = Path(__file__).resolve().parent.parent.parent / "data" / "cantons"
+from bzodigital.db import init_db, load_canton_from_db, save_canton_to_db
 
 # Type for a canton scraper function
 type CantonScraper = Callable[[], Awaitable[list[dict[str, str]]]]
@@ -23,38 +21,22 @@ def register(canton_id: str) -> Callable:
     return decorator
 
 
-def cache_path(canton_id: str) -> Path:
-    return CANTON_CACHE_DIR / f"{canton_id}.json"
-
-
-def load_canton(canton_id: str) -> list[dict[str, str]] | None:
-    """Load cached canton name→URL mapping, or None if not cached."""
-    p = cache_path(canton_id)
-    if p.exists():
-        return json.loads(p.read_text())
-    return None
-
-
-def save_canton(canton_id: str, data: list[dict[str, str]]) -> Path:
-    """Save canton name→URL mapping to cache."""
-    p = cache_path(canton_id)
-    p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(json.dumps(data, indent=2, ensure_ascii=False))
-    return p
-
-
 async def get_canton(canton_id: str, force_refresh: bool = False) -> list[dict[str, str]] | None:
-    """Get canton mapping: from cache, or scrape if scraper exists. Returns None if no scraper."""
+    """Get canton mapping: from DB, or scrape if scraper exists. Returns None if no data."""
+    init_db()
+
     if not force_refresh:
-        cached = load_canton(canton_id)
+        cached = load_canton_from_db(canton_id)
         if cached is not None:
             return cached
+
     scraper = SCRAPERS.get(canton_id)
     if scraper is None:
         return None
+
     data = await scraper()
     if data:
-        save_canton(canton_id, data)
+        save_canton_to_db(canton_id, data)
     return data
 
 

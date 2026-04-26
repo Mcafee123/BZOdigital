@@ -11,6 +11,8 @@ class SearchProfile:
     search_query: str
     # Terms to match against PDF filename, link text, and content (case-insensitive)
     filter_terms: list[str]
+    # Keywords for sitemap/crawl URL prioritization
+    sitemap_keywords: list[str] = field(default_factory=list)
 
     def matches_metadata(self, url: str, title: str) -> bool:
         """Check if a PDF matches based on URL filename or link text."""
@@ -36,6 +38,11 @@ PROFILES: dict[str, SearchProfile] = {
             "bauordnung",
             "zonenplan",
             "nutzungsplanung",
+            "zonenreglement",
+        ],
+        sitemap_keywords=[
+            "bau", "zonen", "bzo", "reglement", "publikation", "raumplanung",
+            "verwaltung", "hochbau", "dienstleistung", "rechtssammlung", "dokument",
         ],
     ),
 }

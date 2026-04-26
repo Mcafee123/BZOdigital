@@ -6,7 +6,9 @@ from pathlib import Path
 
 from thefuzz import fuzz, process
 
-BFS_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "bfs_municipalities.json"
+from bzodigital.db import init_db, load_bfs_from_db, save_bfs_to_db
+
+BFS_JSON_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "bfs_municipalities.json"
 BFS_DOWNLOAD_URL = "https://dam-api.bfs.admin.ch/hub/api/dam/assets/286080/master"
 
 
@@ -18,10 +20,9 @@ class Municipality:
 
 
 def load_bfs() -> list[Municipality]:
-    """Load BFS municipality register from local JSON."""
-    if not BFS_PATH.exists():
-        return []
-    data = json.loads(BFS_PATH.read_text())
+    """Load BFS municipality register from DB (initializes and seeds if needed)."""
+    init_db()
+    data = load_bfs_from_db()
     return [Municipality(**m) for m in data]
 
 
@@ -40,7 +41,7 @@ def fuzzy_find_municipality(
 
 
 async def update_bfs_register() -> Path:
-    """Download latest BFS register, process to JSON, save to BFS_PATH."""
+    """Download latest BFS register, save to DB and JSON."""
     import tempfile
 
     import httpx
@@ -71,6 +72,12 @@ async def update_bfs_register() -> Path:
     finally:
         Path(tmp).unlink(missing_ok=True)
 
-    BFS_PATH.parent.mkdir(parents=True, exist_ok=True)
-    BFS_PATH.write_text(json.dumps(municipalities, indent=2, ensure_ascii=False))
-    return BFS_PATH
+    # Save to JSON (for seeding / git)
+    BFS_JSON_PATH.parent.mkdir(parents=True, exist_ok=True)
+    BFS_JSON_PATH.write_text(json.dumps(municipalities, indent=2, ensure_ascii=False))
+
+    # Save to DB
+    init_db()
+    save_bfs_to_db(municipalities)
+
+    return BFS_JSON_PATH

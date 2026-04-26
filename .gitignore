@@ -34,3 +34,6 @@ result
 
 # uv
 uv.lock
+
+# SQLite
+*.db

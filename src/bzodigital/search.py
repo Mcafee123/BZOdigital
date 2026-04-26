@@ -17,6 +17,11 @@ NOISE_DOMAINS = frozenset({
 })
 
 
+def has_serper_key() -> bool:
+    """Check if Serper API key is configured."""
+    return bool(os.environ.get("SERPER_API_KEY"))
+
+
 def _get_serper_key() -> str:
     api_key = os.environ.get("SERPER_API_KEY")
     if not api_key:
@@ -89,6 +94,25 @@ def infer_domain(results: list[dict[str, str]]) -> str | None:
     return None
 
 
+async def search_or_crawl_site(base_url: str, profile: SearchProfile, max_results: int = 50) -> list[dict[str, str]]:
+    """Search with Serper if API key is available, otherwise crawl the site."""
+    if has_serper_key():
+        return await search_site(base_url, profile, max_results)
+    from bzodigital.crawler import crawl_site
+    # Crawler needs to visit many pages to find PDFs — max_pages != max_results
+    return await crawl_site(base_url, profile, max_pages=200)
+
+
+async def search_or_crawl_open(village_name: str, base_url: str | None, profile: SearchProfile, max_results: int = 50) -> list[dict[str, str]]:
+    """Open search with Serper if available, otherwise crawl the given URL."""
+    if has_serper_key():
+        return await search_open(village_name, profile, max_results)
+    if base_url:
+        from bzodigital.crawler import crawl_site
+        return await crawl_site(base_url, profile, max_pages=max_results)
+    return []
+
+
 def parse_pdf_links(html: str, base_url: str) -> list[dict[str, str]]:
     """Parse PDF links from HTML content.
 
@@ -145,9 +169,15 @@ def parse_pdf_links(html: str, base_url: str) -> list[dict[str, str]]:
     return pdfs
 
 
+def _url_is_pdf(url: str) -> bool:
+    """Check if a URL points to a PDF (ignoring query params)."""
+    path = urlparse(url).path.lower()
+    return path.endswith(".pdf")
+
+
 async def extract_pdfs(page_url: str) -> list[dict[str, str]]:
     """Extract all PDF links from an HTML page."""
-    if page_url.lower().endswith(".pdf"):
+    if _url_is_pdf(page_url):
         return [{"url": page_url, "title": "", "source": page_url}]
 
     async with httpx.AsyncClient(follow_redirects=True, timeout=15) as client:
