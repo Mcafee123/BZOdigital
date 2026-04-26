@@ -768,6 +768,15 @@
       resultsEl.innerHTML = '';
       currentMuni = muni;
       annotations = {};
+
+      // Clean up previous municipality's sections
+      const oldFiles = document.getElementById('existing-files');
+      if (oldFiles) oldFiles.remove();
+      const oldCompare = document.getElementById('compare-bar');
+      if (oldCompare) oldCompare.remove();
+      const oldProcessStatus = document.getElementById('process-status');
+      if (oldProcessStatus) { oldProcessStatus.style.display = 'none'; oldProcessStatus.innerHTML = ''; }
+
       statusEl.className = 'status';
       statusEl.innerHTML = `<span class="spinner"></span>Searching for BZO documents in ${muni.name} (${muni.canton})...`;
 
@@ -817,7 +826,8 @@
           return;
         }
 
-        statusEl.textContent = `${allPdfs.length} BZO document(s) for ${data.municipality} (${data.canton}). [${method}${cached}]`;
+        statusEl.innerHTML = `${allPdfs.length} BZO document(s) for ${esc(data.municipality)} (${esc(data.canton)}). [${method}${cached}]`
+          + (data.cached ? ` <a href="#" id="refresh-search" style="color:#2563eb;font-size:0.85em">Neu suchen</a>` : '');
 
         resultsEl.innerHTML = allPdfs.map((pdf, idx) => {
           const filename = decodeURIComponent(pdf.url.split('/').pop().split('?')[0]);
@@ -951,6 +961,16 @@
         showUploadBar();
         loadExistingFiles(muni.name);
         checkCompareStatus(muni.name);
+
+        // Wire up "Neu suchen" button (clear cache & re-search)
+        const refreshBtn = document.getElementById('refresh-search');
+        if (refreshBtn) {
+          refreshBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            await fetch('/api/bzo/cache', { method: 'DELETE' });
+            await selectMunicipality(muni);
+          });
+        }
 
       } catch (err) {
         statusEl.className = 'status error';
