@@ -32,6 +32,7 @@ from bzodigital.db import (
     upsert_annotation,
 )
 from bzodigital.converter import convert_pdf_stream, download_pdf
+from bzodigital.enrichment import enrich_markdown_safe
 from bzodigital.profiles import DEFAULT_PROFILE, PROFILES
 from bzodigital.search import (
     extract_pdfs,
@@ -533,14 +534,26 @@ def list_converted_files(municipality_name: str):
 
 
 @app.get("/api/files/{municipality_name}/{filename}")
-def get_file_preview(municipality_name: str, filename: str):
-    """Return a converted markdown file by name."""
+def get_file_preview(
+    municipality_name: str,
+    filename: str,
+    enriched: bool = Query(default=False, description="Enrich with law citation links on the fly"),
+):
+    """Return a converted markdown file, optionally enriched with law citations."""
     muni = _resolve_municipality(municipality_name)
     slug = _slug(muni.name)
     md_path = DATA_DIR / slug / "md" / filename
     if not md_path.exists() or not md_path.suffix == ".md":
         raise HTTPException(404, "File not found.")
-    return {"filename": md_path.name, "markdown": md_path.read_text(encoding="utf-8")}
+
+    markdown = md_path.read_text(encoding="utf-8")
+
+    if enriched:
+        result = enrich_markdown_safe(markdown)
+        if result:
+            return {"filename": md_path.name, "markdown": result["markdown"], "enriched": True}
+
+    return {"filename": md_path.name, "markdown": markdown, "enriched": False}
 
 
 async def _process_job(job_id: str, municipality_name: str, queue: asyncio.Queue):
