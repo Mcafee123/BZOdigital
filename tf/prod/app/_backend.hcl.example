@@ -1,0 +1,7 @@
+# Copy this file to _backend.hcl and fill in the real values.
+# _backend.hcl is gitignored. Used with: terraform init -backend-config=_backend.hcl
+
+resource_group_name  = "CHANGE_ME"
+storage_account_name = "CHANGE_ME"
+container_name       = "tfstate"
+key                  = "bzo-app-prod.tfstate"

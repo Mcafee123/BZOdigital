@@ -1,0 +1,31 @@
+name: Build
+
+on:
+  push:
+    branches-ignore: [main]
+    paths-ignore:
+      - 'data/**'
+      - 'app/data/**'
+      - '.plans/**'
+      - 'docs/**'
+      - '**/*.md'
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - 'data/**'
+      - 'app/data/**'
+      - '.plans/**'
+      - 'docs/**'
+      - '**/*.md'
+
+permissions:
+  contents: read
+
+jobs:
+  docker-build:
+    name: Docker build (sanity)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build image
+        run: docker build -t bzo-app:ci-${{ github.sha }} app/

@@ -1,0 +1,40 @@
+name: Upload data files
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'data/**'
+      - 'app/data/**'
+      - '.github/workflows/upload-data.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  upload:
+    name: Sync data/ and app/data/ to Azure File share
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Sync top-level data/
+        if: hashFiles('data/**') != ''
+        run: |
+          az storage file upload-batch \
+            --account-name "${{ secrets.STORAGE_ACCOUNT_NAME }}" \
+            --account-key "${{ secrets.STORAGE_ACCOUNT_KEY }}" \
+            --destination "${{ secrets.FILE_SHARE_NAME }}" \
+            --destination-path "data" \
+            --source "./data"
+
+      - name: Sync app/data/
+        if: hashFiles('app/data/**') != ''
+        run: |
+          az storage file upload-batch \
+            --account-name "${{ secrets.STORAGE_ACCOUNT_NAME }}" \
+            --account-key "${{ secrets.STORAGE_ACCOUNT_KEY }}" \
+            --destination "${{ secrets.FILE_SHARE_NAME }}" \
+            --destination-path "app/data" \
+            --source "./app/data"

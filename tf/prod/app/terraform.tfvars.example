@@ -1,0 +1,14 @@
+# Copy this file to terraform.tfvars and fill in the real values.
+# terraform.tfvars is gitignored.
+
+app_name                       = "bzo-app"
+resource_group_name            = "CHANGE_ME"
+container_app_environment_id   = "/subscriptions/CHANGE_ME/resourceGroups/CHANGE_ME/providers/Microsoft.App/managedEnvironments/CHANGE_ME"
+acr_login_server               = "CHANGE_ME.azurecr.io"
+acr_id                         = "/subscriptions/CHANGE_ME/resourceGroups/CHANGE_ME/providers/Microsoft.ContainerRegistry/registries/CHANGE_ME"
+image_name                     = "CHANGE_ME.azurecr.io/bzo-app:0.1.0"
+
+# Azure File share mounted into the Container App at /mnt/repo
+storage_account_name           = "CHANGE_ME"
+storage_account_resource_group = "CHANGE_ME"
+file_share_name                = "CHANGE_ME"

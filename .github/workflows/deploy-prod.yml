@@ -1,0 +1,104 @@
+name: Deploy PROD
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'app/**'
+      - '!app/data/**'
+      - 'tf/**'
+      - '.github/workflows/deploy-prod.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  IMAGE_NAME: bzo-app
+
+jobs:
+  build-and-push:
+    name: Build and push image
+    runs-on: ubuntu-latest
+    outputs:
+      image-tag: ${{ steps.version.outputs.image-tag }}
+      image-ref: ${{ steps.version.outputs.image-ref }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Compute image tag
+        id: version
+        run: |
+          VERSION=$(grep -m1 '^version' app/pyproject.toml | sed -E 's/.*"([^"]+)".*/\1/')
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          IMAGE_TAG="${VERSION}-${SHORT_SHA}"
+          IMAGE_REF="${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${IMAGE_TAG}"
+          echo "image-tag=${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
+          echo "image-ref=${IMAGE_REF}" >> "$GITHUB_OUTPUT"
+
+      - name: Login to container registry
+        run: |
+          echo "${{ secrets.ACR_PASSWORD }}" | docker login \
+            "${{ secrets.ACR_LOGIN_SERVER }}" \
+            -u "${{ secrets.ACR_USERNAME }}" --password-stdin
+
+      - name: Build image
+        run: |
+          docker build \
+            -t "${{ steps.version.outputs.image-ref }}" \
+            app/
+
+      - name: Push image
+        run: docker push "${{ steps.version.outputs.image-ref }}"
+
+      - name: Tag commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag "v${{ steps.version.outputs.image-tag }}"
+          git push origin "v${{ steps.version.outputs.image-tag }}"
+
+  deploy:
+    name: Terraform apply
+    needs: [build-and-push]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tf/prod/app
+    env:
+      ARM_CLIENT_ID:       ${{ secrets.ARM_CLIENT_ID }}
+      ARM_CLIENT_SECRET:   ${{ secrets.ARM_CLIENT_SECRET }}
+      ARM_TENANT_ID:       ${{ secrets.ARM_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: hashicorp/setup-terraform@v3
+
+      - name: Materialize backend config
+        run: |
+          cat > _backend.hcl <<EOF
+          resource_group_name  = "${{ secrets.TF_BACKEND_RESOURCE_GROUP }}"
+          storage_account_name = "${{ secrets.TF_BACKEND_STORAGE_ACCOUNT }}"
+          container_name       = "${{ secrets.TF_BACKEND_CONTAINER }}"
+          key                  = "${{ secrets.TF_BACKEND_KEY }}"
+          EOF
+
+      - name: Terraform init
+        run: terraform init -input=false -backend-config=_backend.hcl
+
+      - name: Terraform plan
+        run: |
+          terraform plan -input=false -out=tfplan \
+            -var "resource_group_name=${{ secrets.TF_RESOURCE_GROUP }}" \
+            -var "container_app_environment_id=${{ secrets.TF_CONTAINER_APP_ENV_ID }}" \
+            -var "acr_login_server=${{ secrets.ACR_LOGIN_SERVER }}" \
+            -var "acr_id=${{ secrets.TF_ACR_ID }}" \
+            -var "image_name=${{ needs.build-and-push.outputs.image-ref }}" \
+            -var "storage_account_name=${{ secrets.STORAGE_ACCOUNT_NAME }}" \
+            -var "storage_account_resource_group=${{ secrets.STORAGE_ACCOUNT_RESOURCE_GROUP }}" \
+            -var "file_share_name=${{ secrets.FILE_SHARE_NAME }}"
+
+      - name: Terraform apply
+        run: terraform apply -input=false -auto-approve tfplan
