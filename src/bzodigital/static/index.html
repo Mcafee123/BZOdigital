@@ -404,6 +404,32 @@
     .existing-file .icon { width: 20px; text-align: center; flex-shrink: 0; }
     .existing-file .size { color: #9ca3af; font-size: 0.75rem; flex-shrink: 0; }
 
+    .compare-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin: 1rem 0 1.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .compare-btn {
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      border: 2px solid #2563eb;
+      border-radius: 8px;
+      background: #fff;
+      color: #2563eb;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .compare-btn:hover:not(:disabled) { background: #eff6ff; }
+    .compare-btn:disabled { border-color: #93c5fd; color: #93c5fd; cursor: not-allowed; }
+
+    .compare-info { font-size: 0.8rem; color: #6b7280; }
+
     /* Modal overlay */
     .modal-overlay {
       display: none;
@@ -883,6 +909,7 @@
         refreshUsedLabels();
         updateProcessBar();
         loadExistingFiles(muni.name);
+        checkCompareStatus(muni.name);
 
       } catch (err) {
         statusEl.className = 'status error';
@@ -1068,6 +1095,69 @@
     }
 
 
+
+    // --- Compare ---
+
+    async function checkCompareStatus(muniName) {
+      // Remove any previous compare bar
+      const old = document.getElementById('compare-bar');
+      if (old) old.remove();
+
+      try {
+        const resp = await fetch(`/api/compare/${encodeURIComponent(muniName)}/status`);
+        if (!resp.ok) return;
+        const data = await resp.json();
+
+        if (!data.can_compare && !data.has_diff) return;
+
+        const bar = document.createElement('div');
+        bar.id = 'compare-bar';
+        bar.className = 'compare-bar';
+
+        if (data.has_diff) {
+          bar.innerHTML = `
+            <button class="compare-btn" onclick="runCompare('${encodeAttr(muniName)}')">Vergleich neu erstellen</button>
+            <span class="compare-info">✅ Diff vorhanden (${esc(data.alt_filename)} ↔ ${esc(data.neu_filename)})</span>`;
+        } else if (data.can_compare) {
+          bar.innerHTML = `
+            <button class="compare-btn" onclick="runCompare('${encodeAttr(muniName)}')">Vergleich erstellen</button>
+            <span class="compare-info">${esc(data.alt_filename)} ↔ ${esc(data.neu_filename)}</span>`;
+        }
+
+        // Insert after existing-files or process-status
+        const anchor = document.getElementById('existing-files') || processStatusEl;
+        anchor.after(bar);
+      } catch {}
+    }
+
+    async function runCompare(muniName) {
+      const bar = document.getElementById('compare-bar');
+      const btn = bar.querySelector('.compare-btn');
+      const info = bar.querySelector('.compare-info');
+      btn.disabled = true;
+      btn.textContent = 'Vergleiche...';
+      info.innerHTML = '<span class="spinner"></span> DocConverter verarbeitet...';
+
+      try {
+        const resp = await fetch(`/api/compare/${encodeURIComponent(muniName)}`, { method: 'POST' });
+        if (!resp.ok) {
+          const err = await resp.json();
+          info.textContent = err.detail || 'Fehler beim Vergleich.';
+          btn.disabled = false;
+          btn.textContent = 'Vergleich erstellen';
+          return;
+        }
+        const data = await resp.json();
+        const time = data.processing_time_ms ? ` (${(data.processing_time_ms / 1000).toFixed(1)}s)` : '';
+        btn.textContent = 'Vergleich neu erstellen';
+        btn.disabled = false;
+        info.textContent = `✅ Diff gespeichert${time}: ${data.left_filename} ↔ ${data.right_filename}`;
+      } catch (err) {
+        info.textContent = 'Netzwerkfehler.';
+        btn.disabled = false;
+        btn.textContent = 'Vergleich erstellen';
+      }
+    }
 
     // --- Processing ---
 

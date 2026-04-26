@@ -31,7 +31,7 @@ from bzodigital.db import (
     save_search_cache,
     upsert_annotation,
 )
-from bzodigital.converter import convert_pdf_stream, download_pdf
+from bzodigital.converter import compare_documents, convert_pdf_stream, download_pdf
 from bzodigital.enrichment import enrich_markdown_safe
 from bzodigital.profiles import DEFAULT_PROFILE, PROFILES
 from bzodigital.search import (
@@ -381,7 +381,7 @@ async def get_processed(municipality_name: str):
                 if pdf["url"] not in seen:
                     seen.add(pdf["url"])
                     raw_pdfs.append(pdf)
-        matched, _ = filter_pdfs_by_metadata(raw_pdfs, profile)
+        matched, ambiguous = filter_pdfs_by_metadata(raw_pdfs, profile)
         now = datetime.utcnow().isoformat()
         all_pdfs = [
             AnnotationResponse(
@@ -389,7 +389,7 @@ async def get_processed(municipality_name: str):
                 pdf_url=p["url"], pdf_title=p.get("title", ""),
                 labels=[], selected=False, created_at=now, updated_at=now,
             )
-            for p in matched
+            for p in [*matched, *ambiguous]
         ]
 
     return ProcessedPdfResponse(
@@ -556,6 +556,81 @@ def get_file_preview(
     return {"filename": md_path.name, "markdown": markdown, "enriched": False}
 
 
+# --- Compare ---
+
+LABEL_ALT = "Bau- und Zonenordnung alt"
+LABEL_NEU = "Bau- und Zonenordnung neu"
+
+
+@app.get("/api/compare/{municipality_name}/status")
+def compare_status(municipality_name: str):
+    """Check if a comparison is possible and if a diff already exists."""
+    muni = _resolve_municipality(municipality_name)
+    slug = _slug(muni.name)
+    md_dir = DATA_DIR / slug / "md"
+    anns = get_annotations(muni.bfs_nr)
+
+    alt_file = _find_md_for_label(anns, LABEL_ALT, md_dir)
+    neu_file = _find_md_for_label(anns, LABEL_NEU, md_dir)
+
+    diff_path = DATA_DIR / slug / "diff.unified"
+    return {
+        "has_alt": alt_file is not None,
+        "has_neu": neu_file is not None,
+        "can_compare": alt_file is not None and neu_file is not None,
+        "has_diff": diff_path.exists(),
+        "alt_filename": alt_file.name if alt_file else None,
+        "neu_filename": neu_file.name if neu_file else None,
+    }
+
+
+@app.post("/api/compare/{municipality_name}")
+async def run_compare(municipality_name: str):
+    """Compare the alt and neu BZO markdown files via DocConverter."""
+    muni = _resolve_municipality(municipality_name)
+    slug = _slug(muni.name)
+    md_dir = DATA_DIR / slug / "md"
+    anns = get_annotations(muni.bfs_nr)
+
+    alt_file = _find_md_for_label(anns, LABEL_ALT, md_dir)
+    neu_file = _find_md_for_label(anns, LABEL_NEU, md_dir)
+
+    if not alt_file or not neu_file:
+        missing = []
+        if not alt_file:
+            missing.append(LABEL_ALT)
+        if not neu_file:
+            missing.append(LABEL_NEU)
+        raise HTTPException(400, f"Missing labeled markdown files: {', '.join(missing)}")
+
+    left_bytes = alt_file.read_bytes()
+    right_bytes = neu_file.read_bytes()
+
+    result = await compare_documents(left_bytes, alt_file.name, right_bytes, neu_file.name)
+
+    # Save the unified diff
+    diff_path = DATA_DIR / slug / "diff.unified"
+    diff_path.write_text(result.get("unified_diff", ""), encoding="utf-8")
+
+    return {
+        "left_filename": result.get("left_filename"),
+        "right_filename": result.get("right_filename"),
+        "diff_path": str(diff_path.relative_to(DATA_DIR)),
+        "processing_time_ms": result.get("processing_time_ms"),
+    }
+
+
+def _find_md_for_label(annotations: list[dict], label: str, md_dir: Path) -> Path | None:
+    """Find the markdown file for a PDF annotation with a specific label."""
+    for ann in annotations:
+        if label in ann.get("labels", []) and ann.get("selected"):
+            md_name = Path(_pdf_filename(ann["pdf_url"])).stem + ".md"
+            md_path = md_dir / md_name
+            if md_path.exists():
+                return md_path
+    return None
+
+
 async def _process_job(job_id: str, municipality_name: str, queue: asyncio.Queue):
     """Background task: process each PDF in the job."""
     job = _jobs[job_id]
@@ -652,8 +727,13 @@ async def _build_response(
                     seen.add(pdf["url"])
                     all_pdfs.append(pdf)
 
-        matched, _ambiguous = filter_pdfs_by_metadata(all_pdfs, profile)
-        pdf_results = [PdfResult(url=p["url"], title=p.get("title", ""), match=p.get("match", "metadata")) for p in matched]
+        matched, ambiguous = filter_pdfs_by_metadata(all_pdfs, profile)
+        for p in ambiguous:
+            p["match"] = "ambiguous"
+        pdf_results = [
+            PdfResult(url=p["url"], title=p.get("title", ""), match=p.get("match", "metadata"))
+            for p in [*matched, *ambiguous]
+        ]
 
     return BzoResponse(
         municipality=muni.name,

@@ -93,6 +93,29 @@ async def convert_pdf_stream(
             return result
 
 
+async def compare_documents(
+    left_bytes: bytes,
+    left_filename: str,
+    right_bytes: bytes,
+    right_filename: str,
+) -> dict[str, Any]:
+    """Upload two documents to DocConverter's compare endpoint, return CompareResult."""
+    base = _base_url()
+    if not base:
+        raise RuntimeError("DOCCONVERTER_URL is not configured")
+
+    url = f"{base}/api/compare"
+
+    async with httpx.AsyncClient(auth=_auth(), timeout=httpx.Timeout(None, connect=30)) as client:
+        files = {
+            "left_file": (left_filename, left_bytes, "text/markdown"),
+            "right_file": (right_filename, right_bytes, "text/markdown"),
+        }
+        resp = await client.post(url, files=files)
+        resp.raise_for_status()
+        return resp.json()
+
+
 async def convert_pdf_sync(pdf_bytes: bytes, filename: str) -> dict[str, Any]:
     """Upload a PDF to DocConverter's synchronous endpoint."""
     base = _base_url()
