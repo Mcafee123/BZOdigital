@@ -11,7 +11,7 @@ from pathlib import Path
 from urllib.parse import unquote
 from uuid import uuid4
 
-from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Query, Request
+from fastapi import BackgroundTasks, Depends, FastAPI, File, HTTPException, Query, Request, UploadFile
 from fastapi.responses import StreamingResponse
 from fastapi.responses import FileResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
@@ -401,6 +401,50 @@ async def get_processed(municipality_name: str):
     )
 
 
+# --- Uploads ---
+
+
+@app.post("/api/upload/{municipality_name}")
+async def upload_pdf(municipality_name: str, request: Request, file: UploadFile = File(...)):
+    """Upload a PDF and create an annotation for it."""
+    muni = _resolve_municipality(municipality_name)
+    slug = _slug(muni.name)
+
+    if not file.filename or not file.filename.lower().endswith(".pdf"):
+        raise HTTPException(400, "Only PDF files are supported.")
+
+    upload_dir = DATA_DIR / slug / "uploads"
+    upload_dir.mkdir(parents=True, exist_ok=True)
+
+    file_path = upload_dir / file.filename
+    content = await file.read()
+    file_path.write_bytes(content)
+
+    # Build a URL that points to our own serve endpoint
+    base_url = str(request.base_url).rstrip("/")
+    serve_url = f"{base_url}/api/uploads/{_slug(muni.name)}/{file.filename}"
+
+    # Create annotation
+    ann = upsert_annotation(
+        bfs_nr=muni.bfs_nr,
+        pdf_url=serve_url,
+        pdf_title=file.filename,
+        labels=[],
+        selected=False,
+    )
+
+    return ann
+
+
+@app.get("/api/uploads/{municipality_slug}/{filename}")
+async def serve_upload(municipality_slug: str, filename: str):
+    """Serve an uploaded PDF file."""
+    file_path = DATA_DIR / municipality_slug / "uploads" / filename
+    if not file_path.exists():
+        raise HTTPException(404, "File not found.")
+    return FileResponse(file_path, media_type="application/pdf", filename=filename)
+
+
 # --- Processing ---
 
 _jobs: dict[str, JobState] = {}
@@ -643,8 +687,12 @@ async def _process_job(job_id: str, municipality_name: str, queue: asyncio.Queue
         await queue.put({"type": "file_start", "data": {"file_index": i, "url": file_state.url, "title": file_state.title}})
 
         try:
-            # Download
-            pdf_bytes = await download_pdf(file_state.url)
+            # Download — read from disk if it's a local upload
+            local_path = _resolve_local_upload(file_state.url)
+            if local_path:
+                pdf_bytes = local_path.read_bytes()
+            else:
+                pdf_bytes = await download_pdf(file_state.url)
 
             # Convert via DocConverter with progress relay
             async def on_progress(data, _idx=i):
@@ -685,6 +733,18 @@ async def _process_job(job_id: str, municipality_name: str, queue: asyncio.Queue
 
 
 # --- Helpers ---
+
+
+def _resolve_local_upload(url: str) -> Path | None:
+    """If the URL points to our own uploads endpoint, return the local file path."""
+    # Match /api/uploads/<slug>/<filename> in any base URL
+    import re as _re
+    m = _re.search(r"/api/uploads/([^/]+)/(.+)$", url)
+    if not m:
+        return None
+    slug, filename = m.group(1), unquote(m.group(2))
+    path = DATA_DIR / slug / "uploads" / filename
+    return path if path.exists() else None
 
 
 def _resolve_municipality(name: str) -> Municipality:
