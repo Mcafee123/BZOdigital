@@ -19,6 +19,14 @@ locals {
   has_custom_domain = var.custom_domain != null && var.custom_domain != ""
 }
 
+# acr_config from platform state has {name, rg_name, identity_id, ...} but no
+# `id`. Look up the ACR by name+rg to get its resource ID for the role
+# assignment scope.
+data "azurerm_container_registry" "acr" {
+  name                = local.acr_config.name
+  resource_group_name = local.acr_config.rg_name
+}
+
 # Cloudflare credentials (read from platform KV; only fetched when custom domain is on).
 data "azurerm_key_vault_secret" "cloudflare_api_token" {
   count        = local.has_custom_domain ? 1 : 0
@@ -63,7 +71,7 @@ resource "azurerm_user_assigned_identity" "app" {
 }
 
 resource "azurerm_role_assignment" "acr_pull" {
-  scope                = local.acr_config.id
+  scope                = data.azurerm_container_registry.acr.id
   role_definition_name = "AcrPull"
   principal_id         = azurerm_user_assigned_identity.app.principal_id
 }
