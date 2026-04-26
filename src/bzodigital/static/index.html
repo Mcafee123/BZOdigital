@@ -408,6 +408,28 @@
 
     .modal-close:hover { background: #f3f4f6; color: #1a1a1a; }
 
+    .modal-toggle {
+      display: flex;
+      gap: 0;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .modal-toggle button {
+      padding: 0.3rem 0.7rem;
+      font-size: 0.75rem;
+      border: none;
+      background: #fff;
+      cursor: pointer;
+      color: #6b7280;
+    }
+
+    .modal-toggle button:not(:last-child) { border-right: 1px solid #d1d5db; }
+    .modal-toggle button.active { background: #2563eb; color: #fff; }
+    .modal-toggle button:hover:not(.active) { background: #f3f4f6; }
+
     .modal-body {
       padding: 1.5rem;
       overflow-y: auto;
@@ -457,6 +479,10 @@
     <div class="modal">
       <div class="modal-header">
         <span class="modal-title" id="modal-title"></span>
+        <div class="modal-toggle" id="modal-toggle" style="display:none">
+          <button id="toggle-raw" class="active" onclick="togglePreviewMode('raw')">Roh</button>
+          <button id="toggle-enriched" onclick="togglePreviewMode('enriched')">Mit Verweisen</button>
+        </div>
         <button class="modal-close" onclick="closePreview()">&times;</button>
       </div>
       <div class="modal-body" id="modal-body"></div>
@@ -866,9 +892,17 @@
     const previewModal = document.getElementById('preview-modal');
     const modalTitle = document.getElementById('modal-title');
     const modalBody = document.getElementById('modal-body');
+    const modalToggle = document.getElementById('modal-toggle');
+    const toggleRaw = document.getElementById('toggle-raw');
+    const toggleEnriched = document.getElementById('toggle-enriched');
+
+    // Current preview state
+    let previewCtx = null;  // {type: 'job'|'file', jobId, fileIndex, muniName, filename, hasEnriched}
 
     async function openPreview(jobId, fileIndex, title) {
+      previewCtx = { type: 'job', jobId, fileIndex };
       modalTitle.textContent = title;
+      modalToggle.style.display = 'none';
       modalBody.innerHTML = '<div class="status"><span class="spinner"></span> Laden...</div>';
       previewModal.classList.add('open');
 
@@ -882,9 +916,44 @@
       }
     }
 
+    async function openFilePreview(muniName, filename) {
+      previewCtx = { type: 'file', muniName, filename };
+      modalTitle.textContent = filename;
+      modalBody.innerHTML = '<div class="status"><span class="spinner"></span> Laden...</div>';
+      previewModal.classList.add('open');
+      modalToggle.style.display = 'flex';
+      toggleRaw.classList.add('active');
+      toggleEnriched.classList.remove('active');
+
+      await loadFilePreview(muniName, filename, false);
+    }
+
+    async function loadFilePreview(muniName, filename, enriched) {
+      modalBody.innerHTML = '<div class="status"><span class="spinner"></span> Laden...</div>';
+      try {
+        const q = enriched ? '?enriched=true' : '';
+        const resp = await fetch(`/api/files/${encodeURIComponent(muniName)}/${encodeURIComponent(filename)}${q}`);
+        if (!resp.ok) throw new Error('Laden fehlgeschlagen');
+        const data = await resp.json();
+        modalBody.innerHTML = marked.parse(data.markdown);
+      } catch (err) {
+        modalBody.innerHTML = `<p class="status error">${esc(err.message)}</p>`;
+      }
+    }
+
+    function togglePreviewMode(mode) {
+      if (!previewCtx || previewCtx.type !== 'file') return;
+      const enriched = mode === 'enriched';
+      toggleRaw.classList.toggle('active', !enriched);
+      toggleEnriched.classList.toggle('active', enriched);
+      loadFilePreview(previewCtx.muniName, previewCtx.filename, enriched);
+    }
+
     function closePreview() {
       previewModal.classList.remove('open');
       modalBody.innerHTML = '';
+      modalToggle.style.display = 'none';
+      previewCtx = null;
     }
 
     // Close on overlay click or Escape
@@ -946,20 +1015,7 @@
       } catch {}
     }
 
-    async function openFilePreview(muniName, filename) {
-      modalTitle.textContent = filename;
-      modalBody.innerHTML = '<div class="status"><span class="spinner"></span> Laden...</div>';
-      previewModal.classList.add('open');
 
-      try {
-        const resp = await fetch(`/api/files/${encodeURIComponent(muniName)}/${encodeURIComponent(filename)}`);
-        if (!resp.ok) throw new Error('Laden fehlgeschlagen');
-        const data = await resp.json();
-        modalBody.innerHTML = marked.parse(data.markdown);
-      } catch (err) {
-        modalBody.innerHTML = `<p class="status error">${esc(err.message)}</p>`;
-      }
-    }
 
     // --- Processing ---
 
