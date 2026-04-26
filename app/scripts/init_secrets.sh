@@ -142,4 +142,18 @@ for name in "${OPTIONAL[@]}"; do
   echo "  ✓ $name"
 done
 
+# SSH deploy key: read from a file path (multi-line content), default ~/.ssh/id_ed25519.
+SSH_PRIVATE_KEY_PATH="${SSH_PRIVATE_KEY_PATH:-$HOME/.ssh/id_ed25519}"
+# Expand a leading ~ if the file came from secrets.env quoted.
+SSH_PRIVATE_KEY_PATH="${SSH_PRIVATE_KEY_PATH/#\~/$HOME}"
+if [[ -f "$SSH_PRIVATE_KEY_PATH" ]]; then
+  gh secret set SSH_PRIVATE_KEY \
+    --repo "$REPO_NWO" \
+    --env "$GH_ENVIRONMENT" \
+    --body - < "$SSH_PRIVATE_KEY_PATH"
+  echo "  ✓ SSH_PRIVATE_KEY (from $SSH_PRIVATE_KEY_PATH)"
+else
+  echo "  - SSH_PRIVATE_KEY (no key at $SSH_PRIVATE_KEY_PATH, skipped)"
+fi
+
 echo "Done. Workflow runs that reference 'environment: $GH_ENVIRONMENT' will pause until you approve them."
