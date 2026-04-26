@@ -5,8 +5,8 @@ on:
     branches: [main]
     paths:
       - 'app/**'
-      - '!app/data/**'
       - 'tf/**'
+      - 'data/**'
       - '.github/workflows/deploy-prod.yml'
   workflow_dispatch:
 
@@ -19,8 +19,30 @@ env:
   ACR_LOGIN_SERVER: anplatformacr.azurecr.io
 
 jobs:
+  changes:
+    name: Detect changed paths
+    runs-on: ubuntu-latest
+    outputs:
+      app:  ${{ steps.filter.outputs.app }}
+      tf:   ${{ steps.filter.outputs.tf }}
+      data: ${{ steps.filter.outputs.data }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            app:
+              - 'app/**'
+            tf:
+              - 'tf/**'
+            data:
+              - 'data/**'
+
   deploy:
     name: Build, push, and apply
+    needs: changes
+    if: needs.changes.outputs.app == 'true' || needs.changes.outputs.tf == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     environment: production
     env:
@@ -92,3 +114,49 @@ jobs:
       - name: Terraform apply
         working-directory: tf/prod/app
         run: terraform apply -input=false -auto-approve tfplan
+
+  sync-data:
+    name: Sync data/ to Azure File share
+    needs: changes
+    if: needs.changes.outputs.data == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      ARM_CLIENT_ID:       ${{ secrets.ARM_CLIENT_ID }}
+      ARM_CLIENT_SECRET:   ${{ secrets.ARM_CLIENT_SECRET }}
+      ARM_TENANT_ID:       ${{ secrets.ARM_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: webfactory/ssh-agent@v0.10.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - uses: hashicorp/setup-terraform@v3
+      - uses: azure/login@v3
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Read storage outputs from Terraform state
+        id: tf
+        working-directory: tf/prod/app
+        run: |
+          terraform init -input=false -backend-config=_backend.hcl
+          {
+            echo "sa=$(terraform output -raw storage_account_name)"
+            echo "share=$(terraform output -raw file_share_name)"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Install azcopy
+        run: |
+          curl -sSL https://aka.ms/downloadazcopy-v10-linux | \
+            sudo tar -xz --strip-components=1 -C /usr/local/bin --wildcards '*/azcopy'
+          azcopy --version
+
+      - name: Sync data/
+        env:
+          AZCOPY_AUTO_LOGIN_TYPE: AZCLI
+        run: |
+          azcopy sync "./data" \
+            "https://${{ steps.tf.outputs.sa }}.file.core.windows.net/${{ steps.tf.outputs.share }}/data" \
+            --delete-destination=true \
+            --recursive

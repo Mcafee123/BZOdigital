@@ -32,11 +32,9 @@ RUN apt-get update \
 COPY --from=py-build /app/.venv /app/.venv
 COPY --from=py-build /app/src /app/src
 COPY --from=spa-build /build/web/dist /app/web/dist
-COPY data /app/data
 
 ENV PATH="/app/.venv/bin:${PATH}" \
     PYTHONPATH="/app/src" \
-    DIFF_PATH="/app/data/sample.diff" \
     WEB_DIST="/app/web/dist"
 
 USER app
