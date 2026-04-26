@@ -7,6 +7,7 @@
   <link rel="icon" href="/static/favicon.ico" sizes="any">
   <link rel="icon" href="/static/favicon-32.png" type="image/png" sizes="32x32">
   <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -241,6 +242,192 @@
       border-color: #9ca3af;
       background: #f9fafb;
     }
+    /* Processing */
+    .process-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .process-btn {
+      padding: 0.6rem 1.2rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+      border: none;
+      border-radius: 8px;
+      background: #2563eb;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .process-btn:hover:not(:disabled) { background: #1d4ed8; }
+    .process-btn:disabled { background: #93c5fd; cursor: not-allowed; }
+
+    .process-summary {
+      font-size: 0.85rem;
+      color: #6b7280;
+    }
+
+    .process-status {
+      margin-bottom: 1.5rem;
+    }
+
+    .file-progress {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #f3f4f6;
+      font-size: 0.85rem;
+    }
+
+    .file-progress:last-child { border-bottom: none; }
+
+    .file-progress .icon {
+      width: 20px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .file-progress .title {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .file-progress .bar-wrap {
+      width: 100px;
+      height: 6px;
+      background: #e5e7eb;
+      border-radius: 3px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .file-progress .bar-fill {
+      height: 100%;
+      background: #2563eb;
+      border-radius: 3px;
+      transition: width 0.3s;
+    }
+
+    .file-progress.done .bar-fill { background: #16a34a; }
+    .file-progress.failed .bar-fill { background: #dc2626; }
+
+    .file-progress .file-status-text {
+      width: 60px;
+      text-align: right;
+      font-size: 0.75rem;
+      color: #6b7280;
+      flex-shrink: 0;
+    }
+
+    .file-progress.done .title, .existing-file .title {
+      cursor: pointer;
+      color: #2563eb;
+    }
+    .file-progress.done .title:hover, .existing-file .title:hover { text-decoration: underline; }
+
+    .existing-files-section {
+      margin-top: 1.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .existing-files-section h3 {
+      font-size: 0.9rem;
+      color: #374151;
+      margin-bottom: 0.5rem;
+    }
+
+    .existing-file {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0;
+      font-size: 0.85rem;
+    }
+
+    .existing-file .icon { width: 20px; text-align: center; flex-shrink: 0; }
+    .existing-file .size { color: #9ca3af; font-size: 0.75rem; flex-shrink: 0; }
+
+    /* Modal overlay */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: #fff;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 860px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #e5e7eb;
+      gap: 0.75rem;
+    }
+
+    .modal-header .modal-title {
+      flex: 1;
+      font-weight: 600;
+      font-size: 0.95rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.4rem;
+      cursor: pointer;
+      color: #6b7280;
+      padding: 0.25rem 0.5rem;
+      border-radius: 6px;
+    }
+
+    .modal-close:hover { background: #f3f4f6; color: #1a1a1a; }
+
+    .modal-body {
+      padding: 1.5rem;
+      overflow-y: auto;
+      flex: 1;
+      line-height: 1.6;
+      font-size: 0.9rem;
+    }
+
+    .modal-body h1 { font-size: 1.4rem; margin: 1.2rem 0 0.6rem; }
+    .modal-body h2 { font-size: 1.2rem; margin: 1rem 0 0.5rem; }
+    .modal-body h3 { font-size: 1.05rem; margin: 0.8rem 0 0.4rem; }
+    .modal-body p { margin: 0.5rem 0; }
+    .modal-body table { border-collapse: collapse; width: 100%; margin: 0.75rem 0; font-size: 0.85rem; }
+    .modal-body th, .modal-body td { border: 1px solid #d1d5db; padding: 0.4rem 0.6rem; text-align: left; }
+    .modal-body th { background: #f9fafb; font-weight: 600; }
+    .modal-body img { max-width: 100%; border-radius: 4px; }
+    .modal-body blockquote { border-left: 3px solid #d1d5db; padding-left: 1rem; color: #4b5563; margin: 0.5rem 0; }
+    .modal-body pre { background: #f3f4f6; padding: 0.75rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; }
+    .modal-body code { background: #f3f4f6; padding: 0.15rem 0.3rem; border-radius: 3px; font-size: 0.85rem; }
+    .modal-body pre code { background: none; padding: 0; }
   </style>
 </head>
 <body>
@@ -256,8 +443,25 @@
   </div>
 
   <div id="status" class="status"></div>
+
+  <div id="process-bar" class="process-bar" style="display:none">
+    <button id="process-btn" class="process-btn" onclick="startProcessing()">Verarbeitung starten</button>
+    <span id="process-summary" class="process-summary"></span>
+  </div>
+  <div id="process-status" class="process-status" style="display:none"></div>
+
   <ul id="results" class="results"></ul>
   <button type="button" id="beaver-toggle" class="beaver-toggle">Please, no Beavers</button>
+
+  <div class="modal-overlay" id="preview-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title" id="modal-title"></span>
+        <button class="modal-close" onclick="closePreview()">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+    </div>
+  </div>
 
   <script>
     const searchInput = document.getElementById('search');
@@ -270,7 +474,7 @@
     let currentMuni = null;
     let annotations = {};  // keyed by pdf_url
 
-    // Poll for readiness
+    // Poll for readiness, then restore state
     (async function checkReady() {
       try {
         const resp = await fetch('/api/status');
@@ -282,13 +486,71 @@
         } else {
           seedingBanner.style.display = 'none';
           searchInput.disabled = false;
-          searchInput.focus();
           loadLabels();
+          restoreState();
         }
       } catch {
         setTimeout(checkReady, 2000);
       }
     })();
+
+    async function restoreState() {
+      // Restore municipality from URL param
+      const params = new URLSearchParams(window.location.search);
+      const muniName = params.get('municipality');
+      if (muniName) {
+        // Look up the municipality to get the full object
+        try {
+          const resp = await fetch(`/api/municipalities?q=${encodeURIComponent(muniName)}&limit=1`);
+          const matches = await resp.json();
+          if (matches.length > 0 && matches[0].name.toLowerCase() === muniName.toLowerCase()) {
+            await selectMunicipality(matches[0]);
+            // Restore active job if any
+            const savedJobId = localStorage.getItem('bzo_job_id');
+            const savedJobMuni = localStorage.getItem('bzo_job_muni');
+            if (savedJobId && savedJobMuni === muniName) {
+              await resumeJob(savedJobId);
+            }
+            return;
+          }
+        } catch {}
+      }
+      searchInput.focus();
+    }
+
+    async function resumeJob(jobId) {
+      try {
+        const resp = await fetch(`/api/process/${jobId}`);
+        if (!resp.ok) { clearJobStorage(); return; }
+        const job = await resp.json();
+
+        currentJobId = jobId;
+        processBar.style.display = 'flex';
+        processBtn.disabled = true;
+        processBtn.textContent = job.status === 'running' ? 'Wird verarbeitet...' : 'Verarbeitung starten';
+
+        // Render status rows from job state
+        renderProcessingStatus(job.files.map(f => ({ url: f.url, title: f.title })));
+        // Immediately update with current state
+        updateFromJobState(job);
+
+        if (job.status === 'running') {
+          pollJob(jobId);
+        }
+      } catch {
+        clearJobStorage();
+      }
+    }
+
+    function saveJobStorage(jobId, muniName) {
+      localStorage.setItem('bzo_job_id', jobId);
+      localStorage.setItem('bzo_job_muni', muniName);
+    }
+
+    function clearJobStorage() {
+      localStorage.removeItem('bzo_job_id');
+      localStorage.removeItem('bzo_job_muni');
+    }
 
     async function loadLabels() {
       try {
@@ -375,6 +637,11 @@
       annotations = {};
       statusEl.className = 'status';
       statusEl.innerHTML = `<span class="spinner"></span>Searching for BZO documents in ${muni.name} (${muni.canton})...`;
+
+      // Update URL without reload
+      const url = new URL(window.location);
+      url.searchParams.set('municipality', muni.name);
+      history.replaceState(null, '', url);
 
       try {
         // Load existing annotations in parallel with search
@@ -536,6 +803,8 @@
         });
 
         refreshUsedLabels();
+        updateProcessBar();
+        loadExistingFiles(muni.name);
 
       } catch (err) {
         statusEl.className = 'status error';
@@ -589,6 +858,294 @@
           setTimeout(() => indicator.classList.remove('show'), 1500);
         }
       } catch {}
+      updateProcessBar();
+    }
+
+    // --- Preview modal ---
+
+    const previewModal = document.getElementById('preview-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalBody = document.getElementById('modal-body');
+
+    async function openPreview(jobId, fileIndex, title) {
+      modalTitle.textContent = title;
+      modalBody.innerHTML = '<div class="status"><span class="spinner"></span> Laden...</div>';
+      previewModal.classList.add('open');
+
+      try {
+        const resp = await fetch(`/api/preview/${jobId}/${fileIndex}`);
+        if (!resp.ok) throw new Error('Laden fehlgeschlagen');
+        const data = await resp.json();
+        modalBody.innerHTML = marked.parse(data.markdown);
+      } catch (err) {
+        modalBody.innerHTML = `<p class="status error">${esc(err.message)}</p>`;
+      }
+    }
+
+    function closePreview() {
+      previewModal.classList.remove('open');
+      modalBody.innerHTML = '';
+    }
+
+    // Close on overlay click or Escape
+    previewModal.addEventListener('click', (e) => {
+      if (e.target === previewModal) closePreview();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && previewModal.classList.contains('open')) closePreview();
+    });
+
+    // --- Existing files ---
+
+    let convertedFilenames = new Set();  // stems of already-converted files
+
+    function pdfUrlToMdName(url) {
+      // Match backend logic: url → filename → stem + .md
+      const raw = decodeURIComponent(url.split('/').pop().split('?')[0]);
+      const name = raw.endsWith('.pdf') ? raw : raw + '.pdf';
+      return name.replace(/\.pdf$/i, '.md');
+    }
+
+    async function loadExistingFiles(muniName) {
+      try {
+        const resp = await fetch(`/api/files/${encodeURIComponent(muniName)}`);
+        if (!resp.ok) return;
+        const data = await resp.json();
+
+        convertedFilenames = new Set(data.files.map(f => f.filename));
+        updateProcessBar();
+
+        if (data.files.length === 0) return;
+
+        // Remove any previous section
+        const old = document.getElementById('existing-files');
+        if (old) old.remove();
+
+        const section = document.createElement('div');
+        section.id = 'existing-files';
+        section.className = 'existing-files-section';
+        section.innerHTML = `<h3>Bereits konvertierte Dateien (${data.files.length})</h3>` +
+          data.files.map(f => {
+            const sizeKB = Math.round(f.size / 1024);
+            return `<div class="existing-file">
+              <span class="icon">📄</span>
+              <span class="title" data-muni="${encodeAttr(muniName)}" data-filename="${encodeAttr(f.filename)}">${esc(f.filename)}</span>
+              <span class="size">${sizeKB} KB</span>
+            </div>`;
+          }).join('');
+
+        // Insert after process-status, before results
+        processStatusEl.after(section);
+
+        // Wire up click handlers for preview
+        section.querySelectorAll('.title').forEach(el => {
+          el.addEventListener('click', () => {
+            openFilePreview(decodeAttr(el.dataset.muni), decodeAttr(el.dataset.filename));
+          });
+        });
+      } catch {}
+    }
+
+    async function openFilePreview(muniName, filename) {
+      modalTitle.textContent = filename;
+      modalBody.innerHTML = '<div class="status"><span class="spinner"></span> Laden...</div>';
+      previewModal.classList.add('open');
+
+      try {
+        const resp = await fetch(`/api/files/${encodeURIComponent(muniName)}/${encodeURIComponent(filename)}`);
+        if (!resp.ok) throw new Error('Laden fehlgeschlagen');
+        const data = await resp.json();
+        modalBody.innerHTML = marked.parse(data.markdown);
+      } catch (err) {
+        modalBody.innerHTML = `<p class="status error">${esc(err.message)}</p>`;
+      }
+    }
+
+    // --- Processing ---
+
+    const processBar = document.getElementById('process-bar');
+    const processBtn = document.getElementById('process-btn');
+    const processSummary = document.getElementById('process-summary');
+    const processStatusEl = document.getElementById('process-status');
+    let currentJobId = null;
+
+    function updateProcessBar() {
+      if (!currentMuni) { processBar.style.display = 'none'; return; }
+      if (currentJobId) return;  // don't change while job is running
+
+      const selectedItems = resultsEl.querySelectorAll('.result-item:has(.select-cb:checked)');
+      let newCount = 0;
+      let alreadyCount = 0;
+      selectedItems.forEach(item => {
+        const url = decodeAttr(item.dataset.url);
+        const mdName = pdfUrlToMdName(url);
+        if (convertedFilenames.has(mdName)) {
+          alreadyCount++;
+        } else {
+          newCount++;
+        }
+      });
+
+      const totalSelected = newCount + alreadyCount;
+      if (totalSelected > 0) {
+        processBar.style.display = 'flex';
+        if (newCount > 0) {
+          processBtn.disabled = false;
+          const alreadyNote = alreadyCount > 0 ? `, ${alreadyCount} bereits konvertiert` : '';
+          processSummary.textContent = `${newCount} neu zu verarbeiten${alreadyNote}`;
+        } else {
+          processBtn.disabled = true;
+          processSummary.textContent = `Alle ${alreadyCount} Dokument(e) bereits konvertiert`;
+        }
+      } else {
+        processBar.style.display = 'none';
+      }
+    }
+
+    async function startProcessing() {
+      if (!currentMuni || currentJobId) return;
+
+      // Collect selected PDFs
+      const pdfs = [];
+      resultsEl.querySelectorAll('.result-item').forEach(item => {
+        const cb = item.querySelector('.select-cb');
+        if (cb && cb.checked) {
+          pdfs.push({
+            url: decodeAttr(item.dataset.url),
+            title: decodeAttr(item.dataset.title),
+          });
+        }
+      });
+
+      if (pdfs.length === 0) return;
+
+      processBtn.disabled = true;
+      processBtn.textContent = 'Wird verarbeitet...';
+      processSummary.textContent = '';
+
+      try {
+        const resp = await fetch(`/api/process/${encodeURIComponent(currentMuni.name)}`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({pdfs}),
+        });
+
+        if (!resp.ok) {
+          const err = await resp.json();
+          processSummary.textContent = err.detail || 'Fehler beim Starten.';
+          processBtn.disabled = false;
+          processBtn.textContent = 'Verarbeitung starten';
+          return;
+        }
+
+        const data = await resp.json();
+
+        // Backend filtered out already-converted files
+        if (!data.job_id) {
+          processSummary.textContent = data.message || 'Alle Dateien bereits konvertiert.';
+          processBtn.disabled = true;
+          processBtn.textContent = 'Verarbeitung starten';
+          loadExistingFiles(currentMuni.name);
+          return;
+        }
+
+        currentJobId = data.job_id;
+        saveJobStorage(data.job_id, currentMuni.name);
+
+        if (data.skipped && data.skipped.length > 0) {
+          processSummary.textContent = `${data.skipped.length} übersprungen (bereits konvertiert)`;
+        }
+
+        // Build status UI only for files actually being processed
+        renderProcessingStatus(data.files_count > 0
+          ? pdfs.filter(p => !convertedFilenames.has(pdfUrlToMdName(p.url)))
+          : pdfs);
+
+        // Poll for progress
+        pollJob(data.job_id);
+
+      } catch (err) {
+        processSummary.textContent = 'Netzwerkfehler.';
+        processBtn.disabled = false;
+        processBtn.textContent = 'Verarbeitung starten';
+      }
+    }
+
+    function renderProcessingStatus(pdfs) {
+      processStatusEl.style.display = 'block';
+      processStatusEl.innerHTML = pdfs.map((pdf, i) => {
+        const title = pdf.title || pdf.url.split('/').pop();
+        return `<div class="file-progress pending" data-file-index="${i}">
+          <span class="icon">⏳</span>
+          <span class="title" title="${esc(title)}">${esc(title)}</span>
+          <span class="bar-wrap"><span class="bar-fill" style="width: 0%"></span></span>
+          <span class="file-status-text">Wartend</span>
+        </div>`;
+      }).join('');
+    }
+
+    function updateFromJobState(job) {
+      let doneCount = 0;
+      let failedCount = 0;
+
+      job.files.forEach((f, i) => {
+        const row = processStatusEl.querySelector(`[data-file-index="${i}"]`);
+        if (!row) return;
+
+        if (f.status === 'processing') {
+          row.className = 'file-progress processing';
+          row.querySelector('.icon').innerHTML = '<span class="spinner"></span>';
+          row.querySelector('.bar-fill').style.width = '50%';
+          row.querySelector('.file-status-text').textContent = 'Läuft...';
+        } else if (f.status === 'done') {
+          doneCount++;
+          row.className = 'file-progress done';
+          row.querySelector('.icon').textContent = '✅';
+          row.querySelector('.bar-fill').style.width = '100%';
+          const pages = f.page_count ? ` (${f.page_count} S.)` : '';
+          row.querySelector('.file-status-text').textContent = 'Fertig' + pages;
+          const titleEl = row.querySelector('.title');
+          if (!titleEl.dataset.preview) {
+            titleEl.dataset.preview = '1';
+            titleEl.addEventListener('click', () => openPreview(job.job_id, i, titleEl.textContent));
+          }
+        } else if (f.status === 'failed') {
+          failedCount++;
+          row.className = 'file-progress failed';
+          row.querySelector('.icon').textContent = '❌';
+          row.querySelector('.bar-fill').style.width = '100%';
+          row.querySelector('.file-status-text').textContent = 'Fehler';
+          row.querySelector('.file-status-text').title = f.error || '';
+        }
+      });
+
+      processSummary.textContent = `${doneCount + failedCount} von ${job.files.length} verarbeitet`;
+
+      if (job.status === 'done' || job.status === 'failed') {
+        currentJobId = null;
+        clearJobStorage();
+        processBtn.textContent = 'Verarbeitung starten';
+        processBtn.disabled = false;
+        processSummary.textContent = `Fertig: ${doneCount} OK, ${failedCount} fehlgeschlagen`;
+        // Refresh the existing files list
+        if (currentMuni) loadExistingFiles(currentMuni.name);
+      }
+    }
+
+    async function pollJob(jobId) {
+      try {
+        const resp = await fetch(`/api/process/${jobId}`);
+        if (!resp.ok) { clearJobStorage(); return; }
+        const job = await resp.json();
+
+        updateFromJobState(job);
+
+        if (job.status !== 'done' && job.status !== 'failed') {
+          setTimeout(() => pollJob(jobId), 1500);
+        }
+      } catch {
+        setTimeout(() => pollJob(jobId), 3000);
+      }
     }
 
     function esc(s) {
