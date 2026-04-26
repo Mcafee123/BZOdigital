@@ -50,8 +50,9 @@ result
 # uv
 uv.lock
 
-# SQLite
+# SQLite (allow data/bzo.db for sharing)
 *.db
+!data/bzo.db
 
 # Terraform
 .terraform/
