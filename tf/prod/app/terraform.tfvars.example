@@ -12,3 +12,10 @@ image_name                     = "CHANGE_ME.azurecr.io/bzo-app:0.1.0"
 storage_account_name           = "CHANGE_ME"
 storage_account_resource_group = "CHANGE_ME"
 file_share_name                = "CHANGE_ME"
+
+# Optional Cloudflare DNS for a custom hostname. Leave commented (or set custom_domain = null)
+# to skip DNS management. When enabled, the module creates the asuid TXT + CNAME records.
+# Binding the domain to the Container App (cert + hostname) is a separate manual step.
+# custom_domain        = "bzo-app.example.com"
+# cloudflare_api_token = "CHANGE_ME"
+# cloudflare_zone_id   = "CHANGE_ME"

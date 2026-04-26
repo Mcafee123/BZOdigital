@@ -10,8 +10,17 @@ module "main" {
   storage_account_name           = var.storage_account_name
   storage_account_resource_group = var.storage_account_resource_group
   file_share_name                = var.file_share_name
+
+  custom_domain        = var.custom_domain
+  cloudflare_api_token = var.cloudflare_api_token
+  cloudflare_zone_id   = var.cloudflare_zone_id
 }
 
 output "container_app_fqdn" {
   value = module.main.container_app_fqdn
+}
+
+output "custom_domain_verification_id" {
+  value     = module.main.custom_domain_verification_id
+  sensitive = true
 }

@@ -98,7 +98,10 @@ jobs:
             -var "image_name=${{ needs.build-and-push.outputs.image-ref }}" \
             -var "storage_account_name=${{ secrets.STORAGE_ACCOUNT_NAME }}" \
             -var "storage_account_resource_group=${{ secrets.STORAGE_ACCOUNT_RESOURCE_GROUP }}" \
-            -var "file_share_name=${{ secrets.FILE_SHARE_NAME }}"
+            -var "file_share_name=${{ secrets.FILE_SHARE_NAME }}" \
+            -var "custom_domain=${{ secrets.CUSTOM_DOMAIN }}" \
+            -var "cloudflare_api_token=${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+            -var "cloudflare_zone_id=${{ secrets.CLOUDFLARE_ZONE_ID }}"
 
       - name: Terraform apply
         run: terraform apply -input=false -auto-approve tfplan

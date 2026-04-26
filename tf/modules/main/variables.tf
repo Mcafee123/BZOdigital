@@ -74,3 +74,22 @@ variable "memory" {
   type        = string
   default     = "0.5Gi"
 }
+
+variable "custom_domain" {
+  type        = string
+  default     = null
+  description = "Optional custom hostname (e.g. bzo-app.example.com). When set, the module creates the Cloudflare TXT (asuid) + CNAME records pointing at the Container App's FQDN."
+}
+
+variable "cloudflare_api_token" {
+  type        = string
+  default     = ""
+  sensitive   = true
+  description = "Cloudflare API token with Zone:DNS:Edit on the target zone. Unused unless custom_domain is set."
+}
+
+variable "cloudflare_zone_id" {
+  type        = string
+  default     = ""
+  description = "Cloudflare zone ID that owns custom_domain. Unused unless custom_domain is set."
+}

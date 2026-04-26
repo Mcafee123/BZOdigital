@@ -49,6 +49,13 @@ REQUIRED=(
   FILE_SHARE_NAME
 )
 
+# Optional secrets — pushed when non-empty, skipped silently when empty.
+OPTIONAL=(
+  CLOUDFLARE_API_TOKEN
+  CLOUDFLARE_ZONE_ID
+  CUSTOM_DOMAIN
+)
+
 command -v gh >/dev/null 2>&1 || {
   echo "gh CLI not found. Install from https://cli.github.com/" >&2
   exit 1
@@ -86,10 +93,19 @@ if (( ${#missing[@]} > 0 )); then
 fi
 
 target="${REPO_ARGS[*]:-current repo}"
-echo "Setting ${#REQUIRED[@]} secrets on ${target/--repo /}"
+echo "Setting secrets on ${target/--repo /}"
 
 for name in "${REQUIRED[@]}"; do
   # Pipe the value via stdin so it never appears in argv / process listings.
+  printf '%s' "${!name}" | gh secret set "$name" "${REPO_ARGS[@]}" --body -
+  echo "  ✓ $name"
+done
+
+for name in "${OPTIONAL[@]}"; do
+  if [[ -z "${!name:-}" ]]; then
+    echo "  - $name (empty, skipped)"
+    continue
+  fi
   printf '%s' "${!name}" | gh secret set "$name" "${REPO_ARGS[@]}" --body -
   echo "  ✓ $name"
 done

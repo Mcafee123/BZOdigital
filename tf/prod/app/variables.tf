@@ -43,3 +43,22 @@ variable "file_share_name" {
   type        = string
   description = "Azure File share name. Tree mirrors the repo (data/, app/data/, ...)."
 }
+
+variable "custom_domain" {
+  type        = string
+  default     = null
+  description = "Optional custom hostname (e.g. bzo-app.example.com). When null, no Cloudflare records are created."
+}
+
+variable "cloudflare_api_token" {
+  type        = string
+  default     = ""
+  sensitive   = true
+  description = "Cloudflare API token. Required only when custom_domain is set."
+}
+
+variable "cloudflare_zone_id" {
+  type        = string
+  default     = ""
+  description = "Cloudflare zone ID that owns custom_domain. Required only when custom_domain is set."
+}

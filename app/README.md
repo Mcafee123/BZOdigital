@@ -123,6 +123,9 @@ Production deploys run via `.github/workflows/deploy-prod.yml` on push to `main`
    | `STORAGE_ACCOUNT_RESOURCE_GROUP` | RG of that storage account |
    | `STORAGE_ACCOUNT_KEY` | Storage account key (used by `upload-data.yml` for SMB upload) |
    | `FILE_SHARE_NAME` | Name of the Azure File share whose tree mirrors the repo |
+   | `CLOUDFLARE_API_TOKEN` | *(optional)* Cloudflare token with `Zone:DNS:Edit` for the target zone |
+   | `CLOUDFLARE_ZONE_ID` | *(optional)* Zone ID containing `CUSTOM_DOMAIN` |
+   | `CUSTOM_DOMAIN` | *(optional)* Custom hostname (e.g. `bzo-app.example.com`); when set, the TF module creates the `asuid` TXT + CNAME records. Binding the domain + cert to the Container App is still a manual follow-up. |
 
 3. **Local Terraform setup** — for the very first apply you may want to run locally:
 

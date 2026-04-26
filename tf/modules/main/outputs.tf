@@ -10,3 +10,13 @@ output "container_app_fqdn" {
 output "identity_principal_id" {
   value = azurerm_user_assigned_identity.app.principal_id
 }
+
+output "custom_domain_verification_id" {
+  value       = azurerm_container_app.main.custom_domain_verification_id
+  description = "Use this when binding the custom domain to the Container App as the asuid TXT record value (the cloudflare module already does this when custom_domain is set)."
+}
+
+output "custom_domain_fqdn" {
+  value       = var.custom_domain
+  description = "The custom domain configured (null when DNS isn't being managed by this module)."
+}
