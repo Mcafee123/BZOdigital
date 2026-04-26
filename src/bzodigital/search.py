@@ -1,38 +1,32 @@
-"""Fuzzy-find a Gemeinde and search its website for matching pages."""
+"""Search Gemeinde websites for zoning documents."""
 
 import os
 import re
+from collections import Counter
 from urllib.parse import unquote, urljoin, urlparse
 
 import httpx
-from thefuzz import fuzz, process
 
 from bzodigital.profiles import SearchProfile
 
-
-def fuzzy_find(query: str, gemeinden: list[dict[str, str]], limit: int = 5) -> list[dict]:
-    """Fuzzy-match a query against Gemeinde names. Returns top matches with scores."""
-    names = [g["name"] for g in gemeinden]
-    results = process.extract(query, names, scorer=fuzz.WRatio, limit=limit)
-
-    matches = []
-    for name, score, *_ in results:
-        gemeinde = next(g for g in gemeinden if g["name"] == name)
-        matches.append({**gemeinde, "score": score})
-    return matches
+SERPER_URL = "https://google.serper.dev/search"
+NOISE_DOMAINS = frozenset({
+    "de.wikipedia.org", "en.wikipedia.org", "fr.wikipedia.org",
+    "www.wikipedia.org", "www.facebook.com", "twitter.com", "x.com",
+    "www.instagram.com", "www.linkedin.com", "www.youtube.com",
+})
 
 
-async def search_site(base_url: str, profile: SearchProfile, max_results: int = 50) -> list[dict[str, str]]:
-    """Search a Gemeinde website for pages matching a profile using Serper.dev.
-
-    Paginates automatically until results are exhausted or max_results is reached.
-    """
+def _get_serper_key() -> str:
     api_key = os.environ.get("SERPER_API_KEY")
     if not api_key:
         raise RuntimeError("SERPER_API_KEY not set. Add it to your .env file.")
+    return api_key
 
-    domain = urlparse(base_url).netloc or urlparse(base_url).path.split("/")[0]
-    search_query = f"{profile.search_query} site:{domain}"
+
+async def _serper_paginate(query: str, max_results: int) -> list[dict[str, str]]:
+    """Run a paginated Serper search, return deduplicated results."""
+    api_key = _get_serper_key()
 
     results: list[dict[str, str]] = []
     seen: set[str] = set()
@@ -41,9 +35,9 @@ async def search_site(base_url: str, profile: SearchProfile, max_results: int = 
     async with httpx.AsyncClient() as client:
         while len(results) < max_results:
             resp = await client.post(
-                "https://google.serper.dev/search",
+                SERPER_URL,
                 headers={"X-API-KEY": api_key, "Content-Type": "application/json"},
-                json={"q": search_query, "num": 10, "page": page},
+                json={"q": query, "num": 10, "page": page},
             )
             resp.raise_for_status()
             data = resp.json()
@@ -68,6 +62,31 @@ async def search_site(base_url: str, profile: SearchProfile, max_results: int = 
             page += 1
 
     return results[:max_results]
+
+
+async def search_site(base_url: str, profile: SearchProfile, max_results: int = 50) -> list[dict[str, str]]:
+    """Search within a specific domain using site: operator."""
+    domain = urlparse(base_url).netloc or urlparse(base_url).path.split("/")[0]
+    query = f"{profile.search_query} site:{domain}"
+    return await _serper_paginate(query, max_results)
+
+
+async def search_open(village_name: str, profile: SearchProfile, max_results: int = 50) -> list[dict[str, str]]:
+    """Search without site: scope — for municipalities with no known URL."""
+    query = f'{profile.search_query} "{village_name}"'
+    return await _serper_paginate(query, max_results)
+
+
+def infer_domain(results: list[dict[str, str]]) -> str | None:
+    """Find the most common .ch domain in search results (likely the official Gemeinde site)."""
+    domains = [urlparse(r["url"]).netloc for r in results]
+    if not domains:
+        return None
+    counts = Counter(domains)
+    for domain, _count in counts.most_common():
+        if domain not in NOISE_DOMAINS and domain.endswith(".ch"):
+            return domain
+    return None
 
 
 def parse_pdf_links(html: str, base_url: str) -> list[dict[str, str]]:

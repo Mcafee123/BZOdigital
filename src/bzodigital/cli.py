@@ -6,13 +6,15 @@ import sys
 
 from dotenv import load_dotenv
 
-from bzodigital.gemeinden import get_gemeinden
+from bzodigital.bfs import fuzzy_find_municipality, load_bfs, update_bfs_register
+from bzodigital.cantons import find_url, get_canton
 from bzodigital.profiles import DEFAULT_PROFILE, PROFILES
 from bzodigital.search import (
     check_pdf_content,
     extract_pdfs,
     filter_pdfs_by_metadata,
-    fuzzy_find,
+    infer_domain,
+    search_open,
     search_site,
 )
 
@@ -21,8 +23,12 @@ def main():
     parser = argparse.ArgumentParser(description="Find BZO documents for Swiss municipalities")
     sub = parser.add_subparsers(dest="command")
 
-    # Refresh the cached Gemeinde list
-    sub.add_parser("refresh", help="Re-scrape the Gemeinde list from gpvzh.ch")
+    # BFS register update
+    sub.add_parser("bfs-update", help="Download/update the BFS municipality register")
+
+    # Refresh canton scraper
+    refresh = sub.add_parser("refresh", help="Re-scrape a canton's Gemeinde list")
+    refresh.add_argument("--canton", default="zh", help="Canton ID to refresh (default: zh)")
 
     # Search command
     search = sub.add_parser("search", help="Find BZO-related pages for a municipality")
@@ -34,7 +40,8 @@ def main():
     search.add_argument("--check-content", action="store_true", help="Download ambiguous PDFs to check content (requires pymupdf)")
 
     # List command
-    sub.add_parser("list", help="List all cached Gemeinden")
+    list_cmd = sub.add_parser("list", help="List municipalities")
+    list_cmd.add_argument("--canton", help="Filter by canton (e.g. ZH, BE)")
 
     args = parser.parse_args()
 
@@ -47,38 +54,64 @@ def main():
 
 
 async def _dispatch(args):
-    if args.command == "refresh":
-        gemeinden = await get_gemeinden(force_refresh=True)
-        print(f"Cached {len(gemeinden)} Gemeinden")
+    if args.command == "bfs-update":
+        path = await update_bfs_register()
+        municipalities = load_bfs()
+        print(f"Updated BFS register: {len(municipalities)} municipalities → {path}")
+
+    elif args.command == "refresh":
+        canton_data = await get_canton(args.canton, force_refresh=True)
+        if canton_data is None:
+            print(f"No scraper registered for canton '{args.canton}'.")
+            return
+        print(f"Cached {len(canton_data)} Gemeinden for {args.canton.upper()}")
 
     elif args.command == "list":
-        gemeinden = await get_gemeinden()
-        if not gemeinden:
-            print("No Gemeinden cached. Run 'bzo refresh' first.")
+        municipalities = load_bfs()
+        if not municipalities:
+            print("BFS register not found. Run 'bzo bfs-update' first.")
             return
-        for g in gemeinden:
-            print(f"  {g['name']:30s} {g['url']}")
+        if args.canton:
+            municipalities = [m for m in municipalities if m.canton.upper() == args.canton.upper()]
+        for m in municipalities:
+            print(f"  {m.name:30s} {m.canton}  (BFS {m.bfs_nr})")
+        print(f"\n  {len(municipalities)} municipalities")
 
     elif args.command == "search":
-        gemeinden = await get_gemeinden()
-        if not gemeinden:
-            print("No Gemeinden cached. Run 'bzo refresh' first.")
+        municipalities = load_bfs()
+        if not municipalities:
+            print("BFS register not found. Run 'bzo bfs-update' first.")
             return
 
         profile = PROFILES[args.profile]
 
-        matches = fuzzy_find(args.gemeinde, gemeinden, limit=args.num_matches)
-        print(f"\nFuzzy matches for '{args.gemeinde}':")
-        for i, m in enumerate(matches):
-            print(f"  [{i}] {m['name']} (score: {m['score']}) - {m['url']}")
+        # Step 1: Find the municipality in BFS
+        matches = fuzzy_find_municipality(args.gemeinde, municipalities, limit=args.num_matches)
+        print(f"\nMatches for '{args.gemeinde}':")
+        for i, (muni, score) in enumerate(matches):
+            print(f"  [{i}] {muni.name} ({muni.canton}) — score: {score}")
 
-        best = matches[0]
-        if best["score"] < 60:
-            print(f"\nBest match score too low ({best['score']}). Try a more specific name.")
+        best_muni, best_score = matches[0]
+        if best_score < 60:
+            print(f"\nBest match score too low ({best_score}). Try a more specific name.")
             return
 
-        print(f"\nSearching {best['url']} (profile: {args.profile})...")
-        results = await search_site(best["url"], profile, max_results=args.max_results)
+        # Step 2: Try canton URL mapping
+        canton_data = await get_canton(best_muni.canton.lower())
+        base_url = None
+        if canton_data:
+            base_url = find_url(best_muni.name, canton_data)
+
+        # Step 3: Search
+        if base_url:
+            print(f"\nSearching {base_url} (via {best_muni.canton} mapping)...")
+            results = await search_site(base_url, profile, max_results=args.max_results)
+        else:
+            print(f"\nNo URL mapping for {best_muni.canton}. Searching openly for '{best_muni.name}'...")
+            results = await search_open(best_muni.name, profile, max_results=args.max_results)
+            domain = infer_domain(results)
+            if domain:
+                print(f"  (dominant domain: {domain})")
 
         if not results:
             print("No results found.")
