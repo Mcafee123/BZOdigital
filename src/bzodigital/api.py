@@ -1,13 +1,18 @@
 """FastAPI REST API for BZO document search."""
 
 import asyncio
+import json
 import os
+import re
 import secrets
 from datetime import datetime
 from hashlib import sha256
 from pathlib import Path
+from urllib.parse import unquote
+from uuid import uuid4
 
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Query, Request
+from fastapi.responses import StreamingResponse
 from fastapi.responses import FileResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.staticfiles import StaticFiles
@@ -26,6 +31,7 @@ from bzodigital.db import (
     save_search_cache,
     upsert_annotation,
 )
+from bzodigital.converter import convert_pdf_stream, download_pdf
 from bzodigital.profiles import DEFAULT_PROFILE, PROFILES
 from bzodigital.search import (
     extract_pdfs,
@@ -146,6 +152,32 @@ class ProcessedPdfResponse(BaseModel):
     bfs_nr: int
     pdfs: list[AnnotationResponse]
     has_annotations: bool
+
+
+class ProcessPdfItem(BaseModel):
+    url: str
+    title: str = ""
+
+
+class ProcessRequest(BaseModel):
+    pdfs: list[ProcessPdfItem] | None = None  # None = use selected annotations
+
+
+class FileState(BaseModel):
+    url: str
+    title: str
+    status: str = "pending"  # pending | processing | done | failed
+    progress: str = ""
+    error: str = ""
+    markdown_path: str = ""
+    page_count: int | None = None
+
+
+class JobState(BaseModel):
+    job_id: str
+    municipality: str
+    status: str = "running"  # running | done | failed
+    files: list[FileState] = []
 
 
 # --- Startup ---
@@ -366,6 +398,199 @@ async def get_processed(municipality_name: str):
         pdfs=all_pdfs,
         has_annotations=False,
     )
+
+
+# --- Processing ---
+
+_jobs: dict[str, JobState] = {}
+_queues: dict[str, asyncio.Queue] = {}
+
+DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
+
+
+def _slug(name: str) -> str:
+    """Municipality name → filesystem slug (lowercase, no spaces)."""
+    return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+
+
+def _pdf_filename(url: str) -> str:
+    """Extract a clean filename from a PDF URL."""
+    raw = unquote(url.split("/")[-1].split("?")[0])
+    return raw if raw.endswith(".pdf") else raw + ".pdf"
+
+
+@app.post("/api/process/{municipality_name}")
+async def start_processing(municipality_name: str, body: ProcessRequest | None = None):
+    """Start converting selected PDFs to Markdown via DocConverter."""
+    muni = _resolve_municipality(municipality_name)
+
+    if body and body.pdfs:
+        pdf_list = [(p.url, p.title) for p in body.pdfs]
+    else:
+        anns = get_annotations(muni.bfs_nr)
+        selected = [a for a in anns if a["selected"]]
+        if not selected:
+            raise HTTPException(400, "No PDFs selected for processing.")
+        pdf_list = [(a["pdf_url"], a["pdf_title"]) for a in selected]
+
+    # Filter out files that already have a converted markdown
+    slug = _slug(muni.name)
+    md_dir = DATA_DIR / slug / "md"
+    to_process = []
+    skipped = []
+    for url, title in pdf_list:
+        md_name = Path(_pdf_filename(url)).stem + ".md"
+        if (md_dir / md_name).exists():
+            skipped.append({"url": url, "title": title or _pdf_filename(url), "markdown_path": str((md_dir / md_name).relative_to(DATA_DIR))})
+        else:
+            to_process.append((url, title))
+
+    if not to_process:
+        return {"job_id": None, "files_count": 0, "skipped": skipped, "message": "All files already converted."}
+
+    job_id = str(uuid4())
+    files = [FileState(url=url, title=title or _pdf_filename(url)) for url, title in to_process]
+    job = JobState(job_id=job_id, municipality=muni.name, files=files)
+    _jobs[job_id] = job
+
+    queue: asyncio.Queue = asyncio.Queue()
+    _queues[job_id] = queue
+
+    asyncio.create_task(_process_job(job_id, muni.name, queue))
+
+    return {"job_id": job_id, "files_count": len(files), "skipped": skipped}
+
+
+@app.get("/api/process/{job_id}")
+def get_job_status(job_id: str):
+    """Poll current job state."""
+    job = _jobs.get(job_id)
+    if not job:
+        raise HTTPException(404, "Job not found.")
+    return job
+
+
+@app.get("/api/process/{job_id}/stream")
+async def stream_job(job_id: str):
+    """SSE stream of processing progress."""
+    queue = _queues.get(job_id)
+    if not queue:
+        raise HTTPException(404, "Job not found.")
+
+    async def event_generator():
+        # Send current state as initial snapshot
+        job = _jobs.get(job_id)
+        if job:
+            yield f"event: snapshot\ndata: {job.model_dump_json()}\n\n"
+
+        while True:
+            event = await queue.get()
+            if event is None:
+                # Job finished
+                job = _jobs.get(job_id)
+                completed = sum(1 for f in job.files if f.status == "done") if job else 0
+                failed = sum(1 for f in job.files if f.status == "failed") if job else 0
+                yield f"event: done\ndata: {json.dumps({'completed': completed, 'failed': failed})}\n\n"
+                break
+            yield f"event: {event['type']}\ndata: {json.dumps(event['data'])}\n\n"
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+
+@app.get("/api/preview/{job_id}/{file_index}")
+def get_preview(job_id: str, file_index: int):
+    """Return the saved markdown for a processed file."""
+    job = _jobs.get(job_id)
+    if not job:
+        raise HTTPException(404, "Job not found.")
+    if file_index < 0 or file_index >= len(job.files):
+        raise HTTPException(404, "File index out of range.")
+    f = job.files[file_index]
+    if f.status != "done" or not f.markdown_path:
+        raise HTTPException(400, "File not yet processed.")
+    md_path = DATA_DIR / f.markdown_path
+    if not md_path.exists():
+        raise HTTPException(404, "Markdown file not found.")
+    return {"filename": md_path.name, "markdown": md_path.read_text(encoding="utf-8")}
+
+
+@app.get("/api/files/{municipality_name}")
+def list_converted_files(municipality_name: str):
+    """List already-converted markdown files for a municipality."""
+    muni = _resolve_municipality(municipality_name)
+    slug = _slug(muni.name)
+    md_dir = DATA_DIR / slug / "md"
+    if not md_dir.exists():
+        return {"municipality": muni.name, "files": []}
+    files = []
+    for p in sorted(md_dir.glob("*.md")):
+        files.append({
+            "filename": p.name,
+            "path": str(p.relative_to(DATA_DIR)),
+            "size": p.stat().st_size,
+        })
+    return {"municipality": muni.name, "files": files}
+
+
+@app.get("/api/files/{municipality_name}/{filename}")
+def get_file_preview(municipality_name: str, filename: str):
+    """Return a converted markdown file by name."""
+    muni = _resolve_municipality(municipality_name)
+    slug = _slug(muni.name)
+    md_path = DATA_DIR / slug / "md" / filename
+    if not md_path.exists() or not md_path.suffix == ".md":
+        raise HTTPException(404, "File not found.")
+    return {"filename": md_path.name, "markdown": md_path.read_text(encoding="utf-8")}
+
+
+async def _process_job(job_id: str, municipality_name: str, queue: asyncio.Queue):
+    """Background task: process each PDF in the job."""
+    job = _jobs[job_id]
+    slug = _slug(municipality_name)
+    out_dir = DATA_DIR / slug / "md"
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    for i, file_state in enumerate(job.files):
+        file_state.status = "processing"
+        await queue.put({"type": "file_start", "data": {"file_index": i, "url": file_state.url, "title": file_state.title}})
+
+        try:
+            # Download
+            pdf_bytes = await download_pdf(file_state.url)
+
+            # Convert via DocConverter with progress relay
+            async def on_progress(data, _idx=i):
+                file_state.progress = json.dumps(data)
+                await queue.put({"type": "progress", "data": {"file_index": _idx, **data}})
+
+            result = await convert_pdf_stream(pdf_bytes, _pdf_filename(file_state.url), on_progress)
+
+            # Save markdown — content may be in sections rather than top-level
+            markdown = result.get("markdown", "")
+            if not markdown:
+                sections = result.get("sections", [])
+                markdown = "\n\n".join(s.get("markdown", "") for s in sections)
+
+            md_name = Path(_pdf_filename(file_state.url)).stem + ".md"
+            md_path = out_dir / md_name
+            md_path.write_text(markdown, encoding="utf-8")
+
+            file_state.status = "done"
+            file_state.markdown_path = str(md_path.relative_to(DATA_DIR))
+            file_state.page_count = result.get("page_count")
+            await queue.put({
+                "type": "file_done",
+                "data": {"file_index": i, "markdown_path": file_state.markdown_path, "page_count": file_state.page_count},
+            })
+
+        except Exception as e:
+            file_state.status = "failed"
+            file_state.error = str(e)
+            await queue.put({"type": "file_error", "data": {"file_index": i, "error": str(e)}})
+
+    # Mark job complete
+    job.status = "failed" if all(f.status == "failed" for f in job.files) else "done"
+    await queue.put(None)  # sentinel
 
 
 # --- Helpers ---
