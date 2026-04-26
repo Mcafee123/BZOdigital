@@ -24,14 +24,9 @@ variable "image_name" {
   description = "Full image reference including registry and tag (set by CI from build output)."
 }
 
-variable "diff_path" {
-  type        = string
-  default     = "/mnt/repo/app/data/sample.diff"
-}
-
 variable "mount_path" {
-  type        = string
-  default     = "/mnt/repo"
+  type    = string
+  default = "/mnt/repo"
 }
 
 variable "min_replicas" {

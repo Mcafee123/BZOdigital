@@ -123,9 +123,6 @@ module "container_app" {
         image  = var.image_name
         cpu    = var.cpu
         memory = var.memory
-        env = [
-          { name = "DIFF_PATH", value = var.diff_path },
-        ]
         volume_mounts = [
           { name = "repo-data", path = var.mount_path },
         ]

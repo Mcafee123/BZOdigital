@@ -8,7 +8,7 @@ variable "basics" {
     environment = string
   })
   default = {
-    base_name  = "bzo-app"
+    base_name   = "bzo-app"
     environment = "prod"
   }
 }
