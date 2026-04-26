@@ -233,9 +233,20 @@ def get_annotations(bfs_nr: int) -> list[dict]:
 
 
 def upsert_annotation(
-    bfs_nr: int, pdf_url: str, pdf_title: str, labels: list[str], selected: bool
+    bfs_nr: int,
+    pdf_url: str,
+    pdf_title: str,
+    labels: list[str],
+    selected: bool,
+    *,
+    skip_if_labeled: bool = False,
 ) -> dict:
-    """Create or update an annotation for a PDF. Keyed by (bfs_nr, pdf_url)."""
+    """Create or update an annotation for a PDF. Keyed by (bfs_nr, pdf_url).
+
+    When skip_if_labeled is True and the existing row already has labels,
+    leave the row untouched (used by auto-classification to avoid stomping
+    user edits).
+    """
     with get_session() as session:
         existing = session.exec(
             select(PdfAnnotation).where(
@@ -243,6 +254,18 @@ def upsert_annotation(
                 PdfAnnotation.pdf_url == pdf_url,
             )
         ).first()
+
+        if existing and skip_if_labeled and json.loads(existing.labels_json or "[]"):
+            return {
+                "id": existing.id,
+                "municipality_bfs_nr": existing.municipality_bfs_nr,
+                "pdf_url": existing.pdf_url,
+                "pdf_title": existing.pdf_title,
+                "labels": json.loads(existing.labels_json),
+                "selected": existing.selected,
+                "created_at": existing.created_at.isoformat(),
+                "updated_at": existing.updated_at.isoformat(),
+            }
 
         now = datetime.utcnow()
         if existing:
