@@ -141,18 +141,58 @@ module "cloudflare" {
   depends_on = [module.container_app]
 }
 
-module "custom_domain" {
-  count  = local.has_custom_domain ? 1 : 0
-  source = "git@github.com:affolterNET/affolterNET-Cloud-HelperModules.git//custom-domain?ref=main"
-
-  container_app = {
-    name            = module.container_app.cfg.name
-    domain_name     = var.custom_domain
-    fqdn            = module.container_app.cfg.fqdn
-    verification_id = module.container_app.cfg.custom_domain_verification_id
-    environment_id  = local.cae_config.id
-    resource_group  = azurerm_resource_group.app.name
+# Apex domains (e.g. nupla.info) can't use --validation-method CNAME, which the
+# shared custom-domain module hardcodes. Inline the hostname add + bind here
+# with HTTP validation (works for apex via the CNAME-flattened A record).
+resource "null_resource" "hostname_add" {
+  count = local.has_custom_domain ? 1 : 0
+  triggers = {
+    domain   = var.custom_domain
+    app_name = module.container_app.cfg.name
   }
-
+  provisioner "local-exec" {
+    command = <<-EOT
+      set -e
+      if az containerapp hostname list \
+            --name "${module.container_app.cfg.name}" \
+            --resource-group "${azurerm_resource_group.app.name}" \
+            --query "[?name=='${var.custom_domain}'] | length(@)" -o tsv | grep -q '^0$'; then
+        az containerapp hostname add \
+          --name "${module.container_app.cfg.name}" \
+          --resource-group "${azurerm_resource_group.app.name}" \
+          --hostname "${var.custom_domain}"
+      else
+        echo "hostname ${var.custom_domain} already on ${module.container_app.cfg.name}"
+      fi
+    EOT
+  }
   depends_on = [module.cloudflare]
+}
+
+resource "null_resource" "hostname_bind" {
+  count = local.has_custom_domain ? 1 : 0
+  triggers = {
+    domain   = var.custom_domain
+    app_name = module.container_app.cfg.name
+  }
+  provisioner "local-exec" {
+    command = <<-EOT
+      set -e
+      bound=$(az containerapp hostname list \
+        --name "${module.container_app.cfg.name}" \
+        --resource-group "${azurerm_resource_group.app.name}" \
+        --query "[?name=='${var.custom_domain}'].bindingType | [0]" -o tsv)
+      if [ "$bound" = "SniEnabled" ]; then
+        echo "${var.custom_domain} already SniEnabled"
+        exit 0
+      fi
+      az containerapp hostname bind \
+        --name "${module.container_app.cfg.name}" \
+        --resource-group "${azurerm_resource_group.app.name}" \
+        --hostname "${var.custom_domain}" \
+        --environment "${local.cae_config.id}" \
+        --validation-method HTTP
+    EOT
+  }
+  depends_on = [null_resource.hostname_add]
 }
