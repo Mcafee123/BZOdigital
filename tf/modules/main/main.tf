@@ -56,6 +56,17 @@ resource "azurerm_storage_share" "data" {
   quota              = 5
 }
 
+# Allow the deploy SP (the one running terraform / azcopy in CI) to write to
+# the share via OAuth, so the upload-data workflow doesn't need an account key
+# or a SAS.
+data "azurerm_client_config" "current" {}
+
+resource "azurerm_role_assignment" "deploy_files" {
+  scope                = azurerm_storage_account.data.id
+  role_definition_name = "Storage File Data Privileged Contributor"
+  principal_id         = data.azurerm_client_config.current.object_id
+}
+
 resource "azurerm_container_app_environment_storage" "data" {
   name                         = "${var.basics.base_name}-data"
   container_app_environment_id = local.cae_config.id
