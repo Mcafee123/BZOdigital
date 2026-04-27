@@ -827,7 +827,7 @@
         }
 
         statusEl.innerHTML = `${allPdfs.length} BZO document(s) for ${esc(data.municipality)} (${esc(data.canton)}). [${method}${cached}]`
-          + (data.cached ? ` <a href="#" id="refresh-search" style="color:#2563eb;font-size:0.85em">Neu suchen</a>` : '');
+          + ` <a href="#" id="reset-municipality" style="color:#6b7280;font-size:0.85em;margin-left:4px" title="Cache und Labels zurücksetzen">clear</a>`;
 
         resultsEl.innerHTML = allPdfs.map((pdf, idx) => {
           const filename = decodeURIComponent(pdf.url.split('/').pop().split('?')[0]);
@@ -962,12 +962,13 @@
         loadExistingFiles(muni.name);
         checkCompareStatus(muni.name);
 
-        // Wire up "Neu suchen" button (clear cache & re-search)
-        const refreshBtn = document.getElementById('refresh-search');
-        if (refreshBtn) {
-          refreshBtn.addEventListener('click', async (e) => {
+        // Wire up "clear" button (reset cache + annotations, re-search)
+        const resetBtn = document.getElementById('reset-municipality');
+        if (resetBtn) {
+          resetBtn.addEventListener('click', async (e) => {
             e.preventDefault();
-            await fetch('/api/bzo/cache', { method: 'DELETE' });
+            if (!confirm('Cache und Labels für ' + muni.name + ' zurücksetzen?')) return;
+            await fetch(`/api/bzo/${encodeURIComponent(muni.name)}/reset`, { method: 'DELETE' });
             await selectMunicipality(muni);
           });
         }

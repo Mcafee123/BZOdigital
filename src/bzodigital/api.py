@@ -282,6 +282,16 @@ def delete_cache():
     return {"message": "Cache cleared."}
 
 
+@app.delete("/api/bzo/{municipality_name}/reset")
+def reset_municipality(municipality_name: str):
+    """Clear search cache and all annotations for a municipality."""
+    muni = _resolve_municipality(municipality_name)
+    clear_search_cache()
+    for ann in get_annotations(muni.bfs_nr):
+        delete_annotation(ann["id"])
+    return {"message": f"Cache and annotations cleared for {muni.name}."}
+
+
 @app.get("/api/municipalities", response_model=list[MunicipalityResponse])
 def list_municipalities(
     q: str | None = Query(default=None, description="Fuzzy search query"),
