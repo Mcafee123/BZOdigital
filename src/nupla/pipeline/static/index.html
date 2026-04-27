@@ -1461,6 +1461,25 @@
         processSummary.textContent = `Fertig: ${doneCount} OK, ${failedCount} fehlgeschlagen`;
         // Refresh the existing files list
         if (currentMuni) loadExistingFiles(currentMuni.name);
+
+        // Show auto-diff result if backend computed it
+        if (job.auto_diff) {
+          const time = job.auto_diff.processing_time_ms
+            ? ` (${(job.auto_diff.processing_time_ms / 1000).toFixed(1)}s)`
+            : '';
+          const bar = document.getElementById('compare-bar') || document.createElement('div');
+          bar.id = 'compare-bar';
+          bar.className = 'compare-bar';
+          bar.innerHTML = `
+            <button class="compare-btn" onclick="runCompare('${encodeAttr(currentMuni.name)}')">Vergleich neu erstellen</button>
+            <span class="compare-info">✅ Diff automatisch erstellt${time}: ${esc(job.auto_diff.left_filename)} ↔ ${esc(job.auto_diff.right_filename)}</span>`;
+          if (!document.getElementById('compare-bar')) {
+            const anchor = document.getElementById('existing-files') || processStatusEl;
+            anchor.after(bar);
+          }
+        } else if (currentMuni) {
+          checkCompareStatus(currentMuni.name);
+        }
       }
     }
 

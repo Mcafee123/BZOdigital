@@ -211,6 +211,7 @@ class JobState(BaseModel):
     municipality: str
     status: str = "running"  # running | done | failed
     files: list[FileState] = []
+    auto_diff: dict | None = None
 
 
 # --- Startup ---
@@ -868,6 +869,36 @@ async def _process_job(job_id: str, municipality_name: str, queue: asyncio.Queue
 
     # Mark job complete
     job.status = "failed" if all(f.status == "failed" for f in job.files) else "done"
+
+    # Auto-trigger diff if both alt and neu BZO have been converted
+    if job.status == "done":
+        try:
+            muni = _resolve_municipality(municipality_name)
+            anns = get_annotations(muni.bfs_nr)
+            md_dir = DATA_DIR / slug / "md"
+            alt_file = _find_md_for_label(anns, LABEL_ALT, md_dir)
+            neu_file = _find_md_for_label(anns, LABEL_NEU, md_dir)
+            if alt_file and neu_file:
+                result = await compare_documents(
+                    alt_file.read_bytes(),
+                    alt_file.name,
+                    neu_file.read_bytes(),
+                    neu_file.name,
+                )
+                diff_path = DATA_DIR / slug / "diff.unified"
+                diff_path.write_text(
+                    result.get("unified_diff", ""), encoding="utf-8"
+                )
+                job.auto_diff = {
+                    "left_filename": result.get("left_filename"),
+                    "right_filename": result.get("right_filename"),
+                    "processing_time_ms": result.get("processing_time_ms"),
+                }
+        except Exception:
+            import traceback
+
+            traceback.print_exc()
+
     await queue.put(None)  # sentinel
 
 
