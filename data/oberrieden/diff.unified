@@ -1,396 +1,75 @@
---- BZO-Revision IVHB Merkblatt Mobilitätskonzepte_0.md
+--- 7.1-1-2-1.de.md
 +++ BZO Version 26. Januar 2026.md
-@@ -1,308 +1,597 @@
--<!-- section:level=1 title="BZO-Revision IVHB Merkblatt Mobilitätskonzepte_0.pdf" -->
--Kanton Zürich Volkswirtschaftsdirektion Amt für Mobilität
+@@ -1,9 +1,13 @@
+-<!-- section:level=1 title="7.1-1-2-1.de.pdf" -->
 -
--Mobilitätskonzepte
--
--Merkblatt
--
--21
--
--chftrampilotin_
--
--W:
--
--Anforderungen _
--
--und unter
--
--npilot/Trampilotin ein vorne Details
--
--ganz
--<!-- section:level=1 title="Wichtiges in Kürze" -->
--# Wichtiges in Kürze
--
--Gesamtverkehrs-
--
--Der Kanton Zürich steht in den nächsten Jahrzehnten vor grossen Herausforderungen. Es ist weiterhin mit einem markanten Anstieg von Bevölkerung und Beschäftigten zu rechnen. 80  % des Wachstums sollen gemäss Richtplan in den urbanen Gebieten stattfinden. Die angestrebte bauliche Verdichtung in der Siedlungsentwicklung bringt zusätzlichen Verkehr und auch die verkehrsbedingten Umweltbelastungen bleiben eine Herausforderung. Die Mobilitätsnachfrage wird bedeutend steigen, und die heute spürbaren Überlastsituationen im öffentlichen Verkehr und auf den Strassen akzentuieren sich bis 2030 weiter.
--
--2018
--
--Vor allem im dicht bebauten, städtischen Umfeld kommt einer guten Abstimmung von Siedlungsentwicklung (Raumnutzung) und dem daraus resultierenden Verkehr eine herausragende Bedeutung zu. lm Zuge einer Arealentwicklung oder auch eines einzelnen grösseren Bauvorhabens ist es oft zweckmässig, ein Mobilitätskonzept zu erarbeiten und umzusetzen. Damit können die genannten Herausforderungen zielgerichtet angegangen werden.
--<!-- section:level=1 title="Gesamtverkehrskonzept Kanton Zürich 2018" -->
--# Gesamtverkehrskonzept Kanton Zürich 2018
--
--Dieses Merkblatt richtet sich primär an Gemeinden und Bauherrschaften (lnvestorinnen und lnvestoren, Grundeigentümerinnen und Grundeigentümer), aber auch an Betreiberinnen und Betreiber bestehender Liegenschaften (Wohnbaugenossenschaften, Schulen, etc.). Es bildet eine Arbeitshilfe zu lnhalten (Zielsetzungen, Massnahmen, etc.) und zur Umsetzung von Mobilitätskonzepten. Das Merkblatt stützt sich ab auf die Grundsätze des kantonalen Gesamtverkehrskonzepts 2018 und der Agglomerationsprogramme.
--
--Mit dem Gesamtverkehrskonzept legt der Regierungsrat die langfristigen Ziele und Entwicklungsgrundsätze für das Verkehrssystem im Kanton Zürich fest.
--
--zh.ch/gvk
--
--Agglomerations-
--
--proqramme
--
--des Kantons Zürich
--
--*Die Abstimmung von Siedlung und Verkehr im dichtbebauten städtischen Umfeld ist eine grosse Herausforderung.*
--<!-- section:level=1 title="Agglomerationsprogramme des Kantons Zürich" -->
--# Agglomerationsprogramme des Kantons Zürich
--
--Die Agglomerationsprogramme sind langfristige Planungsinstrumente des Kantons. Damit werden auf die erwünschte Siedlungsentwicklung abgestimmte Verkehrsmassnahmen gefördert.
--
--zh.ch/agglomerationsprogramme
--<!-- section:level=1 title="Zweck und Auslöser von Mobilitätskonzepten" -->
--# Zweck und Auslöser von Mobilitätskonzepten
--
--Ein Mobilitätskonzept enthält ein Bündel von aufeinander abgestimmten Massnahmen, die es erlauben, den durch eine Arealentwicklung oder Bauvorhaben erzeugten Verkehr (Quell-ZielVerkehr) auf die bestehenden und künftigen Kapazitäten des übergeordneten Strassennetzes, der Parkplätze, des ÖV sowie des Angebots für den Fuss- und Veloverkehr so abzustimmen, dass Kapazitätsengpässe vermieden (oder zumindest nicht verschärft) werden und/oder Umweltbelastungen (Luft, Lärm) reduziert werden. Mit den Massnahmen des Mobilitätskonzepts wird somit ein bestimmtes Verkehrsverhalten (Fahrtenanzahl, Modalsplit etc.) angestrebt.
--
--Mögliche Auslöser von Mobilitätskonzepten sind:
--
--- Angestrebte Verbesserungen für die Bewohnerinnen und Bewohner, Besucherinnen und Besucher, Kunden, etc., etwa im Fuss- und Veloverkehr.
--- Vermeiden von bestehenden oder absehbaren Erreichbarkeitsproblemen eines Areals, insbesondere:
--- Kapazitätsengpässe auf dem umliegenden Strassennetz (Stau)
--- Knappes Angebot an Parkplätzen
--- Ungenügendes und/oder überlastetes ÖV-Angebot
--- Ungenügende oder fehlende Anbindung für den Fuss- und Veloverkehr
--- Unterschreitung des gemäss Nutzungsplanung bzw. Parkplatz-Verordnung vorgesehenen Pflichtparkplatzbedarfs bei Bauvorhaben (sofern diese Unterschreitung gemäss den Vorschriften zulässig ist), Arealentwicklungen oder bei Bestandsobjekten.
--- Angestrebte Verbesserungen im Rahmen eines betrieblichen oder kommunalen Umweltmanagements oder im Rahmen von Energie- und Mobilitätsprogrammen (2000-WattAreale, EnergieStadt etc).
--- Verbesserungen bei bestehenden oder absehbar übermässigen Emissionen von Luftschadstoffen und Klimagasen.
--
--Für Areale mit sehr guter ÖV-Erschliessung, welche die minimal erforderliche Anzahl Parkplätze unterschreiten sollen (Autoarmes/autofreies Wohnen), kann ein Mobilitätskonzept ein sinnvolles Instrument zur Sicherstellung einer optimierten Mobilität sein.
--<!-- section:level=1 title="Verfahren und Verbindlichkeit" -->
--# Verfahren und Verbindlichkeit
--
--Mobilitätskonzepte sind Planungsinstrumente. Sie können unter bestimmten Voraussetzungen in Planungs- und Bauverfahren verlangt oder empfohlen werden. Ebenso können Mobilitätskonzepte freiwillig erarbeitet und umgesetzt werden (meist bei Bestandsobjekten).
--<!-- section:level=1 title="Nutzungsplanung der Gemeinden" -->
--# Nutzungsplanung der Gemeinden
--
--Die Gemeinden erlassen kommunale Nutzungspläne. Diese umfassen unter anderem die Bau-  und  Zonenordnungen  (BZO),  ggf.  Parkplatzverordnungen  (PP-VO),  Sonderbauvorschriften und öffentliche Gestaltungspläne. Die Gemeinden schaffen damit nach Massgabe von § 2 lit. c PBG kommunales Planungsrecht. Dabei sind sie an die Institute, Begriffe, Messund Berechnungsweisen sowie an die Mindestanforderungen des kantonalen Rechts gebunden (§ 45 Abs. 2 PBG). Zu der kommunalen Nutzungsplanung gehört auch die Regelung zur Parkplatzzahl (§ 242 PBG).
--
--Die Gemeinden können bei der Konkretisierung dieser Bestimmung in ihren Bau- und Zonenordnungen vorschreiben, dass Bauherren im Rahmen des Baubewilligungsverfahrens ein Mobilitätskonzept vorlegen müssen, falls sie von der vorgeschrieben Anzahl Parkplätze nach unten abweichen möchten. Von einem Bauherrn darf dabei nur verlangt werden, was dieser auch aus eigener Kraft herbeiführen kann.
--<!-- section:level=1 title="Vereinbarungen mit Bauherren" -->
--# Vereinbarungen mit Bauherren
--
--Bauherren können private Gestaltungspläne erarbeiten, die von den Gemeinden zu genehmigen sind. Der Bauherr kann eine Selbstverpflichtung zur Erstellung und Umsetzung eines Mobilitätskonzepts eingehen. Die Gemeinde als Bewilligungsinstanz kann eine entsprechende Einigung darüber auf dem Verhandlungsweg erzielen.
--<!-- section:level=1 title="Baubewilligungsverfahren" -->
--# Baubewilligungsverfahren
--
--Sofern ein Mobilitätskonzept im Baubewilligungsverfahren eingefordert werden kann, bestehen folgende Möglichkeiten und Grundsätze des Umgangs mit dem Mobilitätskonzept:
--
--- Der Bauherr (Investor, Grundeigentümer) erarbeitet das Mobilitätskonzept und reicht es zusammen mit dem Baugesuch ein.
--- Die Gemeinde prüft das Baugesuch hinsichtlich dem eingereichten Mobilitätskonzept entsprechend den in der Nutzungsplanung gemachten Vorgaben.
--- Die Gesamtverantwortung für den Vollzug des Mobilitätskonzepts (d.h. Umsetzung der festgelegten Massnahmen) liegt i.d.R. beim Bauherrn/Investor oder beim Betreiber der Nutzung, überwacht durch die Gemeinde. Einzelne Aufgaben daraus können auch die Gemeinde oder Dritte übernehmen.
--
--Generell ist es möglich, dass ein Mobilitätskonzept vorgängig oder parallel zur Sondernutzungsplanung (insbesondere im Fall von Gestaltungsplänen für grössere Areale) erstellt wird und die entsprechenden Ziele und Massnahmen direkt in die Vorschriften integriert werden.
--<!-- section:level=1 title="Optimierung im Bestand" -->
--# Optimierung im Bestand
--
--Ein Mobilitätskonzept kann auch für bestehende Bauten und Areale (Unternehmen, Wohnanlagen, Spitäler etc.) erarbeitet und umgesetzt werden. Meist ist es Bestandteil eines betrieblichen Mobilitäts- oder Umweltmanagements. Das Mobilitätskonzept wird freiwillig ergriffen und zielt i.d.R. auf einen MIV-sparsameren Bewohner-, Pendler- und Geschäftsverkehr ab.
--<!-- section:level=1 title="Inhalte eines Mobilitätskonzepts" -->
--# Inhalte eines Mobilitätskonzepts
--
--Die Inhalte eines Mobilitätskonzepts sind je nach Auslöser und Objekt unterschiedlich. Sie sollten immer eine Beschreibung des Objekts mit seinen wichtigsten Kennzahlen, eine Standortanalyse sowie die Zielsetzungen, Massnahmen, Finanzierung und die Art und Weise der Wirkungskontrolle enthalten. Es wird empfohlen, das Mobilitätskonzept anhand der Überschriften der folgenden Abschnitte zu strukturieren.
--<!-- section:level=1 title="Analyse" -->
--# Analyse
--<!-- section:level=1 title="Standort- und Objektbeschreibung" -->
--# Standort- und Objektbeschreibung
--
--Ein Mobilitätskonzept ist meistens auf einen bestimmten Standort (z.B. ein Gebäude oder ein Areal) ausgerichtet, kann sich aber auch auf betriebliche Einheiten (z.B. Unternehmen) an einen oder mehrere Standorte beziehen. Die wichtigsten Eckdaten des Gebäudes oder Areals werden in einer kurzen Beschreibung erläutert.
--
--Bei allen Arten von Mobilitätskonzepten sind dies folgende Informationen:
--
--- genaue Lage (für alle einzelnen Standorte im Falle einer Organisation mit mehreren Standorten)
--- Nutzungen und deren Kennzahlen (beispielsweise Flächen, Anzahl Arbeitsplätze, Personenzahlen und der Minimal- und Maximalbedarf an Abstellplätzen für alle Verkehrsmittel je Nutzergruppe)
--- Anzahl erwartete Personen- und Fahrzeugbewegungen pro Nutzergruppe
--
--Ist die Erstellung eines Mobilitätskonzepts im Rahmen von Planungs- und Bauvor  haben erforderlich, sind zusätzlich folgende Angaben nötig:
--
--- massgebliche Grundlagen (z.B. Vorgaben aus der Richtplanung, BZO, Parkplatzverordnungen oder Gestaltungspläne)
--- allfällige Vorgaben aus Planungsprozessen (z.B. Umweltverträglichkeitsprüfung)
--- Berechnung der minimal erforderlichen bis maximal zulässigen Anzahl Abstellplätze für alle Verkehrsmittel gemäss den massgeblichen Grundlagen
--- Tatsächlich vorgesehenen Anzahl Abstellplätze für alle Verkehrsmittel inkl. Begründung
--- Bei Wohn- und Arbeitsnutzungen: Nahversorgungssituation, z.B. Verpflegung, Einkauf, Dienstleistungen, Freizeit-/Kultureinrichtungen und Naherholungsflächen in der Umgebung
--- Bei Arbeitsnutzungen sowie Einkaufs- und Freizeitnutzungen (sofern möglich): Mobilitätssituation der Beschäftigten und der Kundschaft (Wohnstandorte / Einzugsbereich, Qualität der ÖV-Verbindung, Mobilitätsgewohnheiten) mittels Befragungen
--<!-- section:level=1 title="Verkehrsangebot und -nachfrage" -->
--# Verkehrsangebot und -nachfrage
--
--Für die Zielsetzungen eines Mobilitätskonzeptes sind insbesondere auch die aktuelle und zukünftige Darstellung zum Verkehrsangebot und der Verkehrsnachfrage wichtig. Dazu zählen:
--
--- Verkehrsaufkommen im Quell-Ziel-Verkehr, Modalsplit
--- ÖV-Erschliessung (Distanz zur nächsten Haltestelle, Verbindungen und Taktfrequenz, ÖV-Güteklassen)
--- Erschliessung für Fuss- und Veloverkehr (Netzanbindung)
--- Veloabstellplätze: Lage, Parkiersystem und Belegung
--- Carsharing-Standorte in fussläufiger Distanz
--- Kapazitätsauslastung auf Strasse und ÖV (Schiene/Strasse)
--<!-- section:level=1 title="Problemlage" -->
--# Problemlage
--
--Im Fokus stehen dabei Aspekte der Erreichbarkeit aus Perspektive der Nutzerinnen und Nutzer, also unter Berücksichtigung von Zeitdauern, allfälligen Schwierigkeiten wie Steigungen, gefährlichen Querungsstellen oder Ähnlichem.
--<!-- section:level=1 title="Zielsetzungen" -->
--# Zielsetzungen
--
--Zielsetzung eines Mobilitätskonzepts ist immer eine optimierte Mobilität. Weitere Ziele eines Mobilitätskonzepts aus Sicht der für die Erstellung verantwortlichen Akteure können Energieeffizienz, Wirtschaftlichkeit, der Umgang mit knappen Kapazitäten, Zufriedenheit der Nutzergruppen oder Imagebildung sein. Machen übergeordnete Vorgaben ein Mobilitätskonzept erforderlich, sind die dahinterstehenden Ziele meist, die Leistungsfähigkeit des Strassennetzes und des öffentlichen Parkraumangebotes zu erhalten bzw. übermässige Lärm-, Luftschadstoff- und Klimagasemissionen zu vermeiden.
--
--Die Zielsetzungen des Mobilitätskonzepts werden detailliert aufgeführt. Dabei sind die spezifische Kombinationen von Auslösern, Nutzungen und Nutzergruppen zu unterscheiden und jeweils spezifische Zielsetzungen zu definieren. Nachstehend werden drei Beispiele für typische Kombinationen von Nutzungen, Auslösern und daraus resultierende spezifische Zielsetzungen eines Mobilitätskonzepts vorgestellt.
--<!-- section:level=1 title="Beispiel 1: Wohnnutzungen mit unterschrittener Pflichtparkplatzzahl" -->
--# Beispiel 1: Wohnnutzungen mit unterschrittener Pflichtparkplatzzahl
--
--Auslöser: Auslöser für die Erstellung eines Mobilitätskonzepts für Wohnnutzungen im Rahmen von Bauprojekten und Arealplanungen ist meist eine (angestrebte) Unterschreitung der minimal erforderlichen Pflichtparkplatzzahl.
--
--Ziel: Ziel ist es, die Parkplatznachfrage der Bewohnerschaft auf die vorhandenen Parkplätze zu beschränken. Die Anzahl der Autos der Bewohnerinnen und Bewohner sowie der Besucherinnen und Besucher soll daher nicht höher ausfallen als die Anzahl vorhandener Parkplätze (Übereinstimmung von Angebot und Nachfrage).
--<!-- section:level=1 title="Beispiel 2: Arbeitsnutzung" -->
--# Beispiel 2: Arbeitsnutzung
--
--Auslöser: Mobilitätskonzepte für Arbeitsnutzungen werden meist freiwillig erstellt, beispielsweise um einen Beitrag zu den Zielen des Umweltmanagementsystems eines Betriebes zu leisten oder um eine an einem Standort vorhandene Parkplatzknappheit zu entschärfen. Andere Gründe können Kapazitätsengpässe auf den vorhandenen, umliegenden Infrastrukturen, Verminderung von Emissionen oder die Reduktion von Investitionskosten bzw. Betriebskosten für neue Parkplätze sein.
--
--Ziel: Zielsetzung ist in den meisten Fällen, eine verstärkte Nutzung von ÖV, Velo sowie von Fahrgemeinschaften zu erreichen. Der Autoanteil im Modalsplit des Pendel- und/oder Geschäftsverkehrs soll ein als verträglich definiertes Mass nicht überschreiten.
--<!-- section:level=1 title="Beispiel 3: Stark verkehrserzeugende Nutzungen" -->
--# Beispiel 3: Stark verkehrserzeugende Nutzungen
--
--Auslöser: Auslöser sind meist die massgeblichen Grundlagen der Standortgemeinden, welche ein auf den Verkehr der Besucherinnen und Besucher bzw. der Kundschaft bezogenes Mobilitätskonzept  fordern.  Es  wird  angestrebt,  die  Leistungsfähigkeit  des  umgebenden Strassennetzes sicherzustellen und übermässige Emissionen zu verhindern.
--
--Ziel: Ziel ist es, eine definierte Fahrtenanzahl nicht zu überschreiten. Zudem wird angestrebt, eine hohe Nutzung der bestehenden öffentlichen Verkehrsmittel sowie im Fuss- und Veloverkehr zu erreichen und den Zugang zu diesen Verkehrsmitteln zu verbessern.
--<!-- section:level=1 title="Massnahmen" -->
--# Massnahmen
--
--Die für die Umsetzung festgesetzten Angebote und Massnahmen werden in einem Mobilitätskonzept beschrieben. Es besteht eine Fülle an Massnahmen, welche auch in unterschiedlicher Differenzierung für die verschiedenen Nutzergruppen angewendet werden können.
--
--Die Finanzierung der Massnahmen sollte frühzeitig festgelegt werden. Dies gilt insbesondere für Massnahmen, die jährlich wiederkehrende Kosten verursachen. Diesen Kosten stehen Einsparungen, die zum Beispiel durch den Verzicht auf die Erstellung von Parkplätzen entstehen, gegenüber. Eine weitere Möglichkeit der Finanzierung sind wiederkehrende Einnahmequellen, beispielsweise aus einer Parkplatzbewirtschaftung. Für jede Massnahme muss auch angegeben werden, wer für die Umsetzung und Wirkungskontrolle zuständig ist.
--
--Für eine detaillierte Information können die Massnahmenblätter oder die Beratung von Impuls Mobilität, der Mobilitätsberatung des Kantons Zürich, in Anspruch genommen werden.
--
--*Gedeckte, sichere Veloabstellplätze an gut erreichbaren Lagen sind eine von vielen möglichen Massnahmen in einem Mobilitätskonzept.*
--
--Nachstehend werden die gängigsten Massnahmen in einer Tabelle aufgeführt. Die Massnahmen werden entweder durch die Gemeinden (z.B. Massnahme Fusswege, -netz), die Bauherrschaft (z.B. Massnahme Parkplatzangebot) oder Dritte (z.B. Massnahme ÖV-Angebot) umgesetzt. Die Tabelle ist als Übersicht zu betrachten.
--
--| Handlungsfeld | Massnahme | Beschreibung |
 +<!-- section:level=1 title="BZO Version 26. Januar 2026.pdf" -->
 +
 +<!-- section:level=1 title="Arbeitsversion" -->
 +# Arbeitsversion
-+<!-- section:level=1 title="Bau- und Zonenordnung" -->
-+# Bau- und Zonenordnung
-+
+ <!-- section:level=1 title="Bau- und Zonenordnung" -->
+ # Bau- und Zonenordnung
+ 
+-Vom 12. September 2013 (Stand 1. August 2023)
 +Vom 12. September 2013 (Stand 26. Januar 2026)
 +
 +Die Stimmberechtigten der Gemeinde Oberrieden haben an der Gemeindeversammlung vom 5. Juni 2025 der Teilrevision der Bau- und Zonenordnung betreffend «Harmonisierung der Baubegriffe und weitere Revisionspunkte» zugestimmt. Die Genehmigung der Baudirektion des Kantons Zürich erfolgte am 3. November 2025 (Publikation der Verfügung der Baudirektion am 1. Dezember 2025).
-+<!-- section:level=1 title="1 Zonen, Zonenplan und Ergänzungspläne" -->
-+# 1 Zonen, Zonenplan und Ergänzungspläne
-+<!-- section:level=1 title="Art.  1 Zonen" -->
-+# Art.  1 Zonen
-+
-+1  Das Gemeindegebiet wird, soweit es nicht kantonalen und regionalen Nutzungszonen zugewiesen oder Wald ist, in folgende Zonen eingeteilt:
-+
-+| Zonen | Kurzbezeichnung | Ausnützungsziffer, Baumassenziffer | ES |
-+| --- | --- | --- | --- |
-+| Kernzone KA | KA | - | III |
-+| Kernzone KB | KB | 35% | III |
-+| 2-geschossige Wohnzone | W2 | 25% | II |
-+| 2-geschossige Wohnzone | W2 | 35% | II |
-+| 2-geschossige Wohnzone mit Gewerbe- anteil | WG2 | 30% | III |
-+| 3-geschossige Wohnzone | W3 | 55% | II |
-+| 3-geschossige Wohnzone mit Gewerbe- anteil | WG3 | 50% | III |
-+| Gewerbezone G3 | G3 | 3 m³/m² | III |
-+| Gewerbezone G6 | G6 | 6 m³/m² | III |
-+| Zone für öffentliche Bauen | ÖB | - | II/III/IV 1) |
-+| Freihaltezonen | FK/F | - | - |
-+| Reservezone | R | - | - |
-+
-+> 2 Abweichungen   von   der   Zuordnung   der   Empfindlichkeitsstufen   gemäss Lärmschutzverordnung (LSV) sind im Zonenplan festgelegt.
-+
-+> 1) Differenzierte Zuordnung gemäss Zonenplan
-+
-+> * Änderungstabellen am Schluss des Erlasses
+ <!-- section:level=1 title="1 Zonen, Zonenplan und Ergänzungspläne" -->
+ # 1 Zonen, Zonenplan und Ergänzungspläne
+ <!-- section:level=1 title="Art.  1 Zonen" -->
+@@ -28,21 +32,21 @@
+ 
+ > 2 Abweichungen   von   der   Zuordnung   der   Empfindlichkeitsstufen   gemäss Lärmschutzverordnung (LSV) sind im Zonenplan festgelegt.
+ 
+-> 3  In den Teilgebieten der Zone für öffentliche Bauten Schützenhaus, Hackholzplatz im Aebnet und Sportplatz Cholenmoos sind keine neuen Bauten mit lärmempfindlicher Nutzung zulässig.
+-
+ > 1) Differenzierte Zuordnung gemäss Zonenplan
+ 
+ > * Änderungstabellen am Schluss des Erlasses
 +
 +3  In den Teilgebieten der Zone für öffentliche Bauten Schützenhaus, Hackholzplatz im Aebnet und Sportplatz Cholenmoos sind keine neuen Bauten mit lärmempfindlicher Nutzung zulässig.
-+<!-- section:level=1 title="Art.  2 Massgebende Pläne" -->
-+# Art.  2 Massgebende Pläne
-+
-+1  Für die Abgrenzung der Zonen und für die Anordnung innerhalb der Zonen ist der Zonenplan im Massstab 1:5000 massgebend. Die genauen Zonengrenzen, die Wald- und Gewässerabstandslinien sowie die Aussichtsschutzpläne   sind,   soweit   erforderlich,   in   Ergänzungsplänen   im   Massstab 1:500/1:1000 dargestellt.
-+
+ <!-- section:level=1 title="Art.  2 Massgebende Pläne" -->
+ # Art.  2 Massgebende Pläne
+ 
+ 1  Für die Abgrenzung der Zonen und für die Anordnung innerhalb der Zonen ist der Zonenplan im Massstab 1:5000 massgebend. Die genauen Zonengrenzen, die Wald- und Gewässerabstandslinien sowie die Aussichtsschutzpläne   sind,   soweit   erforderlich,   in   Ergänzungsplänen   im   Massstab 1:500/1:1000 dargestellt.
+ 
+-2 Die rechtsverbindlichen Pläne liegen auf der Gemeindekanzlei auf.
+-
+-3  Die Inventare des Natur- und Heimatschutzes, der archäologische Zonenplan des Kantons und der Altlastenkataster (Verdachtsflächen) können auf dem Gemeindebauamt eingesehen werden.
+-
+-4  Nach Vorliegen des Zonenplanes nach den Bestimmungen der Kantonalen Mehranforderungen KMAF sind der digitalisierte Zonenplan und die im Datensatz der AV erfassten Grenzen massgebend.
 +2 Die rechtsverbindlichen Pläne liegen bei der Abteilung Hochbau auf.
 +
 +3  Die Inventare des Natur- und Heimatschutzes, der archäologische Zonenplan des Kantons und der Altlastenkataster (Verdachtsflächen) können bei der Abteilung Hochbau eingesehen werden.
 +
 +4  Nach Vorliegen des Zonenplanes nach den Bestimmungen der Kantonalen Mehranforderungen (KMAF) sind der digitalisierte Zonenplan und die im Datensatz der AV erfassten Grenzen massgebend.
-+<!-- section:level=1 title="2 Vorschriften für die Bauzonen" -->
-+# 2 Vorschriften für die Bauzonen
-+<!-- section:level=1 title="2.1 Kernzonen KA und KB" -->
-+# 2.1 Kernzonen KA und KB
-+<!-- section:level=1 title="Art.  3 Zweck der Kernzonen" -->
-+# Art.  3 Zweck der Kernzonen
-+
-+1  Die Kernzone KA ist für den Schutz der vorhandenen wertvollen Bausubstanz, die Erhaltung des Ortsbildes und einzelner Gebäudegruppen sowie für die damit zusammenhängenden Umgebungselemente bestimmt.
-+
-+2  Die Kernzone KB ist dazu bestimmt, dass in Ergänzung zur Kernzone KA neue angepasste Bauten mit sorgfältiger Umgebungsgestaltung entstehen, die einen guten Übergang von den schützenswerten Objekten und Gruppen zu den anschliessenden Zonen bilden.
-+<!-- section:level=1 title="Art.  4 Gestaltungsplanpflicht" -->
-+# Art.  4 Gestaltungsplanpflicht
-+
-+1 Für   die   im   Zonenplan   bezeichneten   Gebiete   besteht   Gestaltungsplanpflicht.
-+
-+2  Wo eine zweckmässige Unterteilung der Gebiete möglich ist, können mehrere Gestaltungspläne aufgestellt werden. Diese müssen nicht für alle Teilgebiete gleichzeitig festgesetzt werden.
-+<!-- section:level=1 title="Art.  5 Um- und Wiederaufbauten" -->
-+# Art.  5 Um- und Wiederaufbauten
-+
-+1  Die bestehenden traditionellen Gebäude dürfen unter Beibehaltung des bisherigen Gebäudeprofils und des herkömmlichen Erscheinungsbildes umgebaut oder wiederaufgebaut werden. Vorbehalten bleiben Unterschutzstellungen.
-+
-+2  Abweichungen aus Gründen des Verkehrs, des Immissionsschutzes, der Feuerpolizei, der Hygiene, der Gestaltung, des Ortsbildschutzes oder aus Gründen anderer öffentlicher Interessen können erlaubt oder vorgeschrieben werden. Dasselbe gilt für untergeordnete Abweichungen zufolge der konkreten baulichen Verhältnisse. Vorbehalten bleiben Unterschutzstellungen.
-+<!-- section:level=1 title="Art.  6 Grundmasse für Neubauten" -->
-+# Art.  6 Grundmasse für Neubauten
-+
-+1  Für Neubauten gelten folgende Grundmasse:
-+
-+| Mass | KA | KB 35% |
+ <!-- section:level=1 title="2 Vorschriften für die Bauzonen" -->
+ # 2 Vorschriften für die Bauzonen
+ <!-- section:level=1 title="2.1 Kernzonen KA und KB" -->
+@@ -73,28 +77,28 @@
+ | Mass | KA | KB 35% |
  | --- | --- | --- |
--| MIV | Carsharing | Organisierte gemeinschaftliche Nutzung eines Autos über Dritte |
--|  | Carpooling | Bildung von Fahrgemeinschaften für gemeinsame Wege (i.d.R. Arbeitsweg) |
--|  | Privates Carsharing | Anreize für Personen, ihr Privatfahrzuge zur Ausleihe oder auch für Mitfahr- gemeinschaften zur Verfügung zu stellen |
--|  | Dienstwagenflotte | Nutzen von Dienstwagen aus der betriebseigenen Flotte oder Fahrzeuge eines Carsharing von Dritten für Geschäftsfahrten der Mitarbeitenden |
--|  | ökologische Fahrzeuge | Beschaffung von ökologischen und emissionsarmen Fahrzeugen |
--|  | ökologisches Fahren | Vermitteln von Grundsätzen zum ökologischen und ökonomischen Fahren |
--|  | Parkraummanagement | Abstimmung des bestehenden Parkplatzangebots auf die Nachfrage. Förderung der Nutzung des ÖVund des Fuss- und Veloverkehrs. Steuerung der Parkplatznutzung über Gebühren und Zuteilungskriterien |
--|  | Parkplatzangebot | Zur Verfügung stellen einer begrenzten Anzahl von Parkplätzen |
--|  | Infrastruktur Parkierung | Lademöglichkeiten für Elektroautos |
--|  | Private Autonutzung | Regelung der Autonutzung im Umfeld des Wohn- bzw Arbeitsortes im Rahmen von Miet- bzw Arbeitsverträgen |
--| ÖV | ÖV-Angebot | Identifizierung von Massnahmen zur Verbesserung des ÖV-Angebots (Fahrplan, Linienführung, Fahrzeuge, Kurstakt); Einbringen in die ordentlichen ÖV-Planungs- und Entscheidungsprozesse |
--|  | ÖV-Infrastruktur | Ausstattung der Haltestelle. Identifizierung von Massnahmen zur Verbesserung (Überdachung, Sitzmöglichkeiten, direkte Erschliessung durch Fussgängerquerung); Einbringen in die ordentlichen ÖV-Planungs- und Entscheidungsprozesse |
--| Veloverkehr | Velowege, -netz | Identifizierung von Massnahmen zur Verbesserung des Velowegnetzes und Einbringen in die kommunale Planung |
--|  | Velosharing, Dienstvelos | Organisierte gemeinschaftliche Nutzung eines Velos oder E-Bikes (privat oder von Dritten), auch als Teil der eigenen Dienstfahrzeugflotte oder in Wohnsiedlungen als Leihvelos |
--|  | Veloparkierung, Abstellplätze für Spezialvelos | Genügende Anzahl und Qualität an Veloabstellplätzen, ungehinderte Erschliessung. Gilt auch für Lastenvelos, Velos mit Anhängern und andere Spezialvelos |
--|  | Infrastruktur Veloparkierung | Einrichten von gut zugänglichen Stromanschlüssen zum Laden für E-Bikes |
--|  | Ergänzende Veloinfrastrukturen | Duschen, Velopumpen oder Werkzeuge, abschliessbare und belüftete Garderoben- schränke zur zweckmässigen Aufbewahrung von Helm, Velobekleidung und Zubehör |
--| Fussverkehr | Fusswege, -netz | Massnahmen zur Verbesserung des Fusswegnetzes (sicher, direkt, beleuchtet) werden identifiziert und in die kommunale Planung eingebracht |
--| Güter- und Wirt- schaftsverkehr | Diverse Massnahmen (Logistik) | Diverse Massnahmen für Nahversorgung und Entsorgung in Wohnsiedlungen. Lieferservices seitens der Verkaufsstellen und amZielort eingerichtete Empfangsstel- len. Lastenvelos, Veloanhänger oder auch Handkarren können zur Verfügung gestellt werden |
--| Flexible Arbeitsformen | Home Office | Möglichkeit, Arbeiten von zu Hause aus zu erledigen, i.d.R. an einzelnen, mit dem Arbeitgeber festgelegten Tagen |
--|  | Arbeitszeitmodelle | Möglichkeit, Voll- oder Teilzeit zu arbeiten bzw. sich die Arbeitszeit über den Tag, die Woche oder das Jahr flexibel einzuteilen |
--|  | Dezentrale Arbeitsplätze | Möglichkeit, Arbeiten von anderen Arbeitsplätzen oder von unterwegs aus zu erledigen |
--|  | E-Learning- Plattformen | Möglichkeiten, den Unterricht vor Ort zu ersetzen |
--|  | Öffnungszeiten | Verschiebung von Öffnungszeiten zur Vermeidung von Verkehrsspitzen |
--| Spesenreglement |  | Regelung von Nutzung der Verkehrsmittel und die Vergütung der Fahrkosten (Pendler, Geschäftsfahrten) |
--| Finanzielle Anreize |  | Mobilitätsgutscheine oder andere finanzielle Anreize (z.B. Vergütungen) zur Motiva- tion, den ÖVoder das Velo zu benützen oder zu Fuss zu gehen |
--| Kommunikation | Information | Informationen über Hintergrund, Ziele, Massnahmen und Erfolge eines Mobilitäts- konzepts sowie über die verschiedenen Mobilitätsangebote. Fahrplanangaben auf Infoscreens, gute Angaben zur Erreichbarkeit mit allen Verkehrsmitteln oder Mobilitätsmappen |
--|  | Aktionen | Organisation von Events, z.B. Eco-Drive-Kurse, Testaktionen von Velos, Bike to Work, Velomittwoch, Bike to School |
--| Koordination und Beratung |  | Beratungsstelle für Mobilitätsfragen |
--<!-- section:level=1 title="Wirkungskontrolle und Berichterstattung" -->
--# Wirkungskontrolle und Berichterstattung
--
--Um die Zielerreichung und damit das Funktionieren des Mobilitätskonzepts zu überprüfen, sind regelmässige Wirkungskontrollen nötig. Bei Mobilitätskonzepten, die im Rahmen von Planungs-  und  Bauvorhaben  vorgeschrieben  sind,  sind  Wirkungskontrollen  inklusive  Berichterstattung an die zuständige Behörde i.d.R. eine Auflage. Sie werden jedoch für alle Mobilitätskonzepte empfohlen.
--
--Folgende Elemente von Wirkungskontrollen sollten in einem Mobilitätskonzept definiert werden:
--<!-- section:level=1 title="Verantwortlichkeit, Periodizität und Berichterstattung" -->
--# Verantwortlichkeit, Periodizität und Berichterstattung
--
--Es wird verbindlich festgehalten, in welchen Zeitabständen die Wirkungskontrollen durchgeführt und welcher zuständigen Stelle die Kontrollberichte vorgelegt werden. Zudem muss festgelegt werden, wer die Wirkungskontrollen durchführt. Eine für Mobilitätsfragen verantwortliche Stelle empfiehlt sich nicht nur in Betrieben, sondern auch für Wohnnutzungen oder stark verkehrserzeugenden Einrichtungen.
--<!-- section:level=1 title="Inhalte der Kontrolle" -->
--# Inhalte der Kontrolle
--
--Es ist sinnvoll, die Umsetzung und wo möglich auch die Wirkung der im Konzept aufgeführten Massnahmen zu überprüfen. Dies ermöglicht, bisher nicht zielführende Massnahmen anzupassen oder durch wirksamere zu ersetzen.
--
--Um überprüfen zu können, ob und wie gut die gesetzten Ziele eines Mobilitätskonzepts erreicht wurden, ist es unabdingbar, ein oder mehrere messbare Beurteilungskriterien zu definieren. Die Messkriterien leiten sich aus den konkreten Zielsetzungen des Mobilitätskonzepts ab, entsprechend ist eine grosse Vielfalt von spezifischen Beurteilungskriterien für die Zielerreichung denkbar.
--<!-- section:level=1 title="Vorgehen bei Erreichung der Ziele" -->
--# Vorgehen bei Erreichung der Ziele
--
--Zeigen die Wirkungskontrollen wiederholt eine gute Zielerreichung, kann das Mobilitätskonzept vorsehen, die Periodizität der Berichterstattung zu verlängern oder sie bis auf weiteres ganz auszusetzen.
--<!-- section:level=1 title="Vorgehen bei mangelhafter Zielerreichung" -->
--# Vorgehen bei mangelhafter Zielerreichung
--
--Im Mobilitätskonzept wird festgehalten, wie vorgegangen wird, wenn die angestrebten Ziele nur mangelhaft erreicht werden oder verkehrliche Missstände festgestellt werden können (§358 PBG). Üblich ist, dass zunächst eine Optimierung der Massnahmen vorgesehen wird. Bei Mobilitätskonzepten, die im Rahmen von Bauprojekten oder Arealplanungen erforderlich sind,  werden  als  Sanktionsmöglichkeit  öffentlichrechtliche  Eigentumsbeschränkungen  im Grundbuch festgehalten, welche die zuständigen Behörden bei wiederholter mangelhafter Erreichung der Ziele auslösen können.
--
--Nachstehend werden Beispiele von Beurteilungskriterien und das Vorgehen bei mangelhafter Erreichung der Ziele in typischen Formen von Mobilitätskonzepten aufgeführt:
--<!-- section:level=1 title="Beispiel 1: Wohnnutzungen mit unterschrittener Pflichtparkplatzzahl" -->
--# Beispiel 1: Wohnnutzungen mit unterschrittener Pflichtparkplatzzahl
--
--Ziel: Ziel ist es, die Parkplatznachfrage der Bewohnerschaft auf die vorhandenen Parkplätze zu beschränken. Die Parkplatznachfrage der Bewohnerschaft soll sich nicht in die Umgebung verschieben, d.h. das Parkplatzangebot auf dem Areal und die Nachfrage der Bewohnerinnen und Bewohner sowie deren Besucherinnen und Besucher sollen in Übereinstimmung stehen.
--
--Wirkungskontrolle: Zur Überprüfung der Zielerreichung wird die Gesamtanzahl Autos der Bewohnerinnen und Bewohner sowie der Besucherinnen und Besucher überprüft, die regelmässig auf dem Areal und in dessen Umgebung parkiert werden.
--
--Vorgehen bei mangelhafter Zielerreichung: Besitzt die Bewohnerschaft einer Siedlung mit unterschrittener Pflichtparkplatzzahl (deutlich) mehr Autos als Parkplätze vorhanden sind, ist es vordringliches Ziel, die im Mobilitätskonzept vorgegebene maximale Anzahl Autos (für die Mieterschaft im Mietvertrag oder anderen rechtlichen Dokumenten festgelegt) einzufordern. Gelingt dies nicht, kann die finale Sanktion in der Auslösung einer im Grundbuch festgehaltenen Rückfallebene liegen, d.h. im nachträglichen Nachweis oder in einer finanziellen Abgeltung (Ersatzabgabe) der fehlenden Parkplätze.
--
--*Bei neuen Wohnnutzungen soll darauf geachtet werden, dass das Parkplatzangebot auf dem Areal und die Nachfrage der Bewohnerinnen und Bewohner sowie deren Besucherinnen und Besucher in Übereinstimmung stehen.*
--<!-- section:level=1 title="Beispiel 2: Arbeitsnutzung" -->
--# Beispiel 2: Arbeitsnutzung
--
--Ziel: Zielsetzung ist in den meisten Fällen, eine verstärkte Nutzung von ÖV, Velo sowie von Fahrgemeinschaften zu erreichen. Der Autoanteil im Modalsplit des Pendel- und/oder Geschäftsverkehrs soll ein als verträglich definiertes Mass nicht überschreiten.
--
--Wirkungskontrolle:  Die  Messung des Umsetzungserfolgs von Mobilitätskonzepten für Arbeitsnutzungen findet häufig im Rahmen von Personalbefragungen statt. Den Beschäftigten wird dabei unter anderem die Frage gestellt, mit welchem Verkehrsmittel sie zur Arbeit kommen. Aus den Antworten kann die Verkehrsmittelnutzung der Belegschaft errechnet werden. Die Anteile verschiedener Verkehrsmittel auf Geschäftsfahrten können ebenfalls auf diesem Weg oder durch Auswertung von Spesenbelegen erhoben werden.
--
--Vorgehen bei mangelhafter Zielerreichung: Entspricht der Modalsplit nicht dem gesteckten Ziel, empfiehlt es sich, die bisher angewandten Massnahmen hinsichtlich ihrer Wirksamkeit, aber auch bezüglich ihrer Bekanntheit unter den Mitarbeitenden zu evaluieren und darauf basierend Optimierungen vorzunehmen.
--<!-- section:level=1 title="Beispiel 3: Stark verkehrserzeugende Nutzungen" -->
--# Beispiel 3: Stark verkehrserzeugende Nutzungen
--
--Ziel: Ziel ist es, eine definierte Fahrtenanzahl nicht zu überschreiten. Zudem wird angestrebt, eine hohe Nutzung der bestehenden öffentlichen Verkehrsmittel sowie im Fuss- und Veloverkehr zu erreichen und den Zugang zu diesen Verkehrsmitteln zu verbessern.
--
--Wirkungskontrolle: Die Fahrtenzahl stark verkehrserzeugender Nutzungen lässt sich am einfachsten mit automatischen Zählungen der Einfahrten an den Schrankenanlagen der Parkierungsanlagen erheben.
--
--Vorgehen bei mangelhafter Zielerreichung: Besonders bei Besucherparkplätzen von stark verkehrserzeugenden  Nutzungen  ist  die  Optimierung  der  Parkplatzbewirtschaftung  eine gängige Massnahme, wenn die Ziele eines Mobilitätskonzepts nur mangelhaft erreicht werden.  Finale  Sanktionsmöglichkeit  bei  dauerhaft  zu  grosser  Verkehrserzeugung  sind  Nutzungseinschränkungen dieser Parkplätze.
--
--*Für verkehrserzeugende Nutzungen wie z.B. Einkaufszentren wird mit einem Mobilitätskonzpt angestrebt, eine definierte Fahrtenzahl einzuhalten sowie die Nutzung und den Zugang zum öffentlichen Verkehr wie auch Fuss- und Veloverkehr zu erhöhen.*
--<!-- section:level=1 title="Weiterführende Informationen und Hilfsmittel" -->
--# Weiterführende Informationen und Hilfsmittel
--
--Impuls Mobilität
--<!-- section:level=1 title="Gemeinden" -->
--# Gemeinden
--
--Mobilitätskonzepte, die im Rahmen von Bauprojekten und Arealplanungen erstellt werden und die einer Bewilligung bedürfen, liegen in der Kompetenz der zuständigen Behörden der Gemeinden. Einige Gemeinden haben verbindliche Grundlagen erstellt, insbesondere die Städte Winterthur und Zürich. Sie sind auf den entsprechenden Internetseiten einsehbar.
--<!-- section:level=1 title="Kanton" -->
--# Kanton
--
--- Impuls Mobilität, die Mobilitätsberatung im Kanton Zürich, unterstützt Akteure wie Gemeinden, Betriebe, Liegenschaftsverwaltungen sowie Veranstalter bei der Entwicklung und Umsetzung von Mobilitätskonzepten. Auf der Webseite sind auch Massnahmenblätter und Beispiele einsehbar: zh.ch/impulsmobilitaet.
--
--*Publikation Impuls Mobilität der Mobilitätsberatung des Kantons Zürich*
--
--- Der Kanton Zürich bietet eine Beispielsammlung zu Mobilitätskonzepten an. Die Sammlung bietet einen Überblick über die verschiedenen Mobilitätskonzepte je nach Auslösern und Nutzergruppen. Sie ist als eigene Dokumentation erhältlich und auf der Internetseite des Amts für Mobilität einzusehen.
--
--zh.ch/impulsmobilitaet
--
--- Die Koordinationsstelle Veloverkehr des Kantons Zürich bietet auf velo.zh.ch/parkierung diverse Merkblätter zur Anzahl, Lage und Gestaltung der Veloparkierung, zum Beispiel spezifisch für Wohnbauten oder für Dienstleistung, Gewerbe und Verkauf.
--- Für Mobilitätsberatungen zu Standorten in der Stadt Zürich gilt folgende Adresse: https://www.stadt-zuerich.ch/impulsmobilitaet.
--<!-- section:level=1 title="National" -->
--# National
--
--- Die Energiestadt-Programme MIPA und MIWO bieten verschiedene Handbücher zu Mobilitätsmanagement und Mobilitätskonzepten in der Arealplanung und im Wohnen, zu finden auf www.energieschweiz.ch/mobilitaetsmanagement
--- Mobilservice, die Plattform für nachhaltige Mobilität und Mobilitätsmanagement in der Schweiz, mit vielen Dossiers und Praxisbeispielen: www.mobilservice.ch
--- Plattform autoarm/autofrei Wohnen: https://wohnbau-mobilitaet.ch
--- mobitool, die Schweizer Plattform für Mobilitätsmanagementtools und aufbereitete Umweltdaten: www.mobitool.ch
--<!-- section:level=1 title="Herausgeberin und Bezug" -->
--# Herausgeberin und Bezug
--
--Kanton Zürich Volkswirtschaftsdirektion Amt für Mobilität AFM Gesamtmobilität Neumühlequai 10 Postfach 8090 Zürich
--
--afm@vd.zh.ch
--
--+41 43 259 30 61
--
--Version 2.0, Februar 2021
--
--Download:
--
--zh.ch/kommverkehr
--
--Grafik/Layout: Works Design, Zürich
--
--Fotos & Abbildungen:
--
--Kanton Zürich, Amt für Mobilität+| Ausnützungsziffer max. | - | 35% |
+ | Ausnützungsziffer max. | - | 35% |
 +| Grünflächenziffer min. (s. Abs. 1.1) | 20% | 30% |
-+| Vollgeschosszahl max. | 3 | 2 |
+ | Vollgeschosszahl max. | 3 | 2 |
+-| Dachgeschosszahl max. | 2 | 2 |
 +| Dachgeschosszahl max. (s. Abs. 1.2) | 2 | 2 |
-+| Gebäudelänge max. | 25 m | 25 m |
-+| Gebäudebreite max. | 12 m | 12 m |
+ | Gebäudelänge max. | 25 m | 25 m |
+ | Gebäudebreite max. | 12 m | 12 m |
+-| Gr. Grundabstand min. | 5 m | 10 m |
+-| Kl. Grundabstand min. | 5 m | 5 m |
+-| Gebäudehöhe max. | 10.5 m | 7.5 m |
+-| Firsthöhe max. | 5.5 m | 5.5 m |
+-
+-> 2  Für Gebäude mit brennbaren Aussenwänden sind § 14 der Besonderen Bauverordnung II sowie § 7 der Verordnung über den baulichen Brandschutz nicht anwendbar.
+-
+-> 3  Das Bauen auf oder das Näherbauen an die Strassengrenze ist gestattet, wenn dadurch das Ortsbild verbessert und die Wohnhygiene sowie die Verkehrssicherheit nicht beeinträchtigt werden.
+-<!-- section:level=1 title="Art.  7 Grosser und kleiner Grundabstand Kernzone KB" -->
+-# Art.  7 Grosser und kleiner Grundabstand Kernzone KB
+-
+-1  Der grosse Grundabstand gilt für die am meisten gegen Süden gerichtete Hauptfassade.
+-
+-> 2 Der kleine Grundabstand gilt für die übrigen Gebäudeseiten.
 +| Grundabstand min. | 5 m | 5 m |
 +| Traufseitige Fassadenhöhe max. | 10.5 m | 7.5 m |
 +| Giebelseitige Fassadenhöhe max. | 16.0 m | 13.0 m |
@@ -404,78 +83,70 @@
 +3  Das Bauen auf oder das Näherbauen an die Strassengrenze ist gestattet, wenn dadurch das Ortsbild verbessert und die Wohnhygiene sowie die Verkehrssicherheit nicht beeinträchtigt werden.
 +<!-- section:level=1 title="Art.  7 …" -->
 +# Art.  7 …
-+<!-- section:level=1 title="Art.  8 Mehrlängenzuschlag" -->
-+# Art.  8 Mehrlängenzuschlag
-+
+ <!-- section:level=1 title="Art.  8 Mehrlängenzuschlag" -->
+ # Art.  8 Mehrlängenzuschlag
+ 
+-1  Ein Mehrlängenzuschlag gilt für mehr als 18 m lange Fassaden von Neubauten; er beträgt ein Drittel der Mehrlänge. Der Grenzabstand beträgt aber höchstens 10 m. Besondere Gebäude im Sinne von §§ 49 Abs. 3 und 273 PBG sind in die Mehrlängenberechnung nicht einzubeziehen.
 +1  Ein Mehrlängenzuschlag gilt für mehr als 18 m lange Fassaden von Neubauten; er beträgt ein Drittel der Mehrlänge. Der Grenzabstand beträgt aber höchstens 9 m. Kleinbauten und Anbauten im Sinne von §§ 49 Abs. 3 und 273 PBG sind in die Mehrlängenberechnung nicht einzubeziehen.
-+
-+2  In der Kernzone KB werden die für den Mehrlängenzuschlag massgeblichen   Fassadenlängen   von   benachbarten   Hauptgebäuden   zusammengerechnet, wenn der Gebäudeabstand 7 m unterschreitet.
-+<!-- section:level=1 title="Art.  9 Näherbau Kernzone KA" -->
-+# Art.  9 Näherbau Kernzone KA
-+
-+1 Der Näherbau ist in Abweichung von Art. 6, 7 und 8 bei Einhaltung eines Gebäudeabstandes von mind. 7 m mit einem Grenzabstand von mind. 2.5 m zulässig, sofern:
-+
-+- der Neubau der sinnvollen Erneuerung oder Erweiterung eines alten Dorfkerns in seiner baulichen, umgebungsgestalterischen und wirtschaftlichen Bedeutung dient;
-+- Nachbargrundstücke nicht übermässig benachteiligt werden;
-+- wohnhygienisch keine unzumutbaren Verhältnisse entstehen.
-+
-+2  Unter der Voraussetzung von Abs. 1 kann der Gebäudeabstand bis auf 4 m reduziert werden, sofern die betreffenden Fassaden bzw. Fassadenteile keine der zur Belichtung der Räume notwendigen Fenster aufweisen.
-+<!-- section:level=1 title="Art.  10 Grenzbau" -->
-+# Art.  10 Grenzbau
-+
-+1  Ohne nachbarliche Zustimmung ist der Grenzbau nur zulässig, wenn die bisherige   Nutzung   und   künftige   Bebaubarkeit   des   Nachbargrundstückes nicht beeinträchtigt werden.
-+
-+2 Zur Verhinderung der Beeinträchtigung des Ortsbildes können Auflagen für die Gestaltung von Brandmauern erteilt werden.
-+<!-- section:level=1 title="Art.  11 Erscheinung der Bauten" -->
-+# Art.  11 Erscheinung der Bauten
-+
-+1  Neubauten, Umbauten und Aussenrenovationen haben sich in ihrer Gebäudestellung, Grösse, kubischen Gestaltung, Fassade, Material, Farbe und Umgebungsgestaltung der bestehenden, das Ortsbild prägenden Bebauung einzuordnen.
-+
-+2  Es sind nur Dächer mit der in der jeweiligen Kernzonenart üblichen Neigung und Dachform zulässig. Die Hauptfirstrichtungen müssen parallel zu den Längsfassaden verlaufen. Andere Dachformen und Materialien sind zulässig, wenn sie bestehende Bauten oder Baugruppen sinnvoll ergänzen.
-+
+ 
+ 2  In der Kernzone KB werden die für den Mehrlängenzuschlag massgeblichen   Fassadenlängen   von   benachbarten   Hauptgebäuden   zusammengerechnet, wenn der Gebäudeabstand 7 m unterschreitet.
+ <!-- section:level=1 title="Art.  9 Näherbau Kernzone KA" -->
+@@ -120,29 +124,29 @@
+ 
+ 2  Es sind nur Dächer mit der in der jeweiligen Kernzonenart üblichen Neigung und Dachform zulässig. Die Hauptfirstrichtungen müssen parallel zu den Längsfassaden verlaufen. Andere Dachformen und Materialien sind zulässig, wenn sie bestehende Bauten oder Baugruppen sinnvoll ergänzen.
+ 
+-3  Dachaufbauten sind nur in Form von Giebellukarnen, Ochsenaugen und Schleppgauben zulässig. Sie sind nur im ersten Dachgeschoss zulässig und dürfen insgesamt nicht breiter als ein Viertel der betreffenden Fassadenlänge sein.
 +3  Dachaufbauten sind nur in Form von Giebellukarnen, Ochsenaugen und Schleppgauben zulässig. Sie dürfen insgesamt nicht breiter als ein Drittel der betreffenden Fassadenlänge sein. Vorbehalten bleibt Art. 32 Abs. 4 BZO. Bei zwei Dachgeschossen sind Dachaufbauten nur im ersten Dachgeschoss zulässig.
-+
-+4  Dachflächenfenster müssen sich in Bezug auf Grösse, Anzahl, Materialwahl und Gestaltung gut ins Dach einfügen. Ihre Grösse darf in der Regel max. 0.5 m² (Glasfläche) im 1. Dachgeschoss und max. 0.3 m² im 2. Dachgeschoss betragen.
-+
-+5 In der Kernzone KA sind Dacheinschnitte nicht zulässig.
-+
+ 
+ 4  Dachflächenfenster müssen sich in Bezug auf Grösse, Anzahl, Materialwahl und Gestaltung gut ins Dach einfügen. Ihre Grösse darf in der Regel max. 0.5 m² (Glasfläche) im 1. Dachgeschoss und max. 0.3 m² im 2. Dachgeschoss betragen.
+ 
+ 5 In der Kernzone KA sind Dacheinschnitte nicht zulässig.
+ 
+-6 In der Kernzone KB sind Dacheinschnitte höchstens auf ein Viertel jeder Dachseite zulässig. Sie dürfen zusammen mit den übrigen Dachaufbauten nicht länger als ein Drittel der betreffenden Fassadenlänge sein.
 +6 In der Kernzone KB sind Dacheinschnitte höchstens auf ein Viertel jeder Dachseite zulässig. Sie dürfen zusammen mit den Dachaufbauten nicht länger als ein Drittel der betreffenden Fassadenlänge sein. Vorbehalten bleibt Art. 32 Abs. 4 BZO.
-+
-+7  Fassaden, Dachvorsprünge, Balkone, Fenster, Schaufenster und Türen sind besonders sorgfältig zu gestalten und zu proportionieren. Reklamen dürfen das Orts- und Strassenbild nicht beeinträchtigen und müssen zurückhaltend im Ausmass sein.
-+
+ 
+ 7  Fassaden, Dachvorsprünge, Balkone, Fenster, Schaufenster und Türen sind besonders sorgfältig zu gestalten und zu proportionieren. Reklamen dürfen das Orts- und Strassenbild nicht beeinträchtigen und müssen zurückhaltend im Ausmass sein.
+ 
+-8  Die herkömmliche Umgebungsgestaltung wie Mauern und Einfriedungen ist im Rahmen des Kernzonenzweckes zu erhalten oder wieder herzustellen.Garagen und Abstellplätze sind unauffällig einzupassen.
 +8  Die herkömmliche Umgebungsgestaltung wie Mauern und Einfriedungen ist im Rahmen des Kernzonenzweckes zu erhalten oder wieder herzustellen. Garagen und Abstellplätze sind unauffällig einzupassen.
-+
-+9  Markante Bäume oder Baumgruppen sind gemäss § 76 PBG zu erhalten und bei Abgang durch standortgerechte Baumarten zu ersetzen.
-+<!-- section:level=1 title="Art.  12 Bewilligungspflicht für Abbrüche" -->
-+# Art.  12 Bewilligungspflicht für Abbrüche
-+
-+1 Der Abbruch ist vorbehältlich einer Unterschutzstellung gestattet, wenn das Ortsbild   dadurch   nicht   beeinträchtigt   wird   oder   wenn   die   Erstellung   des Ersatzbaus gesichert ist.
+ 
+ 9  Markante Bäume oder Baumgruppen sind gemäss § 76 PBG zu erhalten und bei Abgang durch standortgerechte Baumarten zu ersetzen.
+ <!-- section:level=1 title="Art.  12 Bewilligungspflicht für Abbrüche" -->
+ # Art.  12 Bewilligungspflicht für Abbrüche
+ 
+ 1 Der Abbruch ist vorbehältlich einer Unterschutzstellung gestattet, wenn das Ortsbild   dadurch   nicht   beeinträchtigt   wird   oder   wenn   die   Erstellung   des Ersatzbaus gesichert ist.
+-<!-- section:level=1 title="Art.  13 Modell" -->
+-# Art.  13 Modell
 +<!-- section:level=1 title="Art.  13 Modell und Gutachten" -->
 +# Art.  13 Modell und Gutachten
-+
-+1  Bei Neubauten oder eingreifenden äusseren Veränderungen ist zusammen mit der Baueingabe ein in der Machart geeignetes Modell abzuliefern. Das Modell geht nach Erteilung der Baubewilligung unentgeltlich in das Eigentum der Gemeinde über.
-+
+ 
+ 1  Bei Neubauten oder eingreifenden äusseren Veränderungen ist zusammen mit der Baueingabe ein in der Machart geeignetes Modell abzuliefern. Das Modell geht nach Erteilung der Baubewilligung unentgeltlich in das Eigentum der Gemeinde über.
+ 
+-2  Die Baubehörde kann die Baueingabe fachlich begutachten lassen.
 +> 2  Die Baubehörde kann die Baueingabe fachlich begutachten lassen.
-+<!-- section:level=1 title="Art.  14 Nutzweise" -->
-+# Art.  14 Nutzweise
-+
-+> 1 In den Kernzonen KA und KB sind mässig störende Betriebe zulässig.
-+<!-- section:level=1 title="2.2 Wohnzonen und Wohnzonen mit Gewerbeanteil" -->
-+# 2.2 Wohnzonen und Wohnzonen mit Gewerbeanteil
-+
-+*Art.  15 Grundmasse*
-+
-+1  Es gelten folgende Grundmasse:
-+
-+| Mass | W2 (25%) | W2 (35%) | WG2 (30%) | W3 (55%) | WG3 (50%) |
-+| --- | --- | --- | --- | --- | --- |
-+| Ausnützungsziffer max. | 25% | 35% | 30% | 55% | 50% |
+ <!-- section:level=1 title="Art.  14 Nutzweise" -->
+ # Art.  14 Nutzweise
+ 
+@@ -157,27 +161,31 @@
+ | Mass | W2 (25%) | W2 (35%) | WG2 (30%) | W3 (55%) | WG3 (50%) |
+ | --- | --- | --- | --- | --- | --- |
+ | Ausnützungsziffer max. | 25% | 35% | 30% | 55% | 50% |
 +| Grünflächenziffer min. | 40% | 40% | 40% | 30% | 30% |
-+| Vollgeschosszahl max. | 2 | 2 | 2 | 3 | 3 |
-+| Dachgeschosszahl max. | 1 | 1 | 1 | 2 | 2 |
+ | Vollgeschosszahl max. | 2 | 2 | 2 | 3 | 3 |
+ | Dachgeschosszahl max. | 1 | 1 | 1 | 2 | 2 |
 +| Attikageschosszahl max. | 1 | 1 | 1 | 1 | 1 |
 +| Anrechenbare Untergeschosszahl max. (s. Abs. 1.1) | 1/2 | 1/2 | 1/2 | 1/2 | 1/2 |
-+| Gebäudelänge max. | 25 m | 25 m | 25 m | 40 m | 40 m |
+ | Gebäudelänge max. | 25 m | 25 m | 25 m | 40 m | 40 m |
+-| Gr. Grundabstand min. | 9 m | 9 m | 9 m | 12 m | 12 m |
+-| Kl. Grundabstand min. | 5 m | 5 m | 5 m | 5 m | 5 m |
+-| Gebäudehöhe max. | 7.5 m | 7.5 m | 7.5 m | 10.5 m | 10.5 m |
+-| Firsthöhe max. | 4.5 m | 4.5 m | 4.5 m | 5.5 m | 5.5 m |
+-<!-- section:level=1 title="Art.  16 Grosser und kleiner Grundabstand" -->
+-# Art.  16 Grosser und kleiner Grundabstand
+-
+-> 1  Der grosse Grundabstand gilt wahlweise für die am meisten gegen Süden oder nach dem See gerichtete Gebäudeseite.
+-
+-2 Der kleine Grundabstand gilt für die übrigen Gebäudeseiten.
 +| Grundabstand min. | 5 m | 5 m | 5 m | 5 m | 5 m |
 +| Traufseitige Fassadenhöhe max. | 8.5 m | 8.5 m | 8.5 m | 11.5 m | 11.5 m |
 +| Giebelseitige Fassadenhöhe max. | 13.0 m | 13.0 m | 13.0 m | 17.0 m | 17.0 m |
@@ -487,139 +158,146 @@
 +> 2 Bei Flachdächern mit offener oder transparenter Brüstung erhöht sich die Fassadenhöhe um 1 m.
 +<!-- section:level=1 title="Art.  16 …" -->
 +# Art.  16 …
-+<!-- section:level=1 title="Art.  17 Herabsetzung des Grundabstandes" -->
-+# Art.  17 Herabsetzung des Grundabstandes
-+
+ <!-- section:level=1 title="Art.  17 Herabsetzung des Grundabstandes" -->
+ # Art.  17 Herabsetzung des Grundabstandes
+ 
+-1 Bei Verzicht auf ein zulässiges Vollgeschoss gemäss Art. 15 reduziert sich für   jedes   weggelassene   Vollgeschoss   der   Grundabstand   um   je   1.0 m, höchstens jedoch bis auf 3.5 m.
 +1  Bei Verzicht auf ein zulässiges Vollgeschoss gemäss Art. 15 Abs. 1 BZO reduziert sich für jedes weggelassene Vollgeschoss der Grundabstand um je 1.0 m, höchstens jedoch bis auf 3.5 m.
-+<!-- section:level=1 title="Art.  18 Mehrlängenzuschlag" -->
-+# Art.  18 Mehrlängenzuschlag
-+
+ <!-- section:level=1 title="Art.  18 Mehrlängenzuschlag" -->
+ # Art.  18 Mehrlängenzuschlag
+ 
+-1 Ein Mehrlängenzuschlag gilt für mehr als 18 m lange Fassaden; er beträgt ein Drittel der Mehrlänge. Der Grenzabstand beträgt aber höchstens das Mass des grossen Grundabstandes. Besondere Gebäude im Sinne von §§ 49 Abs. 3, 273 PBG sind in die Mehrlängenberechnung nicht einzubeziehen.
 +1 Ein Mehrlängenzuschlag gilt für mehr als 18 m lange Fassaden; er beträgt ein Drittel der Mehrlänge. Der Grenzabstand beträgt in den Zonen W2 und WG2 aber höchstens 9 m und in den Zonen W3 und WG3 höchstens 12 m. Kleinbauten und Anbauten im Sinne von §§ 49 Abs. 3 und 273 PBG sind in die Mehrlängenberechnung nicht einzubeziehen.
-+
-+2  Die für den Mehrlängenzuschlag massgeblichen Fassadenlängen von benachbarten Hauptgebäuden werden zusammengerechnet, wenn der Gebäudeabstand 7 m unterschreitet.
-+<!-- section:level=1 title="Art.  19 Nutzweise" -->
-+# Art.  19 Nutzweise
-+
-+1 In den Wohnzonen sind nicht störende Betriebe zulässig.
-+
+ 
+ 2  Die für den Mehrlängenzuschlag massgeblichen Fassadenlängen von benachbarten Hauptgebäuden werden zusammengerechnet, wenn der Gebäudeabstand 7 m unterschreitet.
+ <!-- section:level=1 title="Art.  19 Nutzweise" -->
+@@ -185,15 +193,15 @@
+ 
+ 1 In den Wohnzonen sind nicht störende Betriebe zulässig.
+ 
+-2  In den Wohnzonen mit Gewerbeanteil sind mässig störende Betriebe zulässig, die ihrem Wesen nach in die Wohnzone passen.
 +> 2  In den Wohnzonen mit Gewerbeanteil sind mässig störende Betriebe zulässig, die ihrem Wesen nach in die Wohnzone passen.
-+<!-- section:level=1 title="Art.  20 Dachform und Materialien" -->
-+# Art.  20 Dachform und Materialien
-+
+ <!-- section:level=1 title="Art.  20 Dachform und Materialien" -->
+ # Art.  20 Dachform und Materialien
+ 
+-1  Es sind ziegelgedeckte Satteldächer mit einer Neigung von 25-45° zu erstellen.
+-
+-2 Wenn sie sich landschaftlich und architektonisch gut in die Umgebung einfügen, sind auch andere Dachformen sowie andere Materialien zulässig. Für Dachgeschosse über Flachdächern gilt insbesondere Art. 32.
+-
+-3  Dachaufbauten, wie Giebellukarnen, Schleppgauben und Ochsenaugen, sowie Dacheinschnitte sind nur im ersten Dachgeschoss zulässig und dürfen zusammen nicht breiter als ein Drittel der betreffenden Fassadenlänge sein.
 +> 1  Form und Material des Dachs haben sich gut in die Umgebung einzufügen.
 +
 +> 2 Für Attikageschosse gilt zudem Art. 32 BZO.
 +
 +3  Dachaufbauten, wie beispielsweise Lukarnen, Schleppgauben und Ochsenaugen, sowie Dacheinschnitte dürfen zusammen nicht breiter als ein Drittel der betreffenden Fassadenlänge sein. Vorbehalten bleibt Art. 32 Abs. 4 BZO. Bei zwei Dachgeschossen sind Dachaufbauten nur im ersten Dachgeschoss zulässig.
-+
-+4 Im zweiten Dachgeschoss sind in der Dachfläche liegende Fenster nur vereinzelt und je in der Grösse von max. 0.3 m² Glasfläche zulässig.
-+<!-- section:level=1 title="Art.  21 Gewerbeanteil" -->
-+# Art.  21 Gewerbeanteil
-+
-+1  In den Wohnzonen mit Gewerbeanteil kann für gewerbliche Nutzungen die zonengemässe Grundziffer um höchstens ein Fünftel der Grundziffer erhöht werden.
-+
-+2  In den Wohnzonen mit Gewerbeanteil beträgt der Grenzabstand auf allen Gebäudeseiten für dauernd gewerblich genutzte Erdgeschosse sowie für oberirdisch in Erscheinung tretende Untergeschosse 3.5 m.
-+<!-- section:level=1 title="2.3 Gewerbezonen" -->
-+# 2.3 Gewerbezonen
-+<!-- section:level=1 title="Art.  22 Grundmasse" -->
-+# Art.  22 Grundmasse
-+
-+1  Es gelten folgende Grundmasse:
-+
-+| Mass | G3 | G6 |
-+| --- | --- | --- |
-+| Baumassenziffer max. | 3 m³/m² | 6 m³/m² |
+ 
+ 4 Im zweiten Dachgeschoss sind in der Dachfläche liegende Fenster nur vereinzelt und je in der Grösse von max. 0.3 m² Glasfläche zulässig.
+ <!-- section:level=1 title="Art.  21 Gewerbeanteil" -->
+@@ -212,19 +220,23 @@
+ | Mass | G3 | G6 |
+ | --- | --- | --- |
+ | Baumassenziffer max. | 3 m³/m² | 6 m³/m² |
+-| Freiflächenziffer min. | 5% | - |
 +| Grünflächenziffer min. | 15% | - |
-+| Vollgeschosszahl max. | 2 | 3 |
+ | Vollgeschosszahl max. | 2 | 3 |
+-| Dachgeschosszahl max. | 1 | 1 |
+-| Untergeschosszahl max. | 1 | 1 |
 +| Attikageschosszahl max. | 1 | 1 |
 +| Anrechenbare Untergeschosszahl max. | 1 | 1 |
-+| Grenzabstand im Innern der Zone min. | 3.5 m | 3.5 m |
-+| Grenzabstand gegenüber benachbarten Zonengrenzen min. | 5.0 m | PBG |
-+| Bautiefe | nicht beschränkt | nicht beschränkt |
+ | Grenzabstand im Innern der Zone min. | 3.5 m | 3.5 m |
+ | Grenzabstand gegenüber benachbarten Zonengrenzen min. | 5.0 m | PBG |
+ | Bautiefe | nicht beschränkt | nicht beschränkt |
+-<!-- section:level=1 title="Art.  23 Bauweise, Parkplätze" -->
+-# Art.  23 Bauweise, Parkplätze
 +<!-- section:level=1 title="Art.  23 Bauweise" -->
 +# Art.  23 Bauweise
-+
-+1 Die geschlossene Bauweise ist erlaubt, sofern gleichzeitig gebaut oder an ein bestehendes Gebäude angebaut wird.
-+
+ 
+ 1 Die geschlossene Bauweise ist erlaubt, sofern gleichzeitig gebaut oder an ein bestehendes Gebäude angebaut wird.
+ 
+-2  Oberirdische Parkplätze sind mit Schattenbäumen zu versehen.
 +2  …
 +<!-- section:level=1 title="Art.  23a Parkplätze" -->
 +# Art.  23a Parkplätze
 +
 +1  Oberirdische Parkplätze sind mit Schattenbäumen zu versehen.
-+<!-- section:level=1 title="Art.  24 Nutzweise" -->
-+# Art.  24 Nutzweise
-+
-+1  Zulässig sind mässig störende Betriebe und Anlagen sowie Handels- und Dienstleistungsbetriebe.
-+
-+2  Zulässig sind provisorische Gemeinschaftsunterkünfte für vorübergehend angestellte Personen.
-+<!-- section:level=1 title="2.4 Zone für öffentliche Bauten" -->
-+# 2.4 Zone für öffentliche Bauten
+ <!-- section:level=1 title="Art.  24 Nutzweise" -->
+ # Art.  24 Nutzweise
+ 
+@@ -233,28 +245,27 @@
+ 2  Zulässig sind provisorische Gemeinschaftsunterkünfte für vorübergehend angestellte Personen.
+ <!-- section:level=1 title="2.4 Zone für öffentliche Bauten" -->
+ # 2.4 Zone für öffentliche Bauten
+-<!-- section:level=1 title="Art.  25 Grundmasse, Mehrlängenzuschlag" -->
+-# Art.  25 Grundmasse, Mehrlängenzuschlag
 +<!-- section:level=1 title="Art.  25 Grundmasse" -->
 +# Art.  25 Grundmasse
-+
-+1  Es gelten folgende Grundmasse:
-+
-+| Mass | ÖB |
-+| --- | --- |
-+| Baumassenziffer max. | nicht beschränkt |
-+| Vollgeschosszahl max. | 3 |
-+| Dachgeschosszahl max. | 2 |
+ 
+ 1  Es gelten folgende Grundmasse:
+ 
+ | Mass | ÖB |
+ | --- | --- |
+ | Baumassenziffer max. | nicht beschränkt |
+-| Freiflächenziffer min. | nicht beschränkt |
+ | Vollgeschosszahl max. | 3 |
+-
+-7.1-1
+-
+-| Mass | ÖB |
+-| --- | --- |
+ | Dachgeschosszahl max. | 2 |
+-| Untergeschosszahl max. | 1 |
 +| Attikageschosszahl max. | 1 |
 +| Anrechenbare Untergeschosszahl max. | 1 |
-+| Grenzabstand im Innern der Zone min. | 3.5 m |
-+| Grenzabstand gegenüber benachbarten Zonengrenzen min. | 5.0 m |
-+| Bautiefe | nicht beschränkt |
-+
+ | Grenzabstand im Innern der Zone min. | 3.5 m |
+ | Grenzabstand gegenüber benachbarten Zonengrenzen min. | 5.0 m |
+ | Bautiefe | nicht beschränkt |
+ 
+-> 2  Ein Mehrlängenzuschlag gilt für mehr als 18 m lange Fassaden von Neubauten; er beträgt ein Drittel der Mehrlänge. Der Grenzabstand beträgt aber höchstens 10 m. Besondere Gebäude im Sinne von §§ 49 Abs. 3 und 273 PBG sind in die Mehrlängenberechnung nicht einzubeziehen.
 +2  …
 +<!-- section:level=1 title="Art.  25a Mehrlängenzuschlag" -->
 +# Art.  25a Mehrlängenzuschlag
 +
 +1  Ein Mehrlängenzuschlag gilt für mehr als 18 m lange Fassaden von Neubauten; er beträgt ein Drittel der Mehrlänge. Der Grenzabstand beträgt aber höchstens 10 m. Kleinbauten und Anbauten im Sinne von §§ 49 Abs. 3 und 273 PBG sind in die Mehrlängenberechnung nicht einzubeziehen.
-+<!-- section:level=1 title="3 Besondere Institute" -->
-+# 3 Besondere Institute
-+<!-- section:level=1 title="3.1 Arealüberbauungen" -->
-+# 3.1 Arealüberbauungen
-+<!-- section:level=1 title="Art.  26 Zulässigkeit" -->
-+# Art.  26 Zulässigkeit
-+
-+1  Arealüberbauungen sind in den folgenden Zonen zulässig: W2 (25%), W2 (35%), WG2 (30%), W3 (55%), WG3 (50%).
-+
-+2  In der Kernzone KB (35%) ist im Gebiet «Spilhof» mit Gestaltungsplanpflicht der Gemeinderat für Abweichungen im Rahmen der Bestimmungen über die Arealüberbauungen zuständig.
-+<!-- section:level=1 title="Art.  27 Arealfläche" -->
-+# Art.  27 Arealfläche
-+
-+1 Die Mindestarealfläche beträgt 8'000 m².
-+<!-- section:level=1 title="Art.  28 Grundmasse" -->
-+# Art.  28 Grundmasse
-+
+ <!-- section:level=1 title="3 Besondere Institute" -->
+ # 3 Besondere Institute
+ <!-- section:level=1 title="3.1 Arealüberbauungen" -->
+@@ -272,17 +283,17 @@
+ <!-- section:level=1 title="Art.  28 Grundmasse" -->
+ # Art.  28 Grundmasse
+ 
+-1  In den Wohnzonen und Wohnzonen mit Gewerbeanteil kann ein zusätzliches Vollgeschoss erstellt werden. Die max. Gebäudehöhen betragen dann für die Zonen W2 (25%), W2 (35%) und WG2 (30%)8.5 m, für die Zonen W3 (55%) und WG3 (50%)11.5 m.
+-
+-2 Es kann ein zweites Dachgeschoss erstellt werden. Die zulässige Firsthöhe beträgt dann 5.5 m.
+-
+-3  Wenn kein zweites Dachgeschoss erstellt wird oder wenn nicht gemäss Art. 30 und 31 abgestufte Bauten erstellt werden, kann die zonengemässe Ausnützungsziffer um höchstens 1/20 erhöht werden.
 +1  In den Wohnzonen und Wohnzonen mit Gewerbeanteil kann ein zusätzliches Vollgeschoss erstellt werden. Die Fassaden- bzw. Gesamthöhen (bei Flachdächern) dürfen dazu um 1.0 m erhöht werden.
 +
 +2  Es kann ein zweites Dachgeschoss erstellt werden. Die zulässige giebelseitige Fassadenhöhe erhöht sich dann um 5.5 m.
 +
 +3  Wenn kein zweites Dachgeschoss erstellt wird oder wenn nicht gemäss Art. 30 und 31 BZO abgestufte Bauten erstellt werden, kann die zonengemässe Ausnützungsziffer um höchstens 1/20 erhöht werden.
-+
-+4  Vor der Inangriffnahme der Projektierung von Arealüberbauungen ist mit der Gemeinde Kontakt aufzunehmen.
-+
-+5 Die Baubehörde ist berechtigt, bereits vor der Eingabe eines Baugesuches einen Fachberater beizuziehen. Für die Behandlung eines Bauvorhabens ist ein   Gutachten   einzuholen,   welches   die   gesetzlichen   Anforderungen   an Arealüberbauungen überprüft. Diese Kosten trägt die Bauherrschaft.
-+
+ 
+ 4  Vor der Inangriffnahme der Projektierung von Arealüberbauungen ist mit der Gemeinde Kontakt aufzunehmen.
+ 
+ 5 Die Baubehörde ist berechtigt, bereits vor der Eingabe eines Baugesuches einen Fachberater beizuziehen. Für die Behandlung eines Bauvorhabens ist ein   Gutachten   einzuholen,   welches   die   gesetzlichen   Anforderungen   an Arealüberbauungen überprüft. Diese Kosten trägt die Bauherrschaft.
+ 
+-6  Bei abgestuften Bauten gelten die Bestimmungen gemäss Art. 31.
 +6  Bei abgestuften Bauten gelten die Bestimmungen gemäss Art. 31 BZO.
-+<!-- section:level=1 title="Art.  29 Ausnützungsverschiebungen" -->
-+# Art.  29 Ausnützungsverschiebungen
-+
-+1  Bei Arealen unterschiedlicher Zonenzugehörigkeit sind Ausnützungsverschiebungen im Ausmass von fünf Ausnützungsprozenten zulässig.
-+<!-- section:level=1 title="3.2 Abgestufte Bauten" -->
-+# 3.2 Abgestufte Bauten
-+<!-- section:level=1 title="Art.  30 Zulässigkeit" -->
-+# Art.  30 Zulässigkeit
-+
-+1 Abgestufte Bauten sind in folgenden Zonen zulässig: W2 (25%), W2 (35%), WG2 (30%).
-+
-+2  In den Zonen W3 (55%) und WG3 (50%) sind sie nur im Rahmen von Arealüberbauungen zulässig.
-+<!-- section:level=1 title="Art.  31 Grundmasse" -->
-+# Art.  31 Grundmasse
-+
-+1 Es gilt die zonengemässe Ausnützungsziffer.
-+
+ <!-- section:level=1 title="Art.  29 Ausnützungsverschiebungen" -->
+ # Art.  29 Ausnützungsverschiebungen
+ 
+@@ -300,15 +311,15 @@
+ 
+ 1 Es gilt die zonengemässe Ausnützungsziffer.
+ 
+-2  Inklusive einem Garagengeschoss sind vier Vollgeschosse und ein Dachgeschoss zulässig.
+-
+-3  Beim Dachgeschoss darf die Firsthöhe maximal 4.5 m betragen.
+-
+-4 Die Profillinie darf an keinem Punkt des Gebäudes, vorbehältlich Abs. 3, 5 und 7 überschritten werden. Sie verläuft im Abstand von 6.5 m, gemessen ab dem gewachsenen Terrain, parallel zum Hang.
+-
+-5 Vordächer dürfen die Profillinie überragen.
+-
+-6 Geschlossene Brüstungen dürfen die Profillinie nicht überschreiten.
 +> 2  Es sind maximal vier Vollgeschosse und ein Dach-/Attikageschoss zulässig.
 +
 +3  Ein Dachgeschoss bzw. die giebelseitige Fassadenhöhe darf maximal 4.5 m über die Profilline gemäss Ziffer 4 hinausragen. Ein Attikageschoss bzw. die Gesamthöhe bei Flachdach darf maximal 3.3 m über die Profilline gemäss Ziffer 4 hinausragen.
@@ -629,19 +307,30 @@
 +> 5 Vordächer dürfen die Profillinie überragen.
 +
 +> 6 Geschlossene Brüstungen dürfen die Profillinie nicht überschreiten.
-+
-+> 7 Verglaste   Veranden   und   Vorbauten   ohne   heiztechnische   Installationen (Wintergärten) dürfen die Profillinie überragen, wenn sie insgesamt nicht breiter als ein Drittel der betreffenden Fassadenlänge sind.
-+
-+> 8 Der seitliche Mehrlängenzuschlag entfällt.
-+
-+> 9  Die maximale Gebäudelänge beträgt bei der Zone W2 (25%) 30 m und bei den Zonen W2 (35%) und WG2 (30%) 35 m.
-+
-+> 10 Die Breite der einzelnen Geschossstufen darf maximal 16 m betragen.
-+<!-- section:level=1 title="4 Weitere Bauvorschriften" -->
-+# 4 Weitere Bauvorschriften
-+<!-- section:level=1 title="Art.  32 Flachdächer / Dachgestaltung bei Attikageschossen" -->
-+# Art.  32 Flachdächer / Dachgestaltung bei Attikageschossen
-+
+ 
+ > 7 Verglaste   Veranden   und   Vorbauten   ohne   heiztechnische   Installationen (Wintergärten) dürfen die Profillinie überragen, wenn sie insgesamt nicht breiter als ein Drittel der betreffenden Fassadenlänge sind.
+ 
+@@ -322,23 +333,23 @@
+ <!-- section:level=1 title="Art.  32 Flachdächer / Dachgestaltung bei Attikageschossen" -->
+ # Art.  32 Flachdächer / Dachgestaltung bei Attikageschossen
+ 
+-1 Flachdächer sind in der Regel zu begrünen, soweit sie nicht als Terrasse benutzt werden.
+-
+-2  Dachgeschosse über Flachdächern (Attikageschosse) müssen mit Ausnahme der nach § 292 PBG zulässigen Dachaufbauten ein Profil einhalten, das auf den fiktiven Traufseiten unter Einhaltung der zulässigen Gebäudehöhe maximal einen Meter über der Schnittlinie zwischen der Aussenkante der Fassade und der Oberkante des fertigen Fussbodens des Attikageschosses unter 45° angelegt wird.
+-
+-3  Das Attikageschoss darf hangseitig fassadenbündig angeordnet werden, wenn auf dieser Seite unter Einbezug des Attikageschosses die zulässige Gebäudehöhe eingehalten wird und seine Fläche nicht grösser wird als die eines Attikageschosses gemäss Abs. 2.
+-<!-- section:level=1 title="Art.  33 Besondere Gebäude" -->
+-# Art.  33 Besondere Gebäude
+-
+-1  Besondere Gebäude gemäss §§ 49 Abs. 3 und 273 PBG, welche das gewachsene Terrain um nicht mehr als 1.2 m überragen und keine Öffnungen gegen das benachbarte Grundstück aufweisen, dürfen ohne Zustimmung des Nachbarn die kantonalrechtlichen Mindestmasse von Grenz- und Gebäudeabständen unterschreiten und bis an die Grenze gestellt werden.
+-
+-2  Übrige Gebäude gemäss §§ 49 Abs. 3 und 273 PBG, welche auf der Seite gegen die Grenze innerhalb eines Gebäudeprofils von 2.0 m Höhe und 45° Dachneigung liegen, dürfen ohne Zustimmung des Nachbarn die kantonalrechtlichen Mindestmasse von Grenz- und Gebäudeabständen unterschreiten und bis an die Grenze gestellt werden, wenn:
+-
+-- deren Anstosslänge insgesamt nicht mehr als 7 m beträgt; oder
+-
+-- bei mehr als 21 m Grenzlänge insgesamt nicht mehr als ein Drittel der nachbarlichen Grenze beansprucht wird.
+-
+-3  Für die Höhenbestimmung gilt der Terrainverlauf gemessen an der nachbarlichen Grundstücksgrenze.
 +1  Flachdächer und geneigte Dächer bis zu einer Neigung von 8% und einer Gesamtfläche von über 10 m² sind ökologisch wertvoll zu begrünen, auch dort, wo Solaranlagen installiert sind. Die Dachbegrünung bzw. der Dachaufbau haben eine Wasserrückhaltekapazität von mind. 45 l/m² nachzuweisen.
 +
 +2  Terrassennutzungen auf Dachflächen sind nur in begründeten Ausnahmefällen und nur für eine gemeinschaftliche Nutzung zulässig. Die als Terrasse genutzte Dachfläche muss nicht begrünt werden, darf aber maximal 50% der Dachfläche betragen
@@ -659,23 +348,20 @@
 +1. deren Anstosslänge insgesamt nicht mehr als 7 m beträgt; oder
 +2. bei mehr als 21 m Grenzlänge insgesamt nicht mehr als ein Drittel der nachbarlichen Grenze beansprucht wird.
 +3. 3  Für die Höhenbestimmung gilt der Terrainverlauf gemessen an der nachbarlichen Grundstücksgrenze.
-+<!-- section:level=1 title="Art.  34 Bauweise" -->
-+# Art.  34 Bauweise
-+
-+1  Die geschlossene Bauweise ist bis zur zonengemässen Gebäudelänge gestattet, sofern gleichzeitig gebaut oder an ein bestehendes Gebäude angebaut wird.
-+<!-- section:level=1 title="Art.  35 Grenzbau und Näherbau" -->
-+# Art.  35 Grenzbau und Näherbau
-+
-+1  Grenz- und Näherbaurechte sind als Eigentumsbeschränkung im Grundbuch anzumerken.
-+<!-- section:level=1 title="Art.  36 Abstände" -->
-+# Art.  36 Abstände
-+
-+1 Bei fehlenden Baulinien haben:
-+
+ <!-- section:level=1 title="Art.  34 Bauweise" -->
+ # Art.  34 Bauweise
+ 
+@@ -352,10 +363,18 @@
+ 
+ 1 Bei fehlenden Baulinien haben:
+ 
+-1. oberirdische Bauten einen Abstand von mindestens 6.0 m gegenüber Strassen und Plätzen sowie mindestens 5.0 m gegenüber Wegen aufzuweisen; in Kernzonen darf gemäss Art. 6 Abs. 3 näher gebaut werden. Bei Verzicht auf ein zulässiges Vollgeschoss sind für oberirdische Bauten die Bestimmungen von Art. 17 anwendbar;
+-2. unterirdische Bauten einen solchen von mindestens 3.5 m gegenüber Strassen, Plätzen und Wegen; sowie
+-3. besondere Gebäude einen solchen von mindestens 2.0 m gegenüber Strassen, Plätzen und Wegen aufzuweisen, vorausgesetzt die Verkehrssicherheit ist eingehalten.
 +1. oberirdische Bauten einen Abstand von mindestens 6.0 m gegenüber Strassen und Plätzen sowie mindestens 5.0 m gegenüber Wegen aufzuweisen; in Kernzonen darf gemäss Art. 6 Abs. 3 BZO näher gebaut werden. Bei Verzicht auf ein zulässiges Vollgeschoss sind für oberirdische Bauten die Bestimmungen von Art. 17 BZO anwendbar.
 +2. unterirdische Bauten und Unterniveaubauten einen Abstand von mindestens 3.5 m gegenüber Strassen, Plätzen und Wegen, sowie
 +3. Kleinbauten und Anbauten einen Abstand von mindestens 2.0 m gegenüber Strassen, Plätzen und Wegen aufzuweisen, vorausgesetzt die Verkehrssicherheit ist eingehalten.
-+4. 2  Bei Wegen ohne bedeutende Werkleitungen kann die Baukommission geringere Abstände bewilligen.
+ 4. 2  Bei Wegen ohne bedeutende Werkleitungen kann die Baukommission geringere Abstände bewilligen.
 +<!-- section:level=1 title="Art.  36a Terrainveränderungen" -->
 +# Art.  36a Terrainveränderungen
 +
@@ -684,55 +370,55 @@
 +2 Im Übrigen sind vorbehältlich Absatz 3 nur geringfügige Abgrabungen und Aufschüttungen zulässig. Zwecks Einordnung in die bauliche und landschaftliche Umgebung und insbesondere zur Sicherstellung eines harmonischen Geländeverlaufs können weitergehende Terrainveränderungen bewilligt werden
 +
 +3  Zur Umnutzung von nicht anrechenbaren Untergeschossen, welche vor dem 01.07.2025 erstellt wurden, zu anrechenbaren Untergeschossen, sind auch weitreichendere Abgrabungen zulässig. Jedoch nur soweit, wie dadurch wohnhygienisch einwandfreie Verhältnisse geschaffen werden. Ein harmonischer Geländeverlauf ist sicherzustellen.
-+<!-- section:level=1 title="Art.  37 Spiel- und Erholungsflächen" -->
-+# Art.  37 Spiel- und Erholungsflächen
-+
-+1  Bei der Erstellung von Mehrfamilienhäusern sind besonnte Spiel- und Erholungsflächen mit freiem Zugang für alle Bewohner anzulegen. Ihre Grösse muss in der Regel 20% der zu Wohnzwecken genutzten Gesamtnutzflächen betragen.
-+
-+2  In der Kernzone KA können sie den Verhältnissen entsprechend reduziert werden.
-+
-+3  Spiel- und Erholungsflächen sind den Bedürfnissen entsprechend zu gestalten und ihrem Zweck dauernd zu erhalten; dies ist grundbuchlich sicherzustellen.
-+<!-- section:level=1 title="Art.  38 Fahrzeugabstellplätze" -->
-+# Art.  38 Fahrzeugabstellplätze
-+
+ <!-- section:level=1 title="Art.  37 Spiel- und Erholungsflächen" -->
+ # Art.  37 Spiel- und Erholungsflächen
+ 
+@@ -367,7 +386,7 @@
+ <!-- section:level=1 title="Art.  38 Fahrzeugabstellplätze" -->
+ # Art.  38 Fahrzeugabstellplätze
+ 
+-1  Bei Wohnbauten ist auf je 80 m² anrechenbare Gesamtnutzfläche mind. aber pro Wohnung ein Abstellplatz erforderlich.
 +1  Bei Wohnbauten ist auf je 80 m² anrechenbare Gesamtnutzfläche, mindestens aber pro Wohnung, ein Abstellplatz erforderlich.
-+
-+2  Bei anderen Bauten und Anlagen gelten sinngemäss die Parkierungsnormen der Vereinigung Schweizerischer Strassenfachleute (VSS), unter angemessener Berücksichtigung von Doppelnutzungsmöglichkeiten.
-+
-+3 Bei der Berechnung von Flächen oder Einheiten ist die resultierende höhere Zahl von Fahrzeugabstellplätzen massgebend. Bruchteile über eine halbe Einheit werden aufgerundet.
-+
-+4  Bei Mehrfamilienhäusern sind zusätzlich zu den wohnungszugehörigen Abstellplätzen 10% Besucherparkplätze zu erstellen, als solche zu kennzeichnen und durch eine Benützungsordnung zu sichern.
-+
-+5  Bei Büro- und Geschäftshäusern sowie Industrie- und Gewerbebauten sind eine angemessene Anzahl der erforderlichen Fahrzeugabstellplätze als Besucher- und Kundenparkplätze auszugestalten oder für den Güterumschlag auszuscheiden, zu kennzeichnen und durch eine Benützungsordnung zu sichern.
+ 
+ 2  Bei anderen Bauten und Anlagen gelten sinngemäss die Parkierungsnormen der Vereinigung Schweizerischer Strassenfachleute (VSS), unter angemessener Berücksichtigung von Doppelnutzungsmöglichkeiten.
+ 
+@@ -376,13 +395,18 @@
+ 4  Bei Mehrfamilienhäusern sind zusätzlich zu den wohnungszugehörigen Abstellplätzen 10% Besucherparkplätze zu erstellen, als solche zu kennzeichnen und durch eine Benützungsordnung zu sichern.
+ 
+ 5  Bei Büro- und Geschäftshäusern sowie Industrie- und Gewerbebauten sind eine angemessene Anzahl der erforderlichen Fahrzeugabstellplätze als Besucher- und Kundenparkplätze auszugestalten oder für den Güterumschlag auszuscheiden, zu kennzeichnen und durch eine Benützungsordnung zu sichern.
 +
 +6 Mit einem Mobilitätskonzept 2)  können die in Abs. 1-5 gemachten Vorgaben zur
 +
 +Anzahl notwendiger Fahrzeugabstellplätze unterschritten werden.
 +
 +> 2) Details zu Verfahren, Inhalt und Verbindlichkeit von Mobilitätskonzepten sind dem aktuellen, kantonalen Merkblatt «Mobilitätskonzepte» zu entnehmen. Zum Zeitpunkt der Inkraftsetzung lag dieses als Version V2.0 vom Februar 2021 vor.
-+<!-- section:level=1 title="Art.  39 Ersatzabgabe und Beteiligungspflicht" -->
-+# Art.  39 Ersatzabgabe und Beteiligungspflicht
-+
+ <!-- section:level=1 title="Art.  39 Ersatzabgabe und Beteiligungspflicht" -->
+ # Art.  39 Ersatzabgabe und Beteiligungspflicht
+ 
+-1 Ist die Erstellung von Abstellplätzen gemäss Art. 38 auch in Form der Beteiligung an einer Gemeinschaftsanlage nicht möglich oder durch behördlichen Entscheid nicht zuässig, so ist eine angemessene Ersatzabgabe zu leisten.
+-
+-1. 2  Die Bemessung der Ersatzabgabe und das Verfahren im Streitfall über deren zulässige Höhe richtet sich nach § 246 Abs. 3 und 4 PBG. Der Gemeinderat kann jedoch vor Baubeginn Kautionierung verlangen, und zwar für jeden nicht ausgeführten Abstellplatz:
+-2. für Bewohner und Beschäftigte:
 +1. 1 Ist die Erstellung von Abstellplätzen gemäss Art. 38 BZO auch in Form der Beteiligung an einer Gemeinschaftsanlage nicht möglich oder durch behördlichen Entscheid nicht zuässig, so ist eine angemessene Ersatzabgabe zu leisten.
 +2. 2  Die Bemessung der Ersatzabgabe und das Verfahren im Streitfall über deren zulässige Höhe richtet sich nach § 246 Abs. 3 und 4 PBG. Der Gemeinderat kann jedoch vor Baubeginn Kautionierung verlangen, und zwar für jeden nicht ausgeführten Abstellplatz:
 +3. für Bewohner und Beschäftigte:
-+
-+Fr. 12'000.00
-+
-+- für Besucher und Kunden:
-+
-+Fr. 8'000.00
-+
-+3 Bei Realerfüllung innert 10 Jahren wird die Abgabe zinsfrei an den Grundeigentümer zurückerstattet. Berechtigt ist der jeweilige Grundeigentümer zur Zeit der Realerfüllung.
-+
-+4 10 Jahre nach der Bezugsbewilligung für das Objekt wird die Kaution automatisch zur definitiven Ersatzabgabe.
-+
-+5  Die Beteiligung an einer Gemeinschaftsanlage kann während längstens 10 Jahren nach Erteilung der Bezugsbewilligung für das Objekt verlangt werden.
+ 
+ Fr. 12'000.00
+ 
+@@ -395,44 +419,42 @@
+ 4 10 Jahre nach der Bezugsbewilligung für das Objekt wird die Kaution automatisch zur definitiven Ersatzabgabe.
+ 
+ 5  Die Beteiligung an einer Gemeinschaftsanlage kann während längstens 10 Jahren nach Erteilung der Bezugsbewilligung für das Objekt verlangt werden.
+-<!-- section:level=1 title="Art.  40 Abstellflächen, Entsorgung, Waschküchen und Trockenräume" -->
+-# Art.  40 Abstellflächen, Entsorgung, Waschküchen und Trockenräume
 +<!-- section:level=1 title="Art.  40 Abstellflächen" -->
 +# Art.  40 Abstellflächen
-+
-+1  Bei Mehrfamilienhäusern sind in der Nähe des Hauseinganges genügend grosse, ebenerdig zugängliche Abstellflächen für Kinderwagen und Fahrräder bereitzustellen und als solche zu bezeichnen.
-+
+ 
+ 1  Bei Mehrfamilienhäusern sind in der Nähe des Hauseinganges genügend grosse, ebenerdig zugängliche Abstellflächen für Kinderwagen und Fahrräder bereitzustellen und als solche zu bezeichnen.
+ 
+-2 Für die Entsorgung der Abfälle wie Hauskehricht, Sperrgut, kompostierbarer Abfall etc. sind nach den Weisungen der Baubehörde an geeigneter Lage Plätze bereitzustellen.
+-
+-3  Es sind ausreichend Waschküchen und Trockenräume zu erstellen.
 +2-3  …
 +<!-- section:level=1 title="Art.  40a Entsorgung" -->
 +# Art.  40a Entsorgung
@@ -742,14 +428,32 @@
 +# Art.  40b Waschküchen und Trockenräume
 +
 +1  Es sind ausreichend Waschküchen und Trockenräume zu erstellen.
-+<!-- section:level=1 title="Art.  41 Gesamtnutzfläche" -->
-+# Art.  41 Gesamtnutzfläche
-+
-+1  Die Gesamtnutzfläche umfasst alle dem Wohnen, Arbeiten oder dem dauernden Aufenthalt dienenden oder hierfür verwendbaren Flächen ohne Aussen- und Brandmauerquerschnitte in zulässigen Voll- und Dachgeschossen.
+ <!-- section:level=1 title="Art.  41 Gesamtnutzfläche" -->
+ # Art.  41 Gesamtnutzfläche
+ 
+ 1  Die Gesamtnutzfläche umfasst alle dem Wohnen, Arbeiten oder dem dauernden Aufenthalt dienenden oder hierfür verwendbaren Flächen ohne Aussen- und Brandmauerquerschnitte in zulässigen Voll- und Dachgeschossen.
+-<!-- section:level=1 title="Art.  42 Alternativenergien" -->
+-# Art.  42 Alternativenergien
+-
+-1 Die für Alternativenergieanlagen technisch erforderlichen Auf- und Anbauten (Sonnenkollektoren, usw.) auf Dächern und an Fassaden beeinflussen die Gebäude- und Firsthöhen sowie die Abstände nicht.
+-
+-2  In Kernzonen sowie bei Arealüberbauungen haben sich Alternativenergieanlagen auf Dächern, an Fassaden oder auf dem Grundstück besonders gut einzuordnen.
 +<!-- section:level=1 title="Art.  42 …" -->
 +# Art.  42 …
-+<!-- section:level=1 title="5 Kommunaler Mehrwertausgleich *" -->
-+# 5 Kommunaler Mehrwertausgleich *
+ <!-- section:level=1 title="5 Kommunaler Mehrwertausgleich *" -->
+ # 5 Kommunaler Mehrwertausgleich *
+-<!-- section:level=1 title="Art.  43 Erhebung einer Mehrwertabgabe *" -->
+-# Art.  43 Erhebung einer Mehrwertabgabe *
+-
+-1 Auf Planungsvorteile, die durch Auf- oder Umzonungen entstehen, wird eine Mehrwertabgabe im Sinne von § 19 des Mehrwertausgleichsgesetzes (MAG) erhoben. *
+-
+-> 2  Die Freifläche gemäss § 19 Abs. 2 MAG beträgt 2000 m2. *
+-
+-> 3  Die Mehrwertabgabe beträgt 30 Prozent des um Fr. 100'000 gekürzten Mehrwerts. *
+-<!-- section:level=1 title="Art.  44 Erträge *" -->
+-# Art.  44 Erträge *
+-
+-1  Die Erträge aus den Mehrwertabgaben fliessen in den kommunalen Mehrwertausgleichsfonds und werden nach Massgabe des Fondsreglements verwendet. *
 +<!-- section:level=1 title="Art.  43 Verzicht auf Mehrwertausgleich *" -->
 +# Art.  43 Verzicht auf Mehrwertausgleich *
 +
@@ -758,27 +462,23 @@
 +2-3  … *
 +<!-- section:level=1 title="Art.  44 … *" -->
 +# Art.  44 … *
-+<!-- section:level=1 title="6 Schlussbestimmungen *" -->
-+# 6 Schlussbestimmungen *
+ <!-- section:level=1 title="6 Schlussbestimmungen *" -->
+ # 6 Schlussbestimmungen *
+-<!-- section:level=1 title="Art.  45 * Übergangsbestimmung zur Änderung vom 9. Dezember 2021" -->
+-# Art.  45 * Übergangsbestimmung zur Änderung vom 9. Dezember 2021
+-
+-1  Alle zum Zeitpunkt des Inkrafttretens hängigen Baugesuche werden nach neuem Recht beurteilt.
 +<!-- section:level=1 title="Art.  45 * Übergangsbestimmung zur Änderung vom 5. Juni 2025" -->
 +# Art.  45 * Übergangsbestimmung zur Änderung vom 5. Juni 2025
 +
 +1 Die revidierte Bau- und Zonenordnung tritt am 26. Januar 2026 in Kraft.
-+<!-- section:level=1 title="Änderungstabelle - Nach Beschluss" -->
-+# Änderungstabelle - Nach Beschluss
-+
-+| Beschluss | Inkrafttreten | Element | Änderung | CRS Fundstelle |
-+| --- | --- | --- | --- | --- |
-+| 12.09.2013 | 26.04.2014 | Erlass | Erstfassung | - |
-+| 09.12.2021 | 01.08.2023 | Titel 5 | geändert | 2023-01 |
-+| 09.12.2021 | 01.08.2023 | Art. 43 | Titel geändert | 2023-01 |
-+| 09.12.2021 | 01.08.2023 | Art. 43 Abs. 1 | eingefügt | 2023-01 |
-+| 09.12.2021 | 01.08.2023 | Art. 43 Abs. 2 | eingefügt | 2023-01 |
-+| 09.12.2021 | 01.08.2023 | Art. 43 Abs. 3 | eingefügt | 2023-01 |
-+| 09.12.2021 | 01.08.2023 | Art. 44 | Titel geändert | 2023-01 |
-+| 09.12.2021 | 01.08.2023 | Art. 44 Abs. 1 | geändert | 2023-01 |
-+| 09.12.2021 | 01.08.2023 | Titel 6 | eingefügt | 2023-01 |
-+| 09.12.2021 | 01.08.2023 | Art. 45 | eingefügt | 2023-01 |
+ <!-- section:level=1 title="Änderungstabelle - Nach Beschluss" -->
+ # Änderungstabelle - Nach Beschluss
+ 
+@@ -448,6 +470,116 @@
+ | 09.12.2021 | 01.08.2023 | Art. 44 Abs. 1 | geändert | 2023-01 |
+ | 09.12.2021 | 01.08.2023 | Titel 6 | eingefügt | 2023-01 |
+ | 09.12.2021 | 01.08.2023 | Art. 45 | eingefügt | 2023-01 |
 +
 +Beschluss
 +
@@ -889,18 +589,121 @@
 +eingefügt
 +
 +2023-01
-+<!-- section:level=1 title="Änderungstabelle - Nach Artikel" -->
-+# Änderungstabelle - Nach Artikel
-+
-+| Element | Beschluss | Inkrafttreten | Änderung | CRS Fundstelle |
-+| --- | --- | --- | --- | --- |
-+| Erlass | 12.09.2013 | 26.04.2014 | Erstfassung | - |
-+| Titel 5 | 09.12.2021 | 01.08.2023 | geändert | 2023-01 |
-+| Art. 43 | 09.12.2021 | 01.08.2023 | Titel geändert | 2023-01 |
-+| Art. 43 Abs. 1 | 09.12.2021 | 01.08.2023 | eingefügt | 2023-01 |
-+| Art. 43 Abs. 2 | 09.12.2021 | 01.08.2023 | eingefügt | 2023-01 |
-+| Art. 43 Abs. 3 | 09.12.2021 | 01.08.2023 | eingefügt | 2023-01 |
-+| Art. 44 | 09.12.2021 | 01.08.2023 | Titel geändert | 2023-01 |
-+| Art. 44 Abs. 1 | 09.12.2021 | 01.08.2023 | geändert | 2023-01 |
-+| Titel 6 | 09.12.2021 | 01.08.2023 | eingefügt | 2023-01 |
-+| Art. 45 | 09.12.2021 | 01.08.2023 | eingefügt | 2023-01 |
+ <!-- section:level=1 title="Änderungstabelle - Nach Artikel" -->
+ # Änderungstabelle - Nach Artikel
+ 
+@@ -462,114 +594,4 @@
+ | Art. 44 | 09.12.2021 | 01.08.2023 | Titel geändert | 2023-01 |
+ | Art. 44 Abs. 1 | 09.12.2021 | 01.08.2023 | geändert | 2023-01 |
+ | Titel 6 | 09.12.2021 | 01.08.2023 | eingefügt | 2023-01 |
+-| Art. 45 | 09.12.2021 | 01.08.2023 | eingefügt | 2023-01 |
+-
+-Element
+-
+-Beschluss
+-
+-Inkrafttreten
+-
+-Änderung
+-
+-CRS Fundstelle
+-
+-Erlass
+-
+-12.09.2013
+-
+-26.04.2014
+-
+-Erstfassung
+-
+--
+-
+-Titel 5
+-
+-09.12.2021
+-
+-01.08.2023
+-
+-geändert
+-
+-2023-01
+-
+-Art. 43
+-
+-09.12.2021
+-
+-01.08.2023
+-
+-Titel geändert
+-
+-2023-01
+-
+-Art. 43 Abs. 1
+-
+-09.12.2021
+-
+-01.08.2023
+-
+-eingefügt
+-
+-2023-01
+-
+-Art. 43 Abs. 2
+-
+-09.12.2021
+-
+-01.08.2023
+-
+-eingefügt
+-
+-2023-01
+-
+-Art. 43 Abs. 3
+-
+-09.12.2021
+-
+-01.08.2023
+-
+-eingefügt
+-
+-2023-01
+-
+-Art. 44
+-
+-09.12.2021
+-
+-01.08.2023
+-
+-Titel geändert
+-
+-2023-01
+-
+-Art. 44 Abs. 1
+-
+-09.12.2021
+-
+-01.08.2023
+-
+-geändert
+-
+-2023-01
+-
+-Titel 6
+-
+-09.12.2021
+-
+-01.08.2023
+-
+-eingefügt
+-
+-2023-01
+-
+-Art. 45
+-
+-09.12.2021
+-
+-01.08.2023
+-
+-eingefügt
+-
+-2023-01+| Art. 45 | 09.12.2021 | 01.08.2023 | eingefügt | 2023-01 |
