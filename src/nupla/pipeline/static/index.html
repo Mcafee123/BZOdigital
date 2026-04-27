@@ -593,9 +593,9 @@
   </div>
 
   <ul id="results" class="results"></ul>
-  <div id="beaver-score" class="beaver-score">Dam snacks: 0</div>
-  <button type="button" id="beaver-log" class="beaver-log" aria-label="Feed the beavers">🪵</button>
-  <button type="button" id="beaver-toggle" class="beaver-toggle">Please, no Beavers</button>
+  <div id="beaver-score" class="beaver-score"></div>
+  <button type="button" id="beaver-log" class="beaver-log hidden" aria-label="Feed the beavers">🪵</button>
+  <button type="button" id="beaver-toggle" class="beaver-toggle"></button>
 
   <div class="modal-overlay" id="preview-modal">
     <div class="modal">
@@ -1502,7 +1502,7 @@
       const ARRIVAL_RADIUS = 90;
       const TURN_RATE = 0.18;
       const BEAVER_HALF_SIZE = 18;
-      const OFF_LABEL = 'Bring back the Beavers!';
+      const OFF_LABEL = 'Bring on the Beavers!';
       const ON_LABEL = 'Please, no Beavers';
       const SCORE_LABELS = ['Dam snacks', 'Timber treats', 'Logs munched', 'Wood wins'];
 
@@ -1515,10 +1515,13 @@
       const toggleButton = document.getElementById('beaver-toggle');
       const logButton = document.getElementById('beaver-log');
       const scoreEl = document.getElementById('beaver-score');
-      let enabled = true;
+      let enabled = false;
       let feeding = false;
       let score = 0;
       let logTimer = null;
+
+      toggleButton.textContent = enabled ? ON_LABEL : OFF_LABEL;
+      updateScore();
 
       window.addEventListener('pointermove', (event) => {
         if (feeding) return;
@@ -1694,8 +1697,10 @@
         window.requestAnimationFrame(tick);
       }
 
-      for (let i = 0; i < COUNT; i++) spawn();
-      placeLog();
+      if (enabled) {
+        for (let i = 0; i < COUNT; i++) spawn();
+        placeLog();
+      }
       tick();
     })();
   </script>
