@@ -22,4 +22,4 @@ az account set --subscription "93a208c4-9c58-4f97-b35f-9beb52df1041"
 
 terraform init -backend-config=_backend.hcl -reconfigure
 
-yellow "Initialized Terraform for module: nupla-app/prod/app"
+yellow "Initialized Terraform for module: bzo-app/prod/app"
