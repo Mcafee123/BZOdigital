@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'app/**'
+      - 'src/nupla/app/**'
       - 'tf/**'
       - 'data/**'
       - '.github/workflows/deploy-prod.yml'
@@ -14,7 +14,7 @@ permissions:
   contents: write
 
 env:
-  IMAGE_NAME: bzo-app
+  IMAGE_NAME: nupla-app
   ACR_NAME: anplatformacr
   ACR_LOGIN_SERVER: anplatformacr.azurecr.io
 
@@ -33,7 +33,7 @@ jobs:
         with:
           filters: |
             app:
-              - 'app/**'
+              - 'src/nupla/app/**'
             tf:
               - 'tf/**'
             data:
@@ -65,7 +65,7 @@ jobs:
       - name: Resolve ACR credentials and image version
         id: compose
         run: |
-          VERSION=$(grep -m1 '^version' app/pyproject.toml | sed -E 's/.*"([^"]+)".*/\1/')
+          VERSION=$(grep -m1 '^version' pyproject.toml | sed -E 's/.*"([^"]+)".*/\1/')
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
           TAG="${VERSION}-${SHORT_SHA}"
           PW=$(az acr credential show -n "${ACR_NAME}" --query 'passwords[0].value' -o tsv)
@@ -81,7 +81,7 @@ jobs:
       - name: Build and push image
         uses: affolterNET/affolterNET.Github.SharedWorkflows/actions/build-backend@main
         with:
-          project-root:   app
+          project-root:   src/nupla/app
           project-folder: .
           project-file:   pyproject.toml
           version:        ${{ steps.compose.outputs.tag }}

@@ -7,9 +7,9 @@ See [`CLAUDE.md`](./CLAUDE.md) for project goals, the staged pipeline (Collect �
 ## Repository layout
 
 - `src/nupla/pipeline/` — **stage I (Collect):** Python package that discovers and downloads BZO PDFs for any Swiss municipality. Ships a `bzo` CLI and a FastAPI service.
-- `app/` — **stage IV slice:** Vue 3 SPA + FastAPI BFF that renders a unified-diff file. See [`app/README.md`](./app/README.md).
+- `src/nupla/app/` — **stage IV slice:** Vue 3 SPA + FastAPI BFF that renders a unified-diff file. See [`src/nupla/app/README.md`](./src/nupla/app/README.md).
 - `data/<municipality>/src/*.pdf` — original source PDFs (currently only `oberrieden`).
-- `tf/` — Terraform for deploying `app/` to Azure Container Apps (PROD only).
+- `tf/` — Terraform for deploying `src/nupla/app/` to Azure Container Apps (PROD only).
 - `.github/workflows/` — `build.yml`, `deploy-prod.yml`, `upload-data.yml`.
 - `docs/*.jpg` — whiteboard spec.
 
@@ -17,7 +17,7 @@ Pipeline stages II (extract) and III (connect) are not yet implemented.
 
 ## Stage I: the `nupla` collector/search service
 
-Lives in `src/nupla/pipeline/`. Independent from `app/` — different package, different `pyproject.toml` (this repo's root `pyproject.toml`).
+Lives in `src/nupla/pipeline/`. Independent from `src/nupla/app/` — different package, different `pyproject.toml` (this repo's root `pyproject.toml`).
 
 ### Modules
 
@@ -40,7 +40,7 @@ From the repo root:
 uv sync                              # install dependencies into .venv
 uv run playwright install chromium   # one-time; needed when SERPER_API_KEY is unset
 uv run nupla bfs-update                # one-time; downloads the BFS register
-uv run nupla serve                     # http://localhost:7100 (UI + API; app/ uses 7000)
+uv run nupla serve                     # http://localhost:7100 (UI + API; src/nupla/app/ uses 7000)
 ```
 
 CLI examples:
@@ -62,9 +62,9 @@ uv run nupla refresh --canton zh
 | `DOCCONVERTER_URL` | `converter.py` | External PDF→Markdown service. Required only for endpoints that convert PDFs. |
 | `DOCCONVERTER_USER` / `DOCCONVERTER_PASS` | `converter.py` | Basic-auth credentials for the doc-converter. |
 
-## Stage IV slice: the diff viewer (`app/`)
+## Stage IV slice: the diff viewer (`src/nupla/app/`)
 
-Vue 3 SPA + FastAPI BFF that renders a unified-diff file. Local dev and container build instructions live in [`app/README.md`](./app/README.md).
+Vue 3 SPA + FastAPI BFF that renders a unified-diff file. Local dev and container build instructions live in [`src/nupla/app/README.md`](./src/nupla/app/README.md).
 
 ## License
 

@@ -1,4 +1,4 @@
-# bzo-app
+# nupla-app
 
 Vue 3 SPA fronted by a FastAPI backend, packaged as a single container, deployed to Azure Container Apps. The first feature renders a unified-diff file.
 
@@ -13,12 +13,12 @@ Two terminals:
 cd app
 uv sync
 DIFF_PATH=./data/sample.diff WEB_DIST=./web/dist \
-  uv run uvicorn bzo_app.server:app --reload --port 8001
+  uv run uvicorn nupla.app.server:app --reload --port 8001
 ```
 
 ```bash
 # Terminal 2 — frontend (Vite on :5173)
-cd app/web
+cd src/nupla/app/web
 npm install
 npm run dev
 ```
@@ -35,25 +35,25 @@ curl http://localhost:8001/api/diff
 ## Container build
 
 ```bash
-docker build -t bzo-app:local app/
-docker run --rm -p 8080:8080 bzo-app:local
+docker build -t nupla-app:local src/nupla/app/
+docker run --rm -p 8080:8080 nupla-app:local
 ```
 
 The container serves SPA + API on `:8080`. Open http://localhost:8080.
 
 ## Where the data lives
 
-In production, an Azure File share is mounted into the Container App at `/mnt/repo`. The tree on the share mirrors the repo: `data/...` from the repo root and `app/data/...` from this folder both end up under `/mnt/repo/`. `DIFF_PATH` is set to `/mnt/repo/app/data/sample.diff` by Terraform.
+In production, an Azure File share is mounted into the Container App at `/mnt/repo`. The tree on the share mirrors the repo: `data/...` from the repo root and `src/nupla/app/data/...` from this folder both end up under `/mnt/repo/`. `DIFF_PATH` is set to `/mnt/repo/src/nupla/app/data/sample.diff` by Terraform.
 
-The image bundles `app/data/` as a fallback (so `docker run` works locally without a mount), but production reads from the mount.
+The image bundles `src/nupla/app/data/` as a fallback (so `docker run` works locally without a mount), but production reads from the mount.
 
-A separate workflow (`.github/workflows/upload-data.yml`) syncs `data/` and `app/data/` to the share on push to `main` whenever those paths change.
+A separate workflow (`.github/workflows/upload-data.yml`) syncs `data/` and `src/nupla/app/data/` to the share on push to `main` whenever those paths change.
 
 ### Swapping the diff file
 
 - **Locally (uvicorn):** `DIFF_PATH=/path/to/your.diff uv run uvicorn ...`
-- **Locally (docker):** `docker run --rm -p 8080:8080 -v $(pwd)/your.diff:/app/data/sample.diff:ro bzo-app:local`
-- **Production:** drop the new diff into `app/data/`, push to `main`, the upload workflow syncs it; the running container picks it up live (no redeploy needed).
+- **Locally (docker):** `docker run --rm -p 8080:8080 -v $(pwd)/your.diff:/src/nupla/app/data/sample.diff:ro nupla-app:local`
+- **Production:** drop the new diff into `src/nupla/app/data/`, push to `main`, the upload workflow syncs it; the running container picks it up live (no redeploy needed).
 
 The file must be plain unified-diff text. Filenames are extracted from the `--- ` and `+++ ` headers.
 
@@ -99,22 +99,22 @@ The committed file `tf/prod/app/_platform.auto.tfvars` (generated once locally b
 
    Everything else — ACR creds, storage names, KV ID, ACE ID, Cloudflare token, custom domain — is derived at apply time. Workflows that need az lookups use `azure/login` with the ARM_* secrets.
 
-   **File-based fallback:** if you don't have KV access, fill in `app/scripts/secrets.env` (gitignored) and run `app/scripts/init_secrets.sh`.
+   **File-based fallback:** if you don't have KV access, fill in `src/nupla/app/scripts/secrets.env` (gitignored) and run `src/nupla/app/scripts/init_secrets.sh`.
 
 4. **First terraform apply locally** — bootstraps the Container App and outputs its FQDN:
 
    ```bash
    cd tf/prod/app
    bash _init.sh                        # az login check + terraform init
-   terraform plan -var "image_name=anplatformacr.azurecr.io/bzo-app:0.1.0"
+   terraform plan -var "image_name=anplatformacr.azurecr.io/nupla-app:0.1.0"
    terraform apply -var "image_name=..."
    ```
 
    You'll need an image already pushed to ACR. Build + push it locally first:
    ```bash
    az acr login --name anplatformacr
-   docker build -t anplatformacr.azurecr.io/bzo-app:0.1.0 app/
-   docker push anplatformacr.azurecr.io/bzo-app:0.1.0
+   docker build -t nupla-app:local src/nupla/app/
+   docker push anplatformacr.azurecr.io/nupla-app:0.1.0
    ```
 
 ### Push-to-deploy
@@ -124,10 +124,10 @@ After the first apply, push to `main` triggers:
 2. `deploy` job — `terraform apply` with the new image_name. Pauses for approval.
 3. Commit gets tagged `v${tag}`.
 
-For data-only changes (`data/**` or `app/data/**`), only `upload-data.yml` runs and pauses for one approval.
+For data-only changes (`data/**` or `src/nupla/app/data/**`), only `upload-data.yml` runs and pauses for one approval.
 
 ## Type check / lint
 
 ```bash
-cd app/web && npm run type-check
+cd src/nupla/app/web && npm run type-check
 ```

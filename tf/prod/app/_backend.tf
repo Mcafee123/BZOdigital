@@ -3,6 +3,6 @@
 
 terraform {
   backend "azurerm" {
-    key = "bzo-app/prod/app/terraform.tfstate"
+    key = "nupla-app/prod/app/terraform.tfstate"
   }
 }

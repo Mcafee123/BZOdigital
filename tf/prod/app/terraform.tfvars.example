@@ -5,7 +5,7 @@
 # Copy to terraform.tfvars (gitignored) for local apply, or pass via
 # `-var "image_name=..."` on the command line.
 
-image_name = "anplatformacr.azurecr.io/bzo-app:0.1.0"
+image_name = "anplatformacr.azurecr.io/nupla-app:0.1.0"
 
 # Optional override (default in tf/prod/app/variables.tf is "nupla.info"):
 # custom_domain = null

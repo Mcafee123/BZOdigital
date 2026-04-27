@@ -11,7 +11,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-# paths.py -> bzo_app -> src -> app -> <repo_root>
+# paths.py -> app -> nupla -> src -> <repo_root>
 _REPO_DATA = Path(__file__).resolve().parents[3] / "data"
 
 

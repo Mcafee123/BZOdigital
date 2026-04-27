@@ -7,7 +7,7 @@ COPY web/ .
 RUN npm run build
 
 # --- Python build stage ---
-# WORKDIR must match the runtime path (/app) so the venv shebangs resolve correctly.
+# Build context is src/nupla/app/; we install from the root pyproject.toml.
 FROM ghcr.io/astral-sh/uv:python3.12-bookworm AS py-build
 WORKDIR /app
 ENV UV_LINK_MODE=copy \
@@ -43,4 +43,4 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
     CMD curl -fsS http://localhost:8080/api/health || exit 1
 
-CMD ["uvicorn", "bzo_app.server:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["uvicorn", "nupla.app.server:app", "--host", "0.0.0.0", "--port", "8080"]

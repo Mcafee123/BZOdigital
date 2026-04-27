@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Start the bzo-app locally: FastAPI on :8001 + Vite on :5173.
+# Start nupla-app locally: FastAPI on :8001 + Vite on :5173.
 # Vite proxies /api/* to the backend. Open http://localhost:5173.
 #
 # Usage:
@@ -33,7 +33,7 @@ if [[ ! -d "$WEB_DIR/node_modules" ]]; then
 fi
 
 echo "==> Starting FastAPI on http://localhost:8001"
-(cd "$APP_DIR" && uv run uvicorn bzo_app.server:app --reload --port 8001) &
+(cd "$APP_DIR" && uv run uvicorn nupla.app.server:app --reload --port 8001) &
 BACKEND_PID=$!
 
 echo "==> Starting Vite on http://localhost:5173"

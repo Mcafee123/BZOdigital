@@ -4,21 +4,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-The repo is mid-pipeline: source collection (stage I) is in progress, and a first frontend slice for stage IV (the diff viewer) is now scaffolded under `app/`.
+The repo is mid-pipeline: source collection (stage I) is in progress, and a first frontend slice for stage IV (the diff viewer) is now scaffolded under `src/nupla/app/`.
 
 Top-level contents:
 
 - `LICENSE` — MIT
 - `docs/*.jpg` — hand-drawn whiteboard slides describing the project's intent, user stories, tasks, and challenges. They are the closest thing to a spec; read them before proposing structure.
 - `data/<municipality>/src/*.pdf` — original source documents per Swiss municipality (currently only `oberrieden`). These are the inputs the pipeline will consume.
-- `src/nupla/pipeline/` — Python package for stage I: discover and collect BZO PDFs for any Swiss municipality. Ships a `bzo` CLI (`bfs-update`, `refresh`, `list`, `search`, `serve`) and a FastAPI app (`bzo-api`) that also serves a vanilla-JS UI from `src/nupla/pipeline/static/`. Pipeline-side; independent from `app/`.
-- `app/` — Vue 3 SPA + FastAPI BFF boilerplate that renders a unified-diff file. First concrete piece of stage IV. See `app/README.md` for local dev (`uv sync` + `npm run dev`), container build, and the deploy prereqs.
-- `tf/` — Terraform for deploying `app/` to Azure Container Apps. PROD-only environment. Generic, public-safe code; private bootstrap (`tf/_project_init/`) is gitignored.
-- `.github/workflows/` — `build.yml` (sanity Docker build), `deploy-prod.yml` (build + push + `terraform apply` on push to `main`), `upload-data.yml` (sync `data/` and `app/data/` to the mounted Azure File share when those paths change).
+- `src/nupla/pipeline/` — Python package for stage I: discover and collect BZO PDFs for any Swiss municipality. Ships a `bzo` CLI (`bfs-update`, `refresh`, `list`, `search`, `serve`) and a FastAPI app (`bzo-api`) that also serves a vanilla-JS UI from `src/nupla/pipeline/static/`. Pipeline-side; independent from `src/nupla/app/`.
+- `src/nupla/app/` — Vue 3 SPA + FastAPI BFF boilerplate that renders a unified-diff file. First concrete piece of stage IV. See `app/README.md` for local dev (`uv sync` + `npm run dev`), container build, and the deploy prereqs.
+- `tf/` — Terraform for deploying `src/nupla/app/` to Azure Container Apps. PROD-only environment. Generic, public-safe code; private bootstrap (`tf/_project_init/`) is gitignored.
+- `.github/workflows/` — `build.yml` (sanity Docker build), `deploy-prod.yml` (build + push + `terraform apply` on push to `main`), `upload-data.yml` (sync `data/` and `src/nupla/app/data/` to the mounted Azure File share when those paths change).
 
 When asked to "build" or "run":
-- For the `nupla` collector/search service: from the repo root, `uv sync` (install), `uv run playwright install chromium` (one-time, for the crawler fallback when `SERPER_API_KEY` is unset), `uv run nupla bfs-update` (one-time, downloads the BFS municipality register), then either CLI calls (`uv run nupla list --canton ZH`, `uv run nupla search Oberrieden --pdfs --check-content`) or `uv run nupla serve` to start the API + UI on `http://localhost:7100` (the diff-viewer `app/` defaults to 7000). See the root `README.md` for the env-var reference.
-- For the diff-viewer app: see `app/README.md`. Local: `cd app && uv sync && uv run uvicorn bzo_app.server:app --reload --port 7000` plus `cd app/web && npm i && npm run dev`. Container: `docker build -t bzo-app:local app/`.
+- For the `nupla` collector/search service: from the repo root, `uv sync` (install), `uv run playwright install chromium` (one-time, for the crawler fallback when `SERPER_API_KEY` is unset), `uv run nupla bfs-update` (one-time, downloads the BFS municipality register), then either CLI calls (`uv run nupla list --canton ZH`, `uv run nupla search Oberrieden --pdfs --check-content`) or `uv run nupla serve` to start the API + UI on `http://localhost:7100` (the diff-viewer `src/nupla/app/` defaults to 7000). See the root `README.md` for the env-var reference.
+- For the diff-viewer app: see `app/README.md`. Local: `cd app && uv sync && uv run uvicorn nupla.app.server:app --reload --port 7000` plus `cd src/nupla/app/web && npm i && npm run dev`. Container: `docker build -t nupla-app:local src/nupla/app/`.
 - For pipeline stages II–III (PDF extraction, topic linking): no code yet — ask which stage to bootstrap before scaffolding.
 
 ## What the project is about

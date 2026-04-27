@@ -24,7 +24,7 @@ _ARTICLE_RE = re.compile(r"^Art\.\s+(\S+)\s*(.*)$")
 _SECTION_MARKER_TRAILER_RE = re.compile(r"\n*<!--\s*section:.*?-->\s*$", re.DOTALL)
 _WS_RE = re.compile(r"\s+")
 
-app = FastAPI(title="bzo-app", version="0.1.0")
+app = FastAPI(title="nupla-app", version="0.1.0")
 
 app.add_middleware(
     CORSMiddleware,

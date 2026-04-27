@@ -5,7 +5,7 @@ on:
     branches-ignore: [main]
     paths-ignore:
       - 'data/**'
-      - 'app/data/**'
+      - 'src/nupla/app/data/**'
       - '.plans/**'
       - 'docs/**'
       - '**/*.md'
@@ -13,7 +13,7 @@ on:
     branches: [main]
     paths-ignore:
       - 'data/**'
-      - 'app/data/**'
+      - 'src/nupla/app/data/**'
       - '.plans/**'
       - 'docs/**'
       - '**/*.md'
@@ -29,7 +29,7 @@ jobs:
       - uses: actions/checkout@v5
 
       - name: Build image (Vue SPA + FastAPI)
-        run: docker build -t bzo-app:ci-${{ github.sha }} app/
+        run: docker build -t nupla-app:ci-${{ github.sha }} src/nupla/app/
 
       - uses: hashicorp/setup-terraform@v4
 
