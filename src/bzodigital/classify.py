@@ -1,31 +1,38 @@
 """Rules-first classifier for BZO-related PDFs.
 
-Maps a discovered PDF (filename + title) to one of the default labels in
-db.DEFAULT_LABELS, or to no label ("other"). Old vs new Bau- und Zonenordnung
-is decided across the whole batch by comparing dates / hint prefixes — a single
-file can't make that call.
+The classifier produces internal category keys (e.g. "regulation_old"); the
+human-readable labels written into PdfAnnotation.labels_json are sourced from
+the `label` table in the database — substring rules pick the right row per
+category. Anything we can't classify, or a category that doesn't match any
+existing label, falls back to the "Andere" / fallback label.
 """
 
 from __future__ import annotations
 
 import re
+from collections.abc import Callable, Iterable
 from pathlib import PurePosixPath
-from typing import Iterable
 from urllib.parse import unquote, urlparse
-
-# Category keys returned by classify_pdf. The string mapping below is the
-# canonical label written into PdfAnnotation.labels_json.
-CATEGORY_TO_LABEL: dict[str, str] = {
-    "synopsis": "Synopse",
-    "regulation_old": "Bau- und Zonenordnung alt",
-    "regulation_new": "Bau- und Zonenordnung neu",
-    "einwendungsbericht": "Einwendungsbericht gemäss § 7 PBG",
-    "erlauterungsbericht": "Erläuterungsbericht gemäss Art. 47 RPV",
-    "versammlungsbeschluss": "Gemeindeversammlungsbeschluss",
-}
 
 # Internal sentinel for "looks like a regulation but old/new not yet decided".
 _REGULATION = "regulation"
+
+# Each rule receives a lowercased label name and returns True if the row
+# represents the given category. The first matching DB row wins.
+_LABEL_MATCHERS: dict[str, Callable[[str], bool]] = {
+    "synopsis":              lambda n: "synops" in n,
+    "regulation_old":        lambda n: ("zonenordnung" in n or re.search(r"\bbzo\b", n) is not None) and "alt" in n,
+    "regulation_new":        lambda n: ("zonenordnung" in n or re.search(r"\bbzo\b", n) is not None) and "neu" in n,
+    "einwendungsbericht":    lambda n: "einwendung" in n,
+    "erlauterungsbericht":   lambda n: "erläut" in n or "erlaut" in n,
+    "versammlungsbeschluss": lambda n: "versammlung" in n,
+    # Fallback bucket — matched against typical names for "other".
+    "other":                 lambda n: n.strip() in ("andere", "other", "sonstige", "sonstiges"),
+}
+
+# Categories that must be unique per municipality. If two or more PDFs match
+# one of these, none gets the label — the operator picks the right one.
+_SINGLE_INSTANCE = ("synopsis", "erlauterungsbericht", "versammlungsbeschluss")
 
 _GERMAN_MONTHS = {
     "januar": 1, "februar": 2, "märz": 3, "maerz": 3, "april": 4,
@@ -44,10 +51,9 @@ def _norm(text: str) -> str:
 
 
 def classify_pdf(url: str, title: str) -> str | None:
-    """Return a category key, or None for "other".
-
-    For BZO-itself documents the bare key "regulation" is returned — old/new
-    is decided by resolve_batch once all files are known.
+    """Return a category key, or None when nothing in the filename/title is a
+    BZO-document signal. For BZO-itself documents the bare key "regulation"
+    is returned — old/new is decided by resolve_batch once all files are known.
     """
     fname = _filename_from_url(url)
     text = _norm(f"{fname} {title}")
@@ -68,8 +74,6 @@ def classify_pdf(url: str, title: str) -> str | None:
     if (
         "erläut" in text
         or "erlaut" in text
-        or "erläuter" in text
-        or "erlauter" in text
         or re.search(r"(^|\s)erl\s*-", text)
     ):
         return "erlauterungsbericht"
@@ -85,6 +89,17 @@ def classify_pdf(url: str, title: str) -> str | None:
     ):
         return _REGULATION
 
+    return None
+
+
+def _resolve_label(category: str, db_labels: Iterable[str]) -> str | None:
+    """Pick the DB label name that matches a category, or None if no row fits."""
+    matcher = _LABEL_MATCHERS.get(category)
+    if matcher is None:
+        return None
+    for label in db_labels:
+        if matcher(label.lower()):
+            return label
     return None
 
 
@@ -116,7 +131,6 @@ def _extract_sort_key(url: str, title: str) -> tuple[int, tuple[int, int, int]]:
 
 def _parse_date(text: str) -> tuple[int, int, int] | None:
     """Extract a (year, month, day) from German date strings, year-only OK."""
-    # "26. Januar 2026" or "26 Januar 2026"
     m = re.search(
         r"(\d{1,2})\.?\s+(januar|februar|märz|maerz|april|mai|juni|juli|august|september|oktober|november|dezember)\s+((?:19|20)\d{2})",
         text,
@@ -127,7 +141,6 @@ def _parse_date(text: str) -> tuple[int, int, int] | None:
         year = int(m.group(3))
         return (year, month, day)
 
-    # Bare year as last resort
     m = re.search(r"\b(19|20)(\d{2})\b", text)
     if m:
         return (int(m.group(1) + m.group(2)), 0, 0)
@@ -135,45 +148,62 @@ def _parse_date(text: str) -> tuple[int, int, int] | None:
     return None
 
 
-def resolve_batch(items: Iterable[dict]) -> dict[str, list[str]]:
+def resolve_batch(
+    items: Iterable[dict],
+    db_labels: Iterable[str] | None = None,
+) -> dict[str, list[str]]:
     """Classify a whole batch of PDFs for one municipality.
 
     items: iterable of {"url": str, "title": str}.
-    Returns {url: [label, ...]} — empty list means "no suggestion".
-    Enforces uniqueness for single-instance categories and resolves
-    regulation_old vs regulation_new from date / hint signals.
+    db_labels: list of label names from the `label` table — the source of truth
+    for the strings written into PdfAnnotation.labels_json. If omitted, fetched
+    lazily via db.get_labels() so this module stays unit-testable without a DB.
+
+    Returns {url: [label, ...]}. A label is always set: either the matched
+    category's DB label, or the fallback ("Andere") if no category-specific
+    label can be resolved.
     """
     items = list(items)
-    raw: list[tuple[dict, str | None]] = [(i, classify_pdf(i["url"], i.get("title", ""))) for i in items]
+    if db_labels is None:
+        from bzodigital.db import get_labels  # local import to avoid cycles in tests
+        db_labels = get_labels()
+    db_labels = list(db_labels)
 
-    suggestions: dict[str, list[str]] = {i["url"]: [] for i in items}
+    fallback = _resolve_label("other", db_labels)
+    raw: list[tuple[dict, str | None]] = [
+        (i, classify_pdf(i["url"], i.get("title", ""))) for i in items
+    ]
+
+    # Default everyone to the fallback; category matches override below.
+    suggestions: dict[str, list[str]] = {
+        i["url"]: ([fallback] if fallback else []) for i in items
+    }
+
+    def assign(url: str, category: str) -> None:
+        label = _resolve_label(category, db_labels)
+        suggestions[url] = [label] if label else ([fallback] if fallback else [])
 
     # Single-instance categories: assign only when exactly one candidate exists.
-    for cat in ("erlauterungsbericht", "versammlungsbeschluss"):
+    for cat in _SINGLE_INSTANCE:
         candidates = [it for it, c in raw if c == cat]
         if len(candidates) == 1:
-            suggestions[candidates[0]["url"]] = [CATEGORY_TO_LABEL[cat]]
+            assign(candidates[0]["url"], cat)
 
-    # Multi-instance OK (synopsis + einwendungsbericht can technically repeat
-    # across municipalities; they only need to appear once per BZO revision —
-    # but we don't enforce here, just label everything that matches).
-    for cat in ("synopsis", "einwendungsbericht"):
-        for it, c in raw:
-            if c == cat:
-                suggestions[it["url"]] = [CATEGORY_TO_LABEL[cat]]
+    # einwendungsbericht: not enforced as unique (multiple sub-reports may exist).
+    for it, c in raw:
+        if c == "einwendungsbericht":
+            assign(it["url"], "einwendungsbericht")
 
     # Regulation old vs new: compare across candidates.
     regulations = [it for it, c in raw if c == _REGULATION]
     if len(regulations) == 1:
-        suggestions[regulations[0]["url"]] = [CATEGORY_TO_LABEL["regulation_new"]]
+        assign(regulations[0]["url"], "regulation_new")
     elif len(regulations) >= 2:
         ranked = sorted(
             regulations,
             key=lambda it: _extract_sort_key(it["url"], it.get("title", "")),
         )
-        # ranked[0] = newest, ranked[-1] = oldest. Anything in between is left
-        # unlabelled — operator decides.
-        suggestions[ranked[0]["url"]] = [CATEGORY_TO_LABEL["regulation_new"]]
-        suggestions[ranked[-1]["url"]] = [CATEGORY_TO_LABEL["regulation_old"]]
+        assign(ranked[0]["url"], "regulation_new")
+        assign(ranked[-1]["url"], "regulation_old")
 
     return suggestions

@@ -347,7 +347,8 @@ def _seed_classifications(bfs_nr: int, pdfs: list[dict]) -> dict[str, list[str]]
     if not pdfs:
         return {}
     suggestions = classify_batch(
-        [{"url": p["url"], "title": p.get("title", "")} for p in pdfs]
+        [{"url": p["url"], "title": p.get("title", "")} for p in pdfs],
+        db_labels=get_labels(),
     )
     for p in pdfs:
         upsert_annotation(

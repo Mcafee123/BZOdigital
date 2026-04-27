@@ -67,6 +67,7 @@ DEFAULT_LABELS = [
     "Einwendungsbericht gemäss § 7 PBG",
     "Erläuterungsbericht gemäss Art. 47 RPV",
     "Gemeindeversammlungsbeschluss",
+    "Andere",
 ]
 
 
