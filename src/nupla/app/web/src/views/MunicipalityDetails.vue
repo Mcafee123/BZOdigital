@@ -135,13 +135,6 @@ onMounted(async () => {
           >
             Diff
           </button>
-          <button
-            type="button"
-            class="toggle-link"
-            @click="router.push(`/crossreferences/${folderName}`)"
-          >
-            Details →
-          </button>
         </div>
 
         <div v-if="viewMode === 'overview'">
@@ -159,7 +152,12 @@ onMounted(async () => {
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="row in sections.rows" :key="row.key">
+                <tr
+                  v-for="row in sections.rows"
+                  :key="row.key"
+                  class="row-clickable"
+                  @click="router.push(`/crossreferences/${folderName}?art=${encodeURIComponent(row.key)}`)"
+                >
                   <td>
                     <strong>{{ articleTitle(row) }}</strong>
                     <div v-if="row.added" class="cell-empty">Neu eingefügt</div>
@@ -220,12 +218,6 @@ onMounted(async () => {
   background: var(--surface-color);
   color: var(--text-main);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-.toggle-wrapper button.toggle-link {
-  color: var(--accent-color);
-}
-.toggle-wrapper button.toggle-link:hover {
-  color: var(--accent-hover);
 }
 
 .table-container {

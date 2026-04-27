@@ -194,13 +194,12 @@ td { font-size: 15px; }
 /* Overview specific */
 .row-clickable { cursor: pointer; transition: background 0.2s; position: relative; }
 .row-clickable:hover { background: #f8fafc; }
-.row-clickable td:last-child { position: relative; }
-.row-clickable:hover td:last-child::after {
+.row-clickable > td:last-child { position: relative; }
+.row-clickable:hover > td:last-child::after {
   content: "→ Details";
   position: absolute;
   right: 20px;
-  top: 50%;
-  transform: translateY(-50%);
+  top: 20px;
   font-size: 13px;
   font-weight: 600;
   color: var(--accent-color);

@@ -1,82 +1,74 @@
-import { computed, nextTick, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { marked } from 'marked';
+import { diffWordsWithSpace } from 'diff';
 import { api } from '../composables/useApi';
 marked.setOptions({ gfm: true, breaks: false });
 const route = useRoute();
 const router = useRouter();
 const folderName = route.params.folder;
+const sections = ref(null);
+const xrefs = ref(null);
 const loading = ref(true);
 const error = ref(null);
-const data = ref(null);
-const selected = ref(route.query.art || '');
-const renderedBzo = computed(() => {
-    if (!data.value)
-        return '';
-    return marked.parse(data.value.bzo_markdown);
+const selectedKey = ref(route.query.art || '');
+const changedRows = computed(() => sections.value?.rows ?? []);
+const currentRow = computed(() => {
+    return changedRows.value.find((r) => r.key === selectedKey.value) ?? null;
 });
-const selectedRefs = computed(() => {
-    if (!data.value || !selected.value)
+const refsForCurrent = computed(() => {
+    if (!selectedKey.value || !xrefs.value)
         return [];
-    return data.value.cross_references[selected.value] ?? [];
+    return xrefs.value.cross_references[selectedKey.value] ?? [];
 });
-const selectedHasRefs = computed(() => selectedRefs.value.length > 0);
+function rowTitle(r) {
+    return r.title_neu ?? r.title_alt ?? `Art. ${r.key}`;
+}
+function escapeHtml(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+function renderMd(src) {
+    return marked.parse(src);
+}
+function renderNeuWithDiff(alt, neu) {
+    const parts = diffWordsWithSpace(alt, neu);
+    const merged = parts
+        .filter((p) => !p.removed)
+        .map((p) => (p.added ? `<mark class="diff-add">${escapeHtml(p.value)}</mark>` : p.value))
+        .join('');
+    return marked.parse(merged);
+}
+function renderNeuOrDiff(row) {
+    return row.added ? renderMd(row.neu) : renderNeuWithDiff(row.alt, row.neu);
+}
 function docLabel(file, labels) {
     if (labels.length > 0)
         return labels[0];
     return file.replace(/\.md$/i, '');
 }
-const docTotals = computed(() => {
-    if (!data.value)
-        return [];
-    const totals = new Map();
-    for (const entries of Object.values(data.value.cross_references)) {
-        for (const e of entries) {
-            const key = e.source_file;
-            const existing = totals.get(key);
-            if (existing) {
-                existing.count += 1;
-            }
-            else {
-                totals.set(key, { key, label: docLabel(e.source_file, e.source_labels), count: 1 });
-            }
-        }
-    }
-    return [...totals.values()].sort((a, b) => b.count - a.count);
-});
-function badgeClass(art) {
-    const has = (data.value?.cross_references[art]?.length ?? 0) > 0;
-    return {
-        'art-badge': true,
-        'is-selected': art === selected.value,
-        'has-refs': has && art !== selected.value,
-        'no-refs': !has && art !== selected.value,
-    };
-}
-function selectArticle(art) {
-    selected.value = art;
-    router.replace({ query: { ...route.query, art } });
-    nextTick(() => {
-        const el = document.querySelector(`a[name="art-${art}"]`);
-        if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-    });
+function selectArticle(key) {
+    selectedKey.value = key;
+    router.replace({ query: { ...route.query, art: key } });
 }
 watch(() => route.query.art, (q) => {
-    if (typeof q === 'string' && q !== selected.value) {
-        selected.value = q;
+    if (typeof q === 'string' && q !== selectedKey.value) {
+        selectedKey.value = q;
     }
 });
 onMounted(async () => {
     try {
-        data.value = await api(`/api/municipalities/${folderName}/crossreferences`);
-        if (!selected.value && data.value.articles.length > 0) {
-            selected.value = data.value.articles[0];
+        const [s, x] = await Promise.all([
+            api(`/api/municipalities/${folderName}/sections`),
+            api(`/api/municipalities/${folderName}/crossreferences`),
+        ]);
+        sections.value = s;
+        xrefs.value = x;
+        if (!selectedKey.value && s.rows.length > 0) {
+            selectArticle(s.rows[0].key);
         }
     }
-    catch (err) {
-        error.value = err.message || String(err);
+    catch (e) {
+        error.value = e.message || String(e);
     }
     finally {
         loading.value = false;
@@ -89,17 +81,14 @@ const __VLS_ctx = {
 let __VLS_components;
 let __VLS_intrinsics;
 let __VLS_directives;
-/** @type {__VLS_StyleScopedClasses['xref-title']} */ ;
-/** @type {__VLS_StyleScopedClasses['xref-header']} */ ;
-/** @type {__VLS_StyleScopedClasses['xref-header']} */ ;
-/** @type {__VLS_StyleScopedClasses['back-btn']} */ ;
-/** @type {__VLS_StyleScopedClasses['xref-error']} */ ;
-/** @type {__VLS_StyleScopedClasses['art-badge']} */ ;
-/** @type {__VLS_StyleScopedClasses['art-badge']} */ ;
-/** @type {__VLS_StyleScopedClasses['art-badge']} */ ;
-/** @type {__VLS_StyleScopedClasses['has-refs']} */ ;
-/** @type {__VLS_StyleScopedClasses['art-badge']} */ ;
-/** @type {__VLS_StyleScopedClasses['xref-docs']} */ ;
+/** @type {__VLS_StyleScopedClasses['detail-card-header']} */ ;
+/** @type {__VLS_StyleScopedClasses['detail-card-header']} */ ;
+/** @type {__VLS_StyleScopedClasses['detail-card-header']} */ ;
+/** @type {__VLS_StyleScopedClasses['detail-card-body']} */ ;
+/** @type {__VLS_StyleScopedClasses['col']} */ ;
+/** @type {__VLS_StyleScopedClasses['col']} */ ;
+/** @type {__VLS_StyleScopedClasses['col']} */ ;
+/** @type {__VLS_StyleScopedClasses['ref-detail']} */ ;
 /** @type {__VLS_StyleScopedClasses['markdown']} */ ;
 /** @type {__VLS_StyleScopedClasses['markdown']} */ ;
 /** @type {__VLS_StyleScopedClasses['markdown']} */ ;
@@ -109,176 +98,176 @@ let __VLS_directives;
 /** @type {__VLS_StyleScopedClasses['markdown']} */ ;
 /** @type {__VLS_StyleScopedClasses['markdown']} */ ;
 /** @type {__VLS_StyleScopedClasses['markdown']} */ ;
-/** @type {__VLS_StyleScopedClasses['markdown']} */ ;
-/** @type {__VLS_StyleScopedClasses['markdown']} */ ;
-/** @type {__VLS_StyleScopedClasses['markdown']} */ ;
-/** @type {__VLS_StyleScopedClasses['markdown']} */ ;
+/** @type {__VLS_StyleScopedClasses['detail-card-header']} */ ;
+/** @type {__VLS_StyleScopedClasses['detail-card-body']} */ ;
+/** @type {__VLS_StyleScopedClasses['detail-card-header']} */ ;
+/** @type {__VLS_StyleScopedClasses['detail-card-body']} */ ;
+/** @type {__VLS_StyleScopedClasses['col']} */ ;
+/** @type {__VLS_StyleScopedClasses['col']} */ ;
 __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
-    ...{ class: "xref-view" },
+    ...{ class: "container detail-container" },
 });
-/** @type {__VLS_StyleScopedClasses['xref-view']} */ ;
-__VLS_asFunctionalElement1(__VLS_intrinsics.header, __VLS_intrinsics.header)({
-    ...{ class: "xref-header" },
-});
-/** @type {__VLS_StyleScopedClasses['xref-header']} */ ;
-__VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
-    ...{ class: "xref-title" },
-});
-/** @type {__VLS_StyleScopedClasses['xref-title']} */ ;
-__VLS_asFunctionalElement1(__VLS_intrinsics.h1, __VLS_intrinsics.h1)({});
-if (__VLS_ctx.data) {
-    __VLS_asFunctionalElement1(__VLS_intrinsics.span, __VLS_intrinsics.span)({
-        ...{ class: "xref-subtitle" },
-    });
-    /** @type {__VLS_StyleScopedClasses['xref-subtitle']} */ ;
-    (__VLS_ctx.data.municipality);
-    (__VLS_ctx.data.bzo_filename);
-}
+/** @type {__VLS_StyleScopedClasses['container']} */ ;
+/** @type {__VLS_StyleScopedClasses['detail-container']} */ ;
 __VLS_asFunctionalElement1(__VLS_intrinsics.a, __VLS_intrinsics.a)({
     ...{ onClick: (...[$event]) => {
             __VLS_ctx.router.push(`/details/${__VLS_ctx.folderName}`);
             // @ts-ignore
-            [data, data, data, router, folderName,];
+            [router, folderName,];
         } },
     ...{ class: "back-btn" },
 });
 /** @type {__VLS_StyleScopedClasses['back-btn']} */ ;
+__VLS_asFunctionalElement1(__VLS_intrinsics.h1, __VLS_intrinsics.h1)({
+    ...{ class: "detail-h1" },
+});
+/** @type {__VLS_StyleScopedClasses['detail-h1']} */ ;
 if (__VLS_ctx.loading) {
     __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
-        ...{ class: "xref-loading" },
+        ...{ class: "diff-status" },
     });
-    /** @type {__VLS_StyleScopedClasses['xref-loading']} */ ;
+    /** @type {__VLS_StyleScopedClasses['diff-status']} */ ;
 }
 else if (__VLS_ctx.error) {
     __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
-        ...{ class: "xref-error" },
+        ...{ class: "diff-status" },
+        ...{ style: {} },
     });
-    /** @type {__VLS_StyleScopedClasses['xref-error']} */ ;
+    /** @type {__VLS_StyleScopedClasses['diff-status']} */ ;
     (__VLS_ctx.error);
 }
-else if (__VLS_ctx.data) {
-    __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
-        ...{ class: "xref-grid" },
-    });
-    /** @type {__VLS_StyleScopedClasses['xref-grid']} */ ;
-    __VLS_asFunctionalElement1(__VLS_intrinsics.article, __VLS_intrinsics.article)({
-        ...{ class: "xref-doc markdown" },
-    });
-    __VLS_asFunctionalDirective(__VLS_directives.vHtml, {})(null, { ...__VLS_directiveBindingRestFields, value: (__VLS_ctx.renderedBzo) }, null, null);
-    /** @type {__VLS_StyleScopedClasses['xref-doc']} */ ;
-    /** @type {__VLS_StyleScopedClasses['markdown']} */ ;
-    __VLS_asFunctionalElement1(__VLS_intrinsics.aside, __VLS_intrinsics.aside)({
-        ...{ class: "xref-side" },
-    });
-    /** @type {__VLS_StyleScopedClasses['xref-side']} */ ;
-    __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
-        ...{ class: "xref-selected" },
-    });
-    /** @type {__VLS_StyleScopedClasses['xref-selected']} */ ;
-    __VLS_asFunctionalElement1(__VLS_intrinsics.h2, __VLS_intrinsics.h2)({});
-    (__VLS_ctx.selected || '—');
-    __VLS_asFunctionalElement1(__VLS_intrinsics.p, __VLS_intrinsics.p)({
-        ...{ class: "xref-count" },
-    });
-    /** @type {__VLS_StyleScopedClasses['xref-count']} */ ;
-    (__VLS_ctx.selectedHasRefs
-        ? `${__VLS_ctx.selectedRefs.length} Querverweis${__VLS_ctx.selectedRefs.length === 1 ? '' : 'e'}`
-        : 'Keine Querverweise');
-    __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
-        ...{ class: "xref-articles" },
-    });
-    /** @type {__VLS_StyleScopedClasses['xref-articles']} */ ;
-    for (const [art] of __VLS_vFor((__VLS_ctx.data.articles))) {
-        __VLS_asFunctionalElement1(__VLS_intrinsics.button, __VLS_intrinsics.button)({
-            ...{ onClick: (...[$event]) => {
+else {
+    if (__VLS_ctx.changedRows.length > 0) {
+        __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
+            ...{ class: "topic-selector" },
+        });
+        /** @type {__VLS_StyleScopedClasses['topic-selector']} */ ;
+        __VLS_asFunctionalElement1(__VLS_intrinsics.select, __VLS_intrinsics.select)({
+            ...{ onChange: (...[$event]) => {
                     if (!!(__VLS_ctx.loading))
                         return;
                     if (!!(__VLS_ctx.error))
                         return;
-                    if (!(__VLS_ctx.data))
+                    if (!(__VLS_ctx.changedRows.length > 0))
                         return;
-                    __VLS_ctx.selectArticle(art);
+                    __VLS_ctx.selectArticle($event.target.value);
                     // @ts-ignore
-                    [data, data, loading, error, error, renderedBzo, selected, selectedHasRefs, selectedRefs, selectedRefs, selectArticle,];
+                    [loading, error, error, changedRows, selectArticle,];
                 } },
-            key: (art),
-            type: "button",
-            ...{ class: (__VLS_ctx.badgeClass(art)) },
+            value: (__VLS_ctx.selectedKey),
         });
-        (art);
-        // @ts-ignore
-        [badgeClass,];
-    }
-    __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
-        ...{ class: "xref-docs" },
-    });
-    /** @type {__VLS_StyleScopedClasses['xref-docs']} */ ;
-    __VLS_asFunctionalElement1(__VLS_intrinsics.h3, __VLS_intrinsics.h3)({});
-    __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
-        ...{ class: "xref-doc-chips" },
-    });
-    /** @type {__VLS_StyleScopedClasses['xref-doc-chips']} */ ;
-    for (const [d] of __VLS_vFor((__VLS_ctx.docTotals))) {
-        __VLS_asFunctionalElement1(__VLS_intrinsics.span, __VLS_intrinsics.span)({
-            key: (d.key),
-            ...{ class: "doc-chip" },
-        });
-        /** @type {__VLS_StyleScopedClasses['doc-chip']} */ ;
-        (d.label);
-        __VLS_asFunctionalElement1(__VLS_intrinsics.span, __VLS_intrinsics.span)({
-            ...{ class: "doc-chip-count" },
-        });
-        /** @type {__VLS_StyleScopedClasses['doc-chip-count']} */ ;
-        (d.count);
-        // @ts-ignore
-        [docTotals,];
-    }
-    __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
-        ...{ class: "xref-refs" },
-    });
-    /** @type {__VLS_StyleScopedClasses['xref-refs']} */ ;
-    if (!__VLS_ctx.selectedHasRefs) {
-        __VLS_asFunctionalElement1(__VLS_intrinsics.p, __VLS_intrinsics.p)({
-            ...{ class: "xref-empty" },
-        });
-        /** @type {__VLS_StyleScopedClasses['xref-empty']} */ ;
-    }
-    else {
-        __VLS_asFunctionalElement1(__VLS_intrinsics.ul, __VLS_intrinsics.ul)({
-            ...{ class: "xref-ref-list" },
-        });
-        /** @type {__VLS_StyleScopedClasses['xref-ref-list']} */ ;
-        for (const [r, i] of __VLS_vFor((__VLS_ctx.selectedRefs))) {
-            __VLS_asFunctionalElement1(__VLS_intrinsics.li, __VLS_intrinsics.li)({
-                key: (i),
-                ...{ class: "xref-ref" },
+        for (const [r] of __VLS_vFor((__VLS_ctx.changedRows))) {
+            __VLS_asFunctionalElement1(__VLS_intrinsics.option, __VLS_intrinsics.option)({
+                key: (r.key),
+                value: (r.key),
             });
-            /** @type {__VLS_StyleScopedClasses['xref-ref']} */ ;
+            (__VLS_ctx.rowTitle(r));
+            // @ts-ignore
+            [changedRows, selectedKey, rowTitle,];
+        }
+    }
+    if (__VLS_ctx.currentRow) {
+        __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
+            ...{ class: "detail-card" },
+        });
+        /** @type {__VLS_StyleScopedClasses['detail-card']} */ ;
+        __VLS_asFunctionalElement1(__VLS_intrinsics.header, __VLS_intrinsics.header)({
+            ...{ class: "detail-card-header" },
+        });
+        /** @type {__VLS_StyleScopedClasses['detail-card-header']} */ ;
+        __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({});
+        __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({});
+        __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({});
+        __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
+            ...{ class: "detail-card-body" },
+        });
+        /** @type {__VLS_StyleScopedClasses['detail-card-body']} */ ;
+        __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
+            ...{ class: "col col-alt" },
+        });
+        /** @type {__VLS_StyleScopedClasses['col']} */ ;
+        /** @type {__VLS_StyleScopedClasses['col-alt']} */ ;
+        __VLS_asFunctionalElement1(__VLS_intrinsics.strong, __VLS_intrinsics.strong)({});
+        (__VLS_ctx.currentRow.title_alt ?? __VLS_ctx.currentRow.title_neu);
+        if (__VLS_ctx.currentRow.added) {
             __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
-                ...{ class: "xref-ref-head" },
+                ...{ class: "cell-empty" },
             });
-            /** @type {__VLS_StyleScopedClasses['xref-ref-head']} */ ;
+            /** @type {__VLS_StyleScopedClasses['cell-empty']} */ ;
+        }
+        else {
+            __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
+                ...{ class: "markdown" },
+            });
+            __VLS_asFunctionalDirective(__VLS_directives.vHtml, {})(null, { ...__VLS_directiveBindingRestFields, value: (__VLS_ctx.renderMd(__VLS_ctx.currentRow.alt)) }, null, null);
+            /** @type {__VLS_StyleScopedClasses['markdown']} */ ;
+        }
+        __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
+            ...{ class: "col col-neu" },
+        });
+        /** @type {__VLS_StyleScopedClasses['col']} */ ;
+        /** @type {__VLS_StyleScopedClasses['col-neu']} */ ;
+        __VLS_asFunctionalElement1(__VLS_intrinsics.strong, __VLS_intrinsics.strong)({});
+        (__VLS_ctx.currentRow.title_neu ?? __VLS_ctx.currentRow.title_alt);
+        if (__VLS_ctx.currentRow.removed) {
+            __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
+                ...{ class: "cell-empty" },
+            });
+            /** @type {__VLS_StyleScopedClasses['cell-empty']} */ ;
+        }
+        else {
+            __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
+                ...{ class: "markdown" },
+            });
+            __VLS_asFunctionalDirective(__VLS_directives.vHtml, {})(null, { ...__VLS_directiveBindingRestFields, value: (__VLS_ctx.renderNeuOrDiff(__VLS_ctx.currentRow)) }, null, null);
+            /** @type {__VLS_StyleScopedClasses['markdown']} */ ;
+        }
+        __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
+            ...{ class: "col col-refs" },
+        });
+        /** @type {__VLS_StyleScopedClasses['col']} */ ;
+        /** @type {__VLS_StyleScopedClasses['col-refs']} */ ;
+        if (__VLS_ctx.refsForCurrent.length === 0) {
+            __VLS_asFunctionalElement1(__VLS_intrinsics.p, __VLS_intrinsics.p)({
+                ...{ class: "ref-empty" },
+            });
+            /** @type {__VLS_StyleScopedClasses['ref-empty']} */ ;
+        }
+        for (const [r, i] of __VLS_vFor((__VLS_ctx.refsForCurrent))) {
+            __VLS_asFunctionalElement1(__VLS_intrinsics.details, __VLS_intrinsics.details)({
+                key: (i),
+                ...{ class: "ref-detail" },
+            });
+            /** @type {__VLS_StyleScopedClasses['ref-detail']} */ ;
+            __VLS_asFunctionalElement1(__VLS_intrinsics.summary, __VLS_intrinsics.summary)({});
             __VLS_asFunctionalElement1(__VLS_intrinsics.span, __VLS_intrinsics.span)({
-                ...{ class: "xref-ref-doc" },
+                ...{ class: "ref-doc" },
             });
-            /** @type {__VLS_StyleScopedClasses['xref-ref-doc']} */ ;
+            /** @type {__VLS_StyleScopedClasses['ref-doc']} */ ;
             (__VLS_ctx.docLabel(r.source_file, r.source_labels));
             __VLS_asFunctionalElement1(__VLS_intrinsics.span, __VLS_intrinsics.span)({
-                ...{ class: "xref-ref-cite" },
+                ...{ class: "ref-cite" },
             });
-            /** @type {__VLS_StyleScopedClasses['xref-ref-cite']} */ ;
+            /** @type {__VLS_StyleScopedClasses['ref-cite']} */ ;
             (r.citation_text);
             __VLS_asFunctionalElement1(__VLS_intrinsics.p, __VLS_intrinsics.p)({
-                ...{ class: "xref-ref-paragraph" },
+                ...{ class: "ref-paragraph" },
             });
-            /** @type {__VLS_StyleScopedClasses['xref-ref-paragraph']} */ ;
+            /** @type {__VLS_StyleScopedClasses['ref-paragraph']} */ ;
             (r.paragraph);
             // @ts-ignore
-            [selectedHasRefs, selectedRefs, docLabel,];
+            [currentRow, currentRow, currentRow, currentRow, currentRow, currentRow, currentRow, currentRow, currentRow, renderMd, renderNeuOrDiff, refsForCurrent, refsForCurrent, docLabel,];
         }
+    }
+    else {
+        __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({
+            ...{ class: "diff-status" },
+        });
+        /** @type {__VLS_StyleScopedClasses['diff-status']} */ ;
+        (__VLS_ctx.selectedKey || '?');
     }
 }
 // @ts-ignore
-[];
+[selectedKey,];
 const __VLS_export = (await import('vue')).defineComponent({});
 export default {};

@@ -81,9 +81,6 @@ let __VLS_intrinsics;
 let __VLS_directives;
 /** @type {__VLS_StyleScopedClasses['toggle-wrapper']} */ ;
 /** @type {__VLS_StyleScopedClasses['toggle-wrapper']} */ ;
-/** @type {__VLS_StyleScopedClasses['toggle-wrapper']} */ ;
-/** @type {__VLS_StyleScopedClasses['toggle-wrapper']} */ ;
-/** @type {__VLS_StyleScopedClasses['toggle-link']} */ ;
 /** @type {__VLS_StyleScopedClasses['table-container']} */ ;
 /** @type {__VLS_StyleScopedClasses['table-container']} */ ;
 /** @type {__VLS_StyleScopedClasses['table-container']} */ ;
@@ -198,20 +195,6 @@ else {
         ...{ class: ({ active: __VLS_ctx.viewMode === 'diff' }) },
     });
     /** @type {__VLS_StyleScopedClasses['active']} */ ;
-    __VLS_asFunctionalElement1(__VLS_intrinsics.button, __VLS_intrinsics.button)({
-        ...{ onClick: (...[$event]) => {
-                if (!!(__VLS_ctx.loading))
-                    return;
-                if (!!(__VLS_ctx.error))
-                    return;
-                __VLS_ctx.router.push(`/crossreferences/${__VLS_ctx.folderName}`);
-                // @ts-ignore
-                [router, viewMode, folderName,];
-            } },
-        type: "button",
-        ...{ class: "toggle-link" },
-    });
-    /** @type {__VLS_StyleScopedClasses['toggle-link']} */ ;
     if (__VLS_ctx.viewMode === 'overview') {
         __VLS_asFunctionalElement1(__VLS_intrinsics.div, __VLS_intrinsics.div)({});
         if (__VLS_ctx.sectionsLoading) {
@@ -249,8 +232,29 @@ else {
             __VLS_asFunctionalElement1(__VLS_intrinsics.tbody, __VLS_intrinsics.tbody)({});
             for (const [row] of __VLS_vFor((__VLS_ctx.sections.rows))) {
                 __VLS_asFunctionalElement1(__VLS_intrinsics.tr, __VLS_intrinsics.tr)({
+                    ...{ onClick: (...[$event]) => {
+                            if (!!(__VLS_ctx.loading))
+                                return;
+                            if (!!(__VLS_ctx.error))
+                                return;
+                            if (!(__VLS_ctx.viewMode === 'overview'))
+                                return;
+                            if (!!(__VLS_ctx.sectionsLoading))
+                                return;
+                            if (!!(__VLS_ctx.sectionsMissing))
+                                return;
+                            if (!!(__VLS_ctx.sections && __VLS_ctx.sections.rows.length === 0))
+                                return;
+                            if (!(__VLS_ctx.sections))
+                                return;
+                            __VLS_ctx.router.push(`/crossreferences/${__VLS_ctx.folderName}?art=${encodeURIComponent(row.key)}`);
+                            // @ts-ignore
+                            [router, viewMode, viewMode, sectionsLoading, sectionsMissing, sections, sections, sections, sections, folderName,];
+                        } },
                     key: (row.key),
+                    ...{ class: "row-clickable" },
                 });
+                /** @type {__VLS_StyleScopedClasses['row-clickable']} */ ;
                 __VLS_asFunctionalElement1(__VLS_intrinsics.td, __VLS_intrinsics.td)({});
                 __VLS_asFunctionalElement1(__VLS_intrinsics.strong, __VLS_intrinsics.strong)({});
                 (__VLS_ctx.articleTitle(row));
@@ -286,7 +290,7 @@ else {
                     /** @type {__VLS_StyleScopedClasses['markdown']} */ ;
                 }
                 // @ts-ignore
-                [viewMode, sectionsLoading, sectionsMissing, sections, sections, sections, sections, articleTitle, articleTitle, renderMd, renderMd, renderNeuWithDiff,];
+                [articleTitle, articleTitle, renderMd, renderMd, renderNeuWithDiff,];
             }
         }
     }

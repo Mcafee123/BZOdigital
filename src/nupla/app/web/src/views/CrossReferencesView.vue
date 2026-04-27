@@ -1,38 +1,56 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { marked } from 'marked';
+import { diffWordsWithSpace } from 'diff';
 import { api } from '../composables/useApi';
+import type { SectionRow, SectionsPayload } from '../types/diff';
 import type { CrossReferenceEntry, CrossReferencesPayload } from '../types/crossreferences';
 
 marked.setOptions({ gfm: true, breaks: false });
 
 const route = useRoute();
 const router = useRouter();
-
 const folderName = route.params.folder as string;
 
+const sections = ref<SectionsPayload | null>(null);
+const xrefs = ref<CrossReferencesPayload | null>(null);
 const loading = ref(true);
 const error = ref<string | null>(null);
-const data = ref<CrossReferencesPayload | null>(null);
-const selected = ref<string>((route.query.art as string) || '');
+const selectedKey = ref<string>((route.query.art as string) || '');
 
-const renderedBzo = computed<string>(() => {
-  if (!data.value) return '';
-  return marked.parse(data.value.bzo_markdown) as string;
+const changedRows = computed<SectionRow[]>(() => sections.value?.rows ?? []);
+const currentRow = computed<SectionRow | null>(() => {
+  return changedRows.value.find((r) => r.key === selectedKey.value) ?? null;
+});
+const refsForCurrent = computed<CrossReferenceEntry[]>(() => {
+  if (!selectedKey.value || !xrefs.value) return [];
+  return xrefs.value.cross_references[selectedKey.value] ?? [];
 });
 
-const selectedRefs = computed<CrossReferenceEntry[]>(() => {
-  if (!data.value || !selected.value) return [];
-  return data.value.cross_references[selected.value] ?? [];
-});
+function rowTitle(r: SectionRow): string {
+  return r.title_neu ?? r.title_alt ?? `Art. ${r.key}`;
+}
 
-const selectedHasRefs = computed(() => selectedRefs.value.length > 0);
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
 
-interface DocChip {
-  key: string;
-  label: string;
-  count: number;
+function renderMd(src: string): string {
+  return marked.parse(src) as string;
+}
+
+function renderNeuWithDiff(alt: string, neu: string): string {
+  const parts = diffWordsWithSpace(alt, neu);
+  const merged = parts
+    .filter((p) => !p.removed)
+    .map((p) => (p.added ? `<mark class="diff-add">${escapeHtml(p.value)}</mark>` : p.value))
+    .join('');
+  return marked.parse(merged) as string;
+}
+
+function renderNeuOrDiff(row: SectionRow): string {
+  return row.added ? renderMd(row.neu) : renderNeuWithDiff(row.alt, row.neu);
 }
 
 function docLabel(file: string, labels: string[]): string {
@@ -40,60 +58,30 @@ function docLabel(file: string, labels: string[]): string {
   return file.replace(/\.md$/i, '');
 }
 
-const docTotals = computed<DocChip[]>(() => {
-  if (!data.value) return [];
-  const totals = new Map<string, DocChip>();
-  for (const entries of Object.values(data.value.cross_references)) {
-    for (const e of entries) {
-      const key = e.source_file;
-      const existing = totals.get(key);
-      if (existing) {
-        existing.count += 1;
-      } else {
-        totals.set(key, { key, label: docLabel(e.source_file, e.source_labels), count: 1 });
-      }
-    }
-  }
-  return [...totals.values()].sort((a, b) => b.count - a.count);
-});
-
-function badgeClass(art: string) {
-  const has = (data.value?.cross_references[art]?.length ?? 0) > 0;
-  return {
-    'art-badge': true,
-    'is-selected': art === selected.value,
-    'has-refs': has && art !== selected.value,
-    'no-refs': !has && art !== selected.value,
-  };
-}
-
-function selectArticle(art: string) {
-  selected.value = art;
-  router.replace({ query: { ...route.query, art } });
-  nextTick(() => {
-    const el = document.querySelector(`a[name="art-${art}"]`) as HTMLElement | null;
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  });
+function selectArticle(key: string) {
+  selectedKey.value = key;
+  router.replace({ query: { ...route.query, art: key } });
 }
 
 watch(() => route.query.art, (q) => {
-  if (typeof q === 'string' && q !== selected.value) {
-    selected.value = q;
+  if (typeof q === 'string' && q !== selectedKey.value) {
+    selectedKey.value = q;
   }
 });
 
 onMounted(async () => {
   try {
-    data.value = await api<CrossReferencesPayload>(
-      `/api/municipalities/${folderName}/crossreferences`,
-    );
-    if (!selected.value && data.value.articles.length > 0) {
-      selected.value = data.value.articles[0];
+    const [s, x] = await Promise.all([
+      api<SectionsPayload>(`/api/municipalities/${folderName}/sections`),
+      api<CrossReferencesPayload>(`/api/municipalities/${folderName}/crossreferences`),
+    ]);
+    sections.value = s;
+    xrefs.value = x;
+    if (!selectedKey.value && s.rows.length > 0) {
+      selectArticle(s.rows[0].key);
     }
-  } catch (err: any) {
-    error.value = err.message || String(err);
+  } catch (e: any) {
+    error.value = e.message || String(e);
   } finally {
     loading.value = false;
   }
@@ -101,272 +89,160 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="xref-view">
-    <header class="xref-header">
-      <div class="xref-title">
-        <h1>BZO Querverweise</h1>
-        <span v-if="data" class="xref-subtitle">
-          {{ data.municipality }} — {{ data.bzo_filename }}
-        </span>
+  <div class="container detail-container">
+    <a class="back-btn" @click.prevent="router.push(`/details/${folderName}`)">
+      ← Zurück zur Übersicht
+    </a>
+
+    <h1 class="detail-h1">Details</h1>
+
+    <div v-if="loading" class="diff-status">Lädt...</div>
+    <div v-else-if="error" class="diff-status" style="color:#b91c1c">{{ error }}</div>
+
+    <template v-else>
+      <div class="topic-selector" v-if="changedRows.length > 0">
+        <select :value="selectedKey" @change="selectArticle(($event.target as HTMLSelectElement).value)">
+          <option v-for="r in changedRows" :key="r.key" :value="r.key">
+            Thema: {{ rowTitle(r) }}
+          </option>
+        </select>
       </div>
-      <a class="back-btn" @click.prevent="router.push(`/details/${folderName}`)">Zurück</a>
-    </header>
 
-    <div v-if="loading" class="xref-loading">Lädt...</div>
-    <div v-else-if="error" class="xref-error">{{ error }}</div>
-
-    <div v-else-if="data" class="xref-grid">
-      <article class="xref-doc markdown" v-html="renderedBzo"></article>
-
-      <aside class="xref-side">
-        <div class="xref-selected">
-          <h2>Art. {{ selected || '—' }}</h2>
-          <p class="xref-count">
-            {{ selectedHasRefs
-              ? `${selectedRefs.length} Querverweis${selectedRefs.length === 1 ? '' : 'e'}`
-              : 'Keine Querverweise' }}
-          </p>
-        </div>
-
-        <div class="xref-articles">
-          <button
-            v-for="art in data.articles"
-            :key="art"
-            type="button"
-            :class="badgeClass(art)"
-            @click="selectArticle(art)"
-          >{{ art }}</button>
-        </div>
-
-        <div class="xref-docs">
-          <h3>Dokumente</h3>
-          <div class="xref-doc-chips">
-            <span v-for="d in docTotals" :key="d.key" class="doc-chip">
-              {{ d.label }} <span class="doc-chip-count">{{ d.count }}</span>
-            </span>
+      <div v-if="currentRow" class="detail-card">
+        <header class="detail-card-header">
+          <div>Bisher (Alt)</div>
+          <div>Geplant (Neu)</div>
+          <div>Referenzen &amp; Quellen</div>
+        </header>
+        <div class="detail-card-body">
+          <div class="col col-alt">
+            <strong>{{ currentRow.title_alt ?? currentRow.title_neu }}</strong>
+            <div v-if="currentRow.added" class="cell-empty">Neu eingefügt</div>
+            <div v-else class="markdown" v-html="renderMd(currentRow.alt)"></div>
+          </div>
+          <div class="col col-neu">
+            <strong>{{ currentRow.title_neu ?? currentRow.title_alt }}</strong>
+            <div v-if="currentRow.removed" class="cell-empty">Aufgehoben</div>
+            <div v-else class="markdown" v-html="renderNeuOrDiff(currentRow)"></div>
+          </div>
+          <div class="col col-refs">
+            <p v-if="refsForCurrent.length === 0" class="ref-empty">
+              Keine Querverweise in Begleitdokumenten.
+            </p>
+            <details v-for="(r, i) in refsForCurrent" :key="i" class="ref-detail">
+              <summary>
+                <span class="ref-doc">{{ docLabel(r.source_file, r.source_labels) }}</span>
+                <span class="ref-cite">{{ r.citation_text }}</span>
+              </summary>
+              <p class="ref-paragraph">{{ r.paragraph }}</p>
+            </details>
           </div>
         </div>
+      </div>
 
-        <div class="xref-refs">
-          <p v-if="!selectedHasRefs" class="xref-empty">
-            Dieser Artikel wird in keinem Begleitdokument referenziert.
-          </p>
-          <ul v-else class="xref-ref-list">
-            <li v-for="(r, i) in selectedRefs" :key="i" class="xref-ref">
-              <div class="xref-ref-head">
-                <span class="xref-ref-doc">
-                  {{ docLabel(r.source_file, r.source_labels) }}
-                </span>
-                <span class="xref-ref-cite">{{ r.citation_text }}</span>
-              </div>
-              <p class="xref-ref-paragraph">{{ r.paragraph }}</p>
-            </li>
-          </ul>
-        </div>
-      </aside>
-    </div>
+      <div v-else class="diff-status">
+        Artikel {{ selectedKey || '?' }} nicht in den geänderten Bestimmungen gefunden.
+      </div>
+    </template>
   </div>
 </template>
 
 <style scoped>
-.xref-view {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: var(--bg-color);
+.detail-container {
+  max-width: 1280px;
+}
+.detail-h1 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  margin-bottom: 20px;
 }
 
-.xref-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 28px;
-  background: var(--surface-color);
-  border-bottom: 1px solid var(--border-color);
-  flex-shrink: 0;
+.topic-selector {
+  margin-bottom: 24px;
 }
-.xref-title {
-  display: flex;
-  align-items: baseline;
-  gap: 14px;
+
+.detail-card {
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+.detail-card-header,
+.detail-card-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+}
+.detail-card-header {
+  background: #f8fafc;
+  border-bottom: 1px solid var(--border-color);
+}
+.detail-card-header > div {
+  padding: 16px 20px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.detail-card-header > div + div,
+.detail-card-body > .col + .col {
+  border-left: 1px solid var(--border-color);
+}
+
+.col {
+  padding: 20px;
+  font-size: 15px;
+  line-height: 1.6;
+  vertical-align: top;
   min-width: 0;
 }
-.xref-title h1 {
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: -0.3px;
+.col strong {
+  display: block;
+  margin-bottom: 12px;
 }
-.xref-subtitle {
-  font-size: 14px;
-  color: var(--text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.xref-header .back-btn {
-  margin-bottom: 0;
-  font-weight: 500;
-  color: var(--accent-color);
-}
-.xref-header .back-btn:hover { color: var(--accent-hover); }
-
-.xref-loading,
-.xref-error {
-  padding: 40px;
-  color: var(--text-muted);
-}
-.xref-error { color: #b91c1c; }
-
-.xref-grid {
-  flex: 1;
-  display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(380px, 2fr);
-  gap: 0;
-  overflow: hidden;
-}
-
-.xref-doc {
-  overflow-y: auto;
-  padding: 28px 36px;
-  background: var(--surface-color);
-}
-
-.xref-side {
-  overflow-y: auto;
-  padding: 24px 28px;
-  border-left: 1px solid var(--border-color);
-  background: var(--bg-color);
-}
-
-.xref-selected h2 {
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: -0.3px;
-}
-.xref-count {
-  font-size: 14px;
-  color: var(--text-muted);
-  margin-top: 2px;
-}
-
-.xref-articles {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 16px;
-}
-.art-badge {
-  min-width: 36px;
-  height: 28px;
-  padding: 0 10px;
-  font-size: 13px;
-  font-weight: 600;
-  font-family: inherit;
-  border-radius: 999px;
-  cursor: pointer;
-  border: 1px solid var(--border-color);
-  background: var(--surface-color);
-  color: var(--text-muted);
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
-}
-.art-badge:hover { border-color: var(--accent-color); color: var(--accent-color); }
-.art-badge.has-refs {
-  background: #dbeafe;
-  border-color: #bfdbfe;
-  color: var(--accent-hover);
-}
-.art-badge.has-refs:hover { background: #bfdbfe; }
-.art-badge.is-selected {
-  background: var(--accent-color);
-  border-color: var(--accent-color);
-  color: #fff;
-}
-
-.xref-docs { margin-top: 28px; }
-.xref-docs h3 {
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  color: var(--text-muted);
-  margin-bottom: 10px;
-}
-.xref-doc-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.doc-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  font-size: 13px;
-  border-radius: 999px;
-  background: #dbeafe;
-  color: var(--accent-hover);
-  border: 1px solid #bfdbfe;
-}
-.doc-chip-count {
-  font-weight: 700;
-  font-size: 12px;
-  color: var(--text-muted);
-}
-
-.xref-refs { margin-top: 24px; }
-.xref-empty {
-  font-size: 14px;
+.cell-empty {
   color: var(--text-muted);
   font-style: italic;
 }
-.xref-ref-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+
+.ref-empty {
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 14px;
+}
+.ref-detail {
+  margin-bottom: 8px;
+}
+.ref-detail :deep(summary) {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  align-items: center;
+  gap: 8px;
 }
-.xref-ref {
-  background: var(--surface-color);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius);
-  padding: 12px 14px;
+.ref-doc {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.xref-ref-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 12px;
-  margin-bottom: 6px;
-}
-.xref-ref-doc {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--accent-color);
-}
-.xref-ref-cite {
+.ref-cite {
   font-size: 12px;
+  font-weight: 500;
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
 }
-.xref-ref-paragraph {
-  font-size: 13px;
-  line-height: 1.5;
-  color: var(--text-main);
+.ref-paragraph {
   white-space: pre-wrap;
+  font-size: 13px;
+  color: var(--text-main);
+  line-height: 1.5;
 }
 
-.markdown :deep(h1) {
-  font-size: 22px;
-  margin: 24px 0 12px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid var(--border-color);
-}
-.markdown :deep(h1:first-child) { margin-top: 0; }
-.markdown :deep(h2) { font-size: 18px; margin: 18px 0 8px; }
-.markdown :deep(h3) { font-size: 16px; margin: 14px 0 6px; }
 .markdown :deep(p) { margin: 0 0 12px; }
+.markdown :deep(p:last-child) { margin-bottom: 0; }
 .markdown :deep(ul),
 .markdown :deep(ol) { margin: 0 0 12px 1.25rem; }
 .markdown :deep(table) {
@@ -384,11 +260,22 @@ onMounted(async () => {
 }
 .markdown :deep(th) { background: #f8fafc; font-weight: 600; }
 .markdown :deep(img) { max-width: 100%; height: auto; }
-.markdown :deep(a) { color: var(--accent-color); }
-.markdown :deep(code) {
-  background: #f1f5f9;
-  padding: 1px 4px;
-  border-radius: 4px;
-  font-size: 0.9em;
+.markdown :deep(mark.diff-add) {
+  background: #dcfce7;
+  color: var(--text-main);
+  padding: 0 2px;
+  border-radius: 3px;
+}
+
+@media (max-width: 900px) {
+  .detail-card-header,
+  .detail-card-body {
+    grid-template-columns: 1fr;
+  }
+  .detail-card-header > div + div,
+  .detail-card-body > .col + .col {
+    border-left: none;
+    border-top: 1px solid var(--border-color);
+  }
 }
 </style>
