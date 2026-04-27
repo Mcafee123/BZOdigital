@@ -95,23 +95,23 @@ class TestResolveBatch:
         assert result[_url("bzo-2018.pdf")] == ["Bau- und Zonenordnung alt"]
 
     def test_synopsis_is_single_instance(self):
-        # Two synopsis candidates → uniqueness invariant; both fall back.
+        # Two synopsis candidates → uniqueness invariant; both stay unlabelled.
         items = [
             {"url": _url("sy - synopse-a.pdf"), "title": ""},
             {"url": _url("sy - synopse-b.pdf"), "title": ""},
         ]
         result = resolve_batch(items, db_labels=DB_LABELS)
-        assert result[_url("sy - synopse-a.pdf")] == ["Andere"]
-        assert result[_url("sy - synopse-b.pdf")] == ["Andere"]
+        assert result[_url("sy - synopse-a.pdf")] == []
+        assert result[_url("sy - synopse-b.pdf")] == []
 
-    def test_two_erlauterungsberichte_left_as_other(self):
+    def test_two_erlauterungsberichte_left_unlabelled(self):
         items = [
             {"url": _url("erl - bericht-a.pdf"), "title": ""},
             {"url": _url("erl - bericht-b.pdf"), "title": ""},
         ]
         result = resolve_batch(items, db_labels=DB_LABELS)
-        assert result[_url("erl - bericht-a.pdf")] == ["Andere"]
-        assert result[_url("erl - bericht-b.pdf")] == ["Andere"]
+        assert result[_url("erl - bericht-a.pdf")] == []
+        assert result[_url("erl - bericht-b.pdf")] == []
 
     def test_three_regulations_keeps_extremes(self):
         items = [
@@ -122,8 +122,8 @@ class TestResolveBatch:
         result = resolve_batch(items, db_labels=DB_LABELS)
         assert result[_url("bzo-2026.pdf")] == ["Bau- und Zonenordnung neu"]
         assert result[_url("bzo-2010.pdf")] == ["Bau- und Zonenordnung alt"]
-        # The middle one falls back to Andere.
-        assert result[_url("bzo-2018.pdf")] == ["Andere"]
+        # The middle one is left without a proposed label.
+        assert result[_url("bzo-2018.pdf")] == []
 
     def test_einwendungsbericht_can_repeat(self):
         # Multiple Einwendungsberichte (e.g. one per topic) all get the label.
@@ -155,9 +155,9 @@ class TestResolveBatch:
         result = resolve_batch(items, db_labels=custom)
         assert result[_url("BZO 2026.pdf")] == ["BZO (Neufassung)"]
 
-    def test_rename_that_loses_keywords_falls_back(self):
+    def test_rename_that_loses_keywords_leaves_unlabelled(self):
         # Without 'zonenordnung'/'bzo' or 'neu', the substring rule misses;
-        # classifier falls back to Andere.
+        # the classifier leaves the PDF without a proposed label.
         custom = [
             "Synopse",
             "Bau- und Zonenordnung alt",
@@ -169,13 +169,11 @@ class TestResolveBatch:
         ]
         items = [{"url": _url("BZO 2026.pdf"), "title": "BZO 2026"}]
         result = resolve_batch(items, db_labels=custom)
-        assert result[_url("BZO 2026.pdf")] == ["Andere"]
+        assert result[_url("BZO 2026.pdf")] == []
 
-    def test_missing_andere_label_returns_empty(self):
-        # If "Andere" doesn't exist in DB, unclassifiable PDFs get an empty list.
-        labels_no_fallback = [l for l in DB_LABELS if l != "Andere"]
+    def test_unclassifiable_pdfs_get_empty_list(self):
         items = [{"url": _url("budget-2024.pdf"), "title": "Budget"}]
-        result = resolve_batch(items, db_labels=labels_no_fallback)
+        result = resolve_batch(items, db_labels=DB_LABELS)
         assert result[_url("budget-2024.pdf")] == []
 
 
@@ -236,27 +234,10 @@ class TestSkipIfLabeled:
         assert "Andere" in labels
 
 
-class TestFallbackLabel:
-    def test_returns_andere_when_present(self):
-        from nupla.pipeline.classify import fallback_label
-
-        assert fallback_label(["Synopse", "Andere", "Other"]) == "Andere"
-
-    def test_returns_none_when_missing(self):
-        from nupla.pipeline.classify import fallback_label
-
-        assert fallback_label(["Synopse", "Bau- und Zonenordnung neu"]) is None
-
-    def test_matches_other_or_sonstige_aliases(self):
-        from nupla.pipeline.classify import fallback_label
-
-        assert fallback_label(["Synopse", "Other"]) == "Other"
-        assert fallback_label(["Synopse", "Sonstige"]) == "Sonstige"
-
-
 class TestSeedClassifications:
     """The api.py _seed_classifications helper auto-selects rows that get a
-    real category match (anything other than the fallback label)."""
+    category match. Unclassifiable PDFs come through with an empty label list
+    and stay unselected."""
 
     @pytest.fixture
     def isolated_db(self, tmp_path, monkeypatch):
@@ -272,7 +253,7 @@ class TestSeedClassifications:
 
         pdfs = [
             {"url": _url("sy - synopse.pdf"), "title": ""},  # → Synopse
-            {"url": _url("budget-2024.pdf"), "title": "Budget"},  # → Andere
+            {"url": _url("budget-2024.pdf"), "title": "Budget"},  # → no proposal
         ]
         _seed_classifications(bfs_nr=1, pdfs=pdfs)
 
@@ -280,7 +261,7 @@ class TestSeedClassifications:
         assert anns[_url("sy - synopse.pdf")]["selected"] is True
         assert anns[_url("sy - synopse.pdf")]["labels"] == ["Synopse"]
         assert anns[_url("budget-2024.pdf")]["selected"] is False
-        assert anns[_url("budget-2024.pdf")]["labels"] == ["Andere"]
+        assert anns[_url("budget-2024.pdf")]["labels"] == []
 
     def test_skip_if_labeled_protects_user_state(self, isolated_db):
         from nupla.pipeline.api import _seed_classifications

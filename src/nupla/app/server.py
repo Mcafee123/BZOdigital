@@ -34,22 +34,22 @@ _WS_RE = re.compile(r"\s+")
 app = FastAPI(title="nupla-app", version="0.1.0")
 
 
-@app.on_event("startup")
-def _migrate_absolute_upload_urls() -> None:
-    """Rewrite any absolute upload URLs in the DB to relative paths (one-time)."""
-    with Session(engine) as session:
-        rows = session.exec(
-            select(PdfAnnotation).where(
-                PdfAnnotation.pdf_url.like("http%/api/uploads/%")
-            )
-        ).all()
-        for row in rows:
-            m = _UPLOAD_ABS_RE.match(row.pdf_url)
-            if m:
-                row.pdf_url = m.group(1)
-                session.add(row)
-        if rows:
-            session.commit()
+# @app.on_event("startup")
+# def _migrate_absolute_upload_urls() -> None:
+#     """Rewrite any absolute upload URLs in the DB to relative paths (one-time)."""
+#     with Session(engine) as session:
+#         rows = session.exec(
+#             select(PdfAnnotation).where(
+#                 PdfAnnotation.pdf_url.like("http%/api/uploads/%")
+#             )
+#         ).all()
+#         for row in rows:
+#             m = _UPLOAD_ABS_RE.match(row.pdf_url)
+#             if m:
+#                 row.pdf_url = m.group(1)
+#                 session.add(row)
+#         if rows:
+#             session.commit()
 
 
 app.add_middleware(
