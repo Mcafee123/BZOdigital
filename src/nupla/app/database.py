@@ -5,10 +5,14 @@ from nupla.shared.paths import get_db_path
 
 DB_PATH = get_db_path()
 
-sqlite_url = f"sqlite:///{DB_PATH}"
+# Open as immutable read-only so a WAL-mode DB on a read-only mount (Azure Files
+# in prod) doesn't try to create -shm/-wal sidecars and fail with SQLITE_CANTOPEN.
+sqlite_url = f"sqlite:///file:{DB_PATH}?immutable=1&mode=ro&uri=true"
 
-# We disable check_same_thread because FastAPI uses multiple threads
-engine = create_engine(sqlite_url, connect_args={"check_same_thread": False})
+engine = create_engine(
+    sqlite_url,
+    connect_args={"check_same_thread": False, "uri": True},
+)
 
 def get_session():
     """Dependency for getting a database session."""
