@@ -134,7 +134,7 @@ onMounted(async () => {
                 <span class="ref-doc">{{ docLabel(r.source_file, r.source_labels) }}</span>
                 <span class="ref-cite">{{ r.citation_text }}</span>
               </summary>
-              <p class="ref-paragraph">{{ r.paragraph }}</p>
+              <div class="ref-paragraph markdown" v-html="renderMd(r.paragraph_html ?? r.paragraph)"></div>
             </details>
           </div>
         </div>
@@ -235,7 +235,6 @@ onMounted(async () => {
   flex-shrink: 0;
 }
 .ref-paragraph {
-  white-space: pre-wrap;
   font-size: 13px;
   color: var(--text-main);
   line-height: 1.5;
@@ -262,6 +261,12 @@ onMounted(async () => {
 .markdown :deep(img) { max-width: 100%; height: auto; }
 .markdown :deep(mark.diff-add) {
   background: #dcfce7;
+  color: var(--text-main);
+  padding: 0 2px;
+  border-radius: 3px;
+}
+.markdown :deep(mark.cite) {
+  background: #fef08a;
   color: var(--text-main);
   padding: 0 2px;
   border-radius: 3px;

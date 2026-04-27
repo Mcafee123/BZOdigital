@@ -63,20 +63,26 @@ def compute_cross_references(
         if not result:
             continue
 
-        for cite in result["citations"]:
-            if cite.get("law_abbreviation") != "BZO" or not cite.get("is_resolved"):
-                continue
+        bzo_citations = [
+            c for c in result["citations"]
+            if c.get("law_abbreviation") == "BZO" and c.get("is_resolved")
+        ]
 
+        for cite in bzo_citations:
             provision = cite["provision"]
-            paragraph = _extract_paragraph(
+            paragraph, para_start, para_end = _extract_paragraph(
                 doc.markdown, cite["start_index"], cite["end_index"],
+            )
+            paragraph_html = _highlight_citations(
+                paragraph, para_start, para_end, bzo_citations,
             )
 
             cross_references.setdefault(provision, []).append({
                 "source_file": doc.filename,
                 "source_labels": doc.labels,
                 "citation_text": cite["text"],
-                "paragraph": paragraph,
+                "paragraph": paragraph.strip(),
+                "paragraph_html": paragraph_html,
             })
 
     return CrossRefResult(
@@ -87,12 +93,19 @@ def compute_cross_references(
     )
 
 
-def _extract_paragraph(text: str, start_index: int, end_index: int) -> str:
+def _extract_paragraph(
+    text: str, start_index: int, end_index: int,
+) -> tuple[str, int, int]:
     """Extract the paragraph containing a citation.
 
     Finds the nearest blank-line boundaries, then expands outward when the
     result is very short (common with OCR-broken text or diagram labels).
     For markdown table rows, grabs the full row.
+
+    Returns ``(paragraph_text, start_offset, end_offset)`` where the offsets
+    are absolute positions in ``text``. The slice ``text[start:end]`` matches
+    ``paragraph_text`` exactly (no `.strip()` on the slice — leading/trailing
+    whitespace is preserved so callers can re-locate citations by offset).
     """
     para_start = text.rfind("\n\n", 0, start_index)
     para_start = para_start + 2 if para_start != -1 else 0
@@ -115,15 +128,46 @@ def _extract_paragraph(text: str, start_index: int, end_index: int) -> str:
         if not expanded:
             break
 
-    paragraph = text[para_start:para_end].strip()
+    paragraph = text[para_start:para_end]
 
-    if paragraph.startswith("|") or "\n|" in paragraph:
+    if paragraph.lstrip().startswith("|") or "\n|" in paragraph:
         lines = paragraph.split("\n")
         offset = para_start
         for line in lines:
             line_end = offset + len(line)
             if offset <= start_index < line_end or offset < end_index <= line_end:
-                return line.strip()
+                return line, offset, line_end
             offset = line_end + 1
 
-    return paragraph
+    return paragraph, para_start, para_end
+
+
+def _highlight_citations(
+    paragraph: str,
+    para_start: int,
+    para_end: int,
+    citations: list[dict[str, Any]],
+) -> str:
+    """Wrap each citation that falls inside the paragraph in <mark class="cite">.
+
+    Uses the absolute ``start_index``/``end_index`` from the enrichment output
+    so we don't re-run regex on the snippet. Walks in reverse so insertions
+    don't shift later positions.
+    """
+    in_para = sorted(
+        (c for c in citations if para_start <= c["start_index"] < para_end),
+        key=lambda c: c["start_index"],
+        reverse=True,
+    )
+    out = paragraph
+    for cite in in_para:
+        rel_start = cite["start_index"] - para_start
+        rel_end = min(cite["end_index"] - para_start, len(out))
+        if rel_start < 0 or rel_end <= rel_start:
+            continue
+        out = (
+            out[:rel_start]
+            + '<mark class="cite">' + out[rel_start:rel_end] + '</mark>'
+            + out[rel_end:]
+        )
+    return out.strip()

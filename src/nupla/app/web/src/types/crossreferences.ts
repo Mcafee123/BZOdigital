@@ -3,6 +3,7 @@ export interface CrossReferenceEntry {
   source_labels: string[]
   citation_text: string
   paragraph: string
+  paragraph_html?: string
 }
 
 export interface CrossReferencesPayload {
