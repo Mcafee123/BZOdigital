@@ -29,7 +29,7 @@ jobs:
       - uses: actions/checkout@v5
 
       - name: Build image (Vue SPA + FastAPI)
-        run: docker build -t nupla-app:ci-${{ github.sha }} src/nupla/app/
+        run: docker build -t nupla-app:ci-${{ github.sha }} -f src/nupla/app/Dockerfile .
 
       - uses: hashicorp/setup-terraform@v4
 

@@ -81,13 +81,13 @@ jobs:
       - name: Build and push image
         uses: affolterNET/affolterNET.Github.SharedWorkflows/actions/build-backend@main
         with:
-          project-root:   src/nupla/app
+          project-root:   .
           project-folder: .
           project-file:   pyproject.toml
           version:        ${{ steps.compose.outputs.tag }}
           image-name:     ${{ env.IMAGE_NAME }}
           registry-name:  ${{ env.ACR_LOGIN_SERVER }}
-          dockerfile:     Dockerfile
+          dockerfile:     src/nupla/app/Dockerfile
           push:           'true'
           acr-username:   ${{ steps.compose.outputs.acr-username }}
           acr-password:   ${{ steps.compose.outputs.acr-password }}

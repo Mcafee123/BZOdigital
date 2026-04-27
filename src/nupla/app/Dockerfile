@@ -1,13 +1,13 @@
 # --- Node build stage (Vue SPA) ---
 FROM node:22-slim AS spa-build
 WORKDIR /build/web
-COPY web/package.json web/package-lock.json* ./
+COPY src/nupla/app/web/package.json src/nupla/app/web/package-lock.json* ./
 RUN npm ci
-COPY web/ .
+COPY src/nupla/app/web/ .
 RUN npm run build
 
 # --- Python build stage ---
-# Build context is src/nupla/app/; we install from the root pyproject.toml.
+# Build context is repo root; use: docker build -f src/nupla/app/Dockerfile .
 FROM ghcr.io/astral-sh/uv:python3.12-bookworm AS py-build
 WORKDIR /app
 ENV UV_LINK_MODE=copy \
