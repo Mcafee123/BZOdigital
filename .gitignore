@@ -86,3 +86,7 @@ tf/_project_init/
 # SP login helper generated at scripts/sp_login.sh — contains SP client_id +
 # secret-name pattern. Local convenience only; not needed by CI.
 scripts/sp_login.sh
+
+
+# Powerpoint
+~$*.pptx
