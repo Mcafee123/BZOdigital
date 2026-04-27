@@ -25,10 +25,13 @@
     .search-box {
       position: relative;
       margin-bottom: 1.5rem;
+      display: flex;
+      gap: 8px;
+      align-items: center;
     }
 
     input[type="text"] {
-      width: 100%;
+      flex: 1;
       padding: 0.75rem 1rem;
       font-size: 1rem;
       border: 2px solid #ccc;
@@ -38,6 +41,20 @@
     }
 
     input[type="text"]:focus { border-color: #2563eb; }
+
+    #reset-btn {
+      display: none;
+      padding: 0.55rem 0.9rem;
+      font-size: 0.8rem;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      background: white;
+      color: #6b7280;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+    #reset-btn:hover { border-color: #ef4444; color: #ef4444; }
 
     .suggestions {
       position: absolute;
@@ -560,6 +577,7 @@
 
   <div class="search-box">
     <input type="text" id="search" placeholder="Gemeinde suchen..." autocomplete="off">
+    <button id="reset-btn" title="Cache und Labels zurücksetzen">Clear</button>
     <div class="suggestions" id="suggestions"></div>
   </div>
 
@@ -826,8 +844,7 @@
           return;
         }
 
-        statusEl.innerHTML = `${allPdfs.length} BZO document(s) for ${esc(data.municipality)} (${esc(data.canton)}). [${method}${cached}]`
-          + ` <a href="#" id="reset-municipality" style="color:#6b7280;font-size:0.85em;margin-left:4px" title="Cache und Labels zurücksetzen">clear</a>`;
+        statusEl.textContent = `${allPdfs.length} BZO document(s) for ${data.municipality} (${data.canton}). [${method}${cached}]`;
 
         resultsEl.innerHTML = allPdfs.map((pdf, idx) => {
           const filename = decodeURIComponent(pdf.url.split('/').pop().split('?')[0]);
@@ -962,16 +979,14 @@
         loadExistingFiles(muni.name);
         checkCompareStatus(muni.name);
 
-        // Wire up "clear" button (reset cache + annotations, re-search)
-        const resetBtn = document.getElementById('reset-municipality');
-        if (resetBtn) {
-          resetBtn.addEventListener('click', async (e) => {
-            e.preventDefault();
-            if (!confirm('Cache und Labels für ' + muni.name + ' zurücksetzen?')) return;
-            await fetch(`/api/bzo/${encodeURIComponent(muni.name)}/reset`, { method: 'DELETE' });
-            await selectMunicipality(muni);
-          });
-        }
+        // Show the reset button
+        const resetBtn = document.getElementById('reset-btn');
+        resetBtn.style.display = 'block';
+        resetBtn.onclick = async () => {
+          if (!confirm('Cache und Labels für ' + muni.name + ' zurücksetzen?')) return;
+          await fetch(`/api/bzo/${encodeURIComponent(muni.name)}/reset`, { method: 'DELETE' });
+          await selectMunicipality(muni);
+        };
 
       } catch (err) {
         statusEl.className = 'status error';
