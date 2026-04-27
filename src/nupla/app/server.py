@@ -157,20 +157,28 @@ def get_municipality_pdfs(folder: str, session: Session = Depends(get_session)):
         raise HTTPException(status_code=404, detail="Municipality not found")
 
     pdfs = session.exec(
-        select(PdfAnnotation).where(PdfAnnotation.municipality_bfs_nr == muni.bfs_nr)
+        select(PdfAnnotation).where(
+            PdfAnnotation.municipality_bfs_nr == muni.bfs_nr,
+            PdfAnnotation.selected == True,  # noqa: E712
+        )
     ).all()
+
+    md_dir = get_data_path() / folder.lower() / "md"
 
     results = []
     for pdf in pdfs:
         try:
             labels = json.loads(pdf.labels_json)
-            label = (
-                labels[0]
-                if isinstance(labels, list) and len(labels) > 0
-                else pdf.pdf_title
-            )
+            if not isinstance(labels, list) or len(labels) == 0:
+                continue
+            label = labels[0]
         except (ValueError, KeyError, json.JSONDecodeError):
-            label = pdf.pdf_title
+            continue
+
+        # Only include PDFs whose markdown conversion exists
+        md_name = _pdf_url_to_md_name(pdf.pdf_url)
+        if not md_dir.is_dir() or not (md_dir / md_name).is_file():
+            continue
 
         # Normalise legacy absolute upload URLs to relative paths
         url = pdf.pdf_url
