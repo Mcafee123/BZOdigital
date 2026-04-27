@@ -1,0 +1,24 @@
+#!/bin/sh
+# Fold the SQLite WAL into data/bzo.db before commit so the file we ship has
+# the actual data. *.db-wal/*.db-shm are gitignored, so without this any
+# uncheckpointed writes would not reach prod.
+set -e
+if git diff --cached --name-only --diff-filter=ACM | grep -qx 'data/bzo.db'; then
+    if ! command -v sqlite3 >/dev/null 2>&1; then
+        echo "pre-commit: sqlite3 not on PATH; install it or skip with --no-verify" >&2
+        exit 1
+    fi
+    # PRAGMA wal_checkpoint(TRUNCATE) returns "busy|log_pages|checkpointed_pages".
+    # busy != 0 means another connection blocked the checkpoint (data left in WAL).
+    # log != checkpointed means not all WAL pages made it into the main file.
+    result=$(sqlite3 data/bzo.db 'PRAGMA wal_checkpoint(TRUNCATE);')
+    busy=$(echo "$result" | cut -d'|' -f1)
+    log=$(echo "$result" | cut -d'|' -f2)
+    ckp=$(echo "$result" | cut -d'|' -f3)
+    if [ "$busy" != "0" ] || [ "$log" != "$ckp" ]; then
+        echo "pre-commit: WAL checkpoint incomplete (busy=$busy log=$log checkpointed=$ckp)" >&2
+        echo "  another process has data/bzo.db open. Stop it (try: lsof data/bzo.db) and retry." >&2
+        exit 1
+    fi
+    git add data/bzo.db
+fi
