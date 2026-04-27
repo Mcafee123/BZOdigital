@@ -135,6 +135,13 @@ onMounted(async () => {
           >
             Diff
           </button>
+          <button
+            type="button"
+            class="toggle-link"
+            @click="router.push(`/crossreferences/${folderName}`)"
+          >
+            Details →
+          </button>
         </div>
 
         <div v-if="viewMode === 'overview'">
@@ -213,6 +220,12 @@ onMounted(async () => {
   background: var(--surface-color);
   color: var(--text-main);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+.toggle-wrapper button.toggle-link {
+  color: var(--accent-color);
+}
+.toggle-wrapper button.toggle-link:hover {
+  color: var(--accent-hover);
 }
 
 .table-container {

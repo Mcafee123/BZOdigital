@@ -2,12 +2,13 @@
 
 import json
 from datetime import datetime, timedelta
-from pathlib import Path
 from typing import Optional
 
 from sqlmodel import Field, Session, SQLModel, create_engine, select
 
-DB_PATH = Path(__file__).resolve().parent.parent.parent.parent / "data" / "bzo.db"
+from nupla.shared.paths import get_db_path
+
+DB_PATH = get_db_path()
 
 engine = None
 

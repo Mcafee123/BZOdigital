@@ -1,10 +1,14 @@
-"""Wrapper around law_enrichment for use in the pipeline."""
+"""Safe wrapper around law_enrichment.
+
+Catches errors from the citation-extraction engine so callers can degrade
+gracefully (return raw markdown, skip a doc, etc.) instead of 500-ing.
+"""
 
 from __future__ import annotations
 
 from typing import Any, Dict, Optional
 
-from nupla.pipeline.law_enrichment import enrich_markdown, LawEntry
+from nupla.shared.law_enrichment import enrich_markdown, LawEntry
 
 
 def enrich_markdown_safe(

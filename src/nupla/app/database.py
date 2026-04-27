@@ -1,9 +1,9 @@
 """Database connection and models for the nupla-app backend."""
 from sqlmodel import Field, Session, SQLModel, create_engine
 
-from .paths import get_data_path
+from nupla.shared.paths import get_db_path
 
-DB_PATH = get_data_path() / "bzo.db"
+DB_PATH = get_db_path()
 
 sqlite_url = f"sqlite:///{DB_PATH}"
 

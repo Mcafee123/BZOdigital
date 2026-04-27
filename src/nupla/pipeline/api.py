@@ -33,7 +33,8 @@ from nupla.pipeline.db import (
     upsert_annotation,
 )
 from nupla.pipeline.converter import compare_documents, convert_pdf_stream, download_pdf
-from nupla.pipeline.enrichment import build_bzo_custom_law, enrich_markdown_safe
+from nupla.pipeline.crossreferences import get_cross_references_for_municipality
+from nupla.shared.enrichment import build_bzo_custom_law, enrich_markdown_safe
 from nupla.pipeline.profiles import DEFAULT_PROFILE, PROFILES
 from nupla.pipeline.search import (
     extract_pdfs,
@@ -43,6 +44,13 @@ from nupla.pipeline.search import (
     search_or_crawl_open,
     search_or_crawl_site,
 )
+from nupla.pipeline.lookup import (
+    _find_md_for_label,
+    _pdf_filename,
+    _resolve_municipality,
+    _slug,
+)
+from nupla.shared.paths import get_data_path
 
 security = HTTPBasic()
 
@@ -472,18 +480,7 @@ async def serve_upload(municipality_slug: str, filename: str):
 _jobs: dict[str, JobState] = {}
 _queues: dict[str, asyncio.Queue] = {}
 
-DATA_DIR = Path(__file__).resolve().parent.parent.parent.parent / "data"
-
-
-def _slug(name: str) -> str:
-    """Municipality name → filesystem slug (lowercase, no spaces)."""
-    return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
-
-
-def _pdf_filename(url: str) -> str:
-    """Extract a clean filename from a PDF URL."""
-    raw = unquote(url.split("/")[-1].split("?")[0])
-    return raw if raw.endswith(".pdf") else raw + ".pdf"
+DATA_DIR = get_data_path()
 
 
 @app.post("/api/process/{municipality_name}")
@@ -643,133 +640,11 @@ def get_file_preview(
 LABEL_ALT = "Bau- und Zonenordnung alt"
 LABEL_NEU = "Bau- und Zonenordnung neu"
 
-_ARTICLE_HEADING_RE = re.compile(r"^#{1,6}\s+Art\.?\s*(\d+[a-zA-Z]?)\b", re.MULTILINE)
-
-
-_MIN_PARAGRAPH_LEN = 80
-
-
-def _extract_paragraph(text: str, start_index: int, end_index: int) -> str:
-    """Extract the paragraph containing a citation.
-
-    Finds the nearest blank-line boundaries, then expands outward when the
-    result is very short (common with OCR-broken text or diagram labels).
-    For markdown table rows, grabs the full row.
-    """
-    para_start = text.rfind("\n\n", 0, start_index)
-    para_start = para_start + 2 if para_start != -1 else 0
-    para_end = text.find("\n\n", end_index)
-    if para_end == -1:
-        para_end = len(text)
-
-    # Expand short paragraphs by merging adjacent blocks (OCR fragments)
-    for _ in range(3):
-        if para_end - para_start >= _MIN_PARAGRAPH_LEN:
-            break
-        expanded = False
-        # Try expanding forward
-        next_end = text.find("\n\n", para_end + 2)
-        if next_end != -1 and next_end - para_start < 500:
-            para_end = next_end
-            expanded = True
-        # Try expanding backward
-        prev_start = text.rfind("\n\n", 0, para_start - 2) if para_start > 2 else -1
-        if prev_start != -1 and para_end - (prev_start + 2) < 500:
-            para_start = prev_start + 2
-            expanded = True
-        if not expanded:
-            break
-
-    paragraph = text[para_start:para_end].strip()
-
-    # For table rows: extract just the row containing the citation
-    if paragraph.startswith("|") or "\n|" in paragraph:
-        lines = paragraph.split("\n")
-        offset = para_start
-        for line in lines:
-            line_end = offset + len(line)
-            if offset <= start_index < line_end or offset < end_index <= line_end:
-                # Include separator rows around the match for context
-                return line.strip()
-            offset = line_end + 1  # +1 for \n
-
-    return paragraph
-
-
-def _build_md_label_map(annotations: list[dict]) -> dict[str, list[str]]:
-    """Map markdown filenames to their annotation labels."""
-    label_map: dict[str, list[str]] = {}
-    for ann in annotations:
-        if not ann.get("labels"):
-            continue
-        md_name = Path(_pdf_filename(ann["pdf_url"])).stem + ".md"
-        label_map[md_name] = ann["labels"]
-    return label_map
-
 
 @app.get("/api/crossrefs/{municipality_name}")
 def get_cross_references(municipality_name: str):
     """Pre-compute all BZO cross-references for a municipality."""
-    muni = _resolve_municipality(municipality_name)
-    slug = _slug(muni.name)
-    md_dir = DATA_DIR / slug / "md"
-    anns = get_annotations(muni.bfs_nr)
-
-    bzo_path = _find_md_for_label(anns, LABEL_NEU, md_dir)
-    if not bzo_path:
-        raise HTTPException(404, "No file labeled 'Bau- und Zonenordnung neu' found.")
-
-    bzo_markdown = bzo_path.read_text(encoding="utf-8")
-    custom_laws = [build_bzo_custom_law(bzo_path.name)]
-
-    # Enrich the BZO itself (for anchors + self-reference links)
-    bzo_result = enrich_markdown_safe(bzo_markdown, custom_laws=custom_laws)
-    bzo_enriched = bzo_result["markdown"] if bzo_result else bzo_markdown
-
-    # Extract article list from BZO headings
-    articles = _ARTICLE_HEADING_RE.findall(bzo_markdown)
-
-    # Build filename → labels map from annotations
-    label_map = _build_md_label_map(anns)
-
-    # Collect cross-references from all companion documents
-    cross_references: dict[str, list[dict]] = {}
-    for md_file in sorted(md_dir.glob("*.md")):
-        if md_file.name == bzo_path.name:
-            continue
-
-        companion_md = md_file.read_text(encoding="utf-8")
-        result = enrich_markdown_safe(
-            companion_md, default_law="BZO", custom_laws=custom_laws,
-        )
-        if not result:
-            continue
-
-        labels = label_map.get(md_file.name, [])
-
-        for cite in result["citations"]:
-            if cite.get("law_abbreviation") != "BZO" or not cite.get("is_resolved"):
-                continue
-
-            provision = cite["provision"]
-            paragraph = _extract_paragraph(
-                companion_md, cite["start_index"], cite["end_index"],
-            )
-
-            cross_references.setdefault(provision, []).append({
-                "source_file": md_file.name,
-                "source_labels": labels,
-                "citation_text": cite["text"],
-                "paragraph": paragraph,
-            })
-
-    return {
-        "municipality": muni.name,
-        "bzo_filename": bzo_path.name,
-        "bzo_markdown": bzo_enriched,
-        "articles": articles,
-        "cross_references": cross_references,
-    }
+    return get_cross_references_for_municipality(municipality_name, data_dir=DATA_DIR)
 
 
 # --- Compare ---
@@ -831,17 +706,6 @@ async def run_compare(municipality_name: str):
         "diff_path": str(diff_path.relative_to(DATA_DIR)),
         "processing_time_ms": result.get("processing_time_ms"),
     }
-
-
-def _find_md_for_label(annotations: list[dict], label: str, md_dir: Path) -> Path | None:
-    """Find the markdown file for a PDF annotation with a specific label."""
-    for ann in annotations:
-        if label in ann.get("labels", []) and ann.get("selected"):
-            md_name = Path(_pdf_filename(ann["pdf_url"])).stem + ".md"
-            md_path = md_dir / md_name
-            if md_path.exists():
-                return md_path
-    return None
 
 
 async def _process_job(job_id: str, municipality_name: str, queue: asyncio.Queue):
@@ -945,17 +809,6 @@ def _seed_classifications(bfs_nr: int, pdfs: list[dict]) -> dict[str, list[str]]
             skip_if_labeled=True,
         )
     return suggestions
-
-
-def _resolve_municipality(name: str) -> Municipality:
-    """Fuzzy-resolve a municipality name, raise 404 if not found."""
-    municipalities = load_bfs()
-    if not municipalities:
-        raise HTTPException(status_code=500, detail="BFS register not loaded.")
-    matches = fuzzy_find_municipality(name, municipalities, limit=1)
-    if not matches or matches[0][1] < 60:
-        raise HTTPException(status_code=404, detail=f"Municipality '{name}' not found.")
-    return matches[0][0]
 
 
 def _make_cache_key(muni: Municipality, profile: str) -> str:

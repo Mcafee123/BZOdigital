@@ -1,18 +1,21 @@
 """FastAPI backend that serves the SPA and exposes diff endpoints."""
 from __future__ import annotations
 
+import dataclasses
+import json
 import os
 import re
 from pathlib import Path
+from urllib.parse import unquote
 
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session, select, func
-import json
 
 from .database import get_session, BfsMunicipality, PdfAnnotation
-from .paths import get_data_path
+from nupla.shared.crossreferences import CompanionDoc, compute_cross_references
+from nupla.shared.paths import get_data_path
 
 WEB_DIST = Path(os.environ.get("WEB_DIST", "/app/web/dist"))
 
@@ -221,6 +224,71 @@ def get_municipality_sections(folder: str, session: Session = Depends(get_sessio
         "neu_filename": neu_filename,
         "rows": rows,
     }
+
+
+_LABEL_NEU = "Bau- und Zonenordnung neu"
+
+
+def _pdf_url_to_md_name(pdf_url: str) -> str:
+    raw = unquote(pdf_url.split("/")[-1].split("?")[0])
+    stem = raw[:-4] if raw.endswith(".pdf") else raw
+    return stem + ".md"
+
+
+@app.get("/api/municipalities/{folder}/crossreferences")
+def get_municipality_crossreferences(folder: str, session: Session = Depends(get_session)):
+    """Pre-compute all BZO cross-references for the municipality at `folder`."""
+    muni = session.exec(
+        select(BfsMunicipality).where(func.lower(BfsMunicipality.name) == folder.lower())
+    ).first()
+    if not muni:
+        raise HTTPException(status_code=404, detail="Municipality not found")
+
+    md_dir = get_data_path() / folder.lower() / "md"
+    if not md_dir.is_dir():
+        raise HTTPException(status_code=404, detail=f"No markdown directory for {folder}")
+
+    pdfs = session.exec(
+        select(PdfAnnotation).where(PdfAnnotation.municipality_bfs_nr == muni.bfs_nr)
+    ).all()
+
+    bzo_md_name: str | None = None
+    label_map: dict[str, list[str]] = {}
+    for pdf in pdfs:
+        try:
+            labels = json.loads(pdf.labels_json) or []
+        except Exception:
+            labels = []
+        md_name = _pdf_url_to_md_name(pdf.pdf_url)
+        label_map[md_name] = labels
+        if pdf.selected and _LABEL_NEU in labels and (md_dir / md_name).is_file():
+            bzo_md_name = md_name
+
+    if not bzo_md_name:
+        raise HTTPException(
+            status_code=404,
+            detail="No file labeled 'Bau- und Zonenordnung neu' found.",
+        )
+
+    bzo_path = md_dir / bzo_md_name
+    bzo_markdown = bzo_path.read_text(encoding="utf-8")
+
+    companions = [
+        CompanionDoc(
+            filename=p.name,
+            markdown=p.read_text(encoding="utf-8"),
+            labels=label_map.get(p.name, []),
+        )
+        for p in sorted(md_dir.glob("*.md"))
+        if p.name != bzo_md_name
+    ]
+
+    result = compute_cross_references(
+        bzo_filename=bzo_md_name,
+        bzo_markdown=bzo_markdown,
+        companions=companions,
+    )
+    return {"municipality": muni.name, **dataclasses.asdict(result)}
 
 
 if WEB_DIST.is_dir():
