@@ -6,7 +6,7 @@ See [`CLAUDE.md`](./CLAUDE.md) for project goals, the staged pipeline (Collect �
 
 ## Repository layout
 
-- `src/nupla/` — **stage I (Collect):** Python package that discovers and downloads BZO PDFs for any Swiss municipality. Ships a `bzo` CLI and a FastAPI service.
+- `src/nupla/pipeline/` — **stage I (Collect):** Python package that discovers and downloads BZO PDFs for any Swiss municipality. Ships a `bzo` CLI and a FastAPI service.
 - `app/` — **stage IV slice:** Vue 3 SPA + FastAPI BFF that renders a unified-diff file. See [`app/README.md`](./app/README.md).
 - `data/<municipality>/src/*.pdf` — original source PDFs (currently only `oberrieden`).
 - `tf/` — Terraform for deploying `app/` to Azure Container Apps (PROD only).
@@ -17,7 +17,7 @@ Pipeline stages II (extract) and III (connect) are not yet implemented.
 
 ## Stage I: the `nupla` collector/search service
 
-Lives in `src/nupla/`. Independent from `app/` — different package, different `pyproject.toml` (this repo's root `pyproject.toml`).
+Lives in `src/nupla/pipeline/`. Independent from `app/` — different package, different `pyproject.toml` (this repo's root `pyproject.toml`).
 
 ### Modules
 

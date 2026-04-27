@@ -1,6 +1,6 @@
 """Tests for domain inference from search results."""
 
-from nupla.search import infer_domain
+from nupla.pipeline.search import infer_domain
 
 
 class TestInferDomain:

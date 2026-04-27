@@ -18,10 +18,10 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from nupla.bfs import Municipality, fuzzy_find_municipality, load_bfs, update_bfs_register
-from nupla.cantons import find_url, get_canton
-from nupla.classify import fallback_label, resolve_batch as classify_batch
-from nupla.db import (
+from nupla.pipeline.bfs import Municipality, fuzzy_find_municipality, load_bfs, update_bfs_register
+from nupla.pipeline.cantons import find_url, get_canton
+from nupla.pipeline.classify import fallback_label, resolve_batch as classify_batch
+from nupla.pipeline.db import (
     add_label,
     clear_search_cache,
     delete_annotation,
@@ -32,10 +32,10 @@ from nupla.db import (
     save_search_cache,
     upsert_annotation,
 )
-from nupla.converter import compare_documents, convert_pdf_stream, download_pdf
-from nupla.enrichment import build_bzo_custom_law, enrich_markdown_safe
-from nupla.profiles import DEFAULT_PROFILE, PROFILES
-from nupla.search import (
+from nupla.pipeline.converter import compare_documents, convert_pdf_stream, download_pdf
+from nupla.pipeline.enrichment import build_bzo_custom_law, enrich_markdown_safe
+from nupla.pipeline.profiles import DEFAULT_PROFILE, PROFILES
+from nupla.pipeline.search import (
     extract_pdfs,
     filter_pdfs_by_metadata,
     has_serper_key,
@@ -385,7 +385,7 @@ async def get_processed(municipality_name: str):
 
     all_pdfs: list[AnnotationResponse] = []
     if cached_results:
-        from nupla.search import extract_pdfs, filter_pdfs_by_metadata
+        from nupla.pipeline.search import extract_pdfs, filter_pdfs_by_metadata
         seen: set[str] = set()
         raw_pdfs: list[dict] = []
         tasks = [extract_pdfs(r["url"]) for r in cached_results]
@@ -472,7 +472,7 @@ async def serve_upload(municipality_slug: str, filename: str):
 _jobs: dict[str, JobState] = {}
 _queues: dict[str, asyncio.Queue] = {}
 
-DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
+DATA_DIR = Path(__file__).resolve().parent.parent.parent.parent / "data"
 
 
 def _slug(name: str) -> str:
@@ -1036,4 +1036,4 @@ async def _batch_worker(municipality_names: list[str]):
 def start():
     """Entry point for nupla-api."""
     import uvicorn
-    uvicorn.run("nupla.api:app", host="0.0.0.0", port=7000, reload=True)
+    uvicorn.run("nupla.pipeline.api:app", host="0.0.0.0", port=7000, reload=True)

@@ -1,6 +1,6 @@
 """Backward-compatible shim — delegates to canton registry."""
 
-from nupla.cantons import get_canton
+from nupla.pipeline.cantons import get_canton
 
 
 async def get_gemeinden(force_refresh: bool = False) -> list[dict[str, str]]:

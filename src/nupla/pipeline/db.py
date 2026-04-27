@@ -7,7 +7,7 @@ from typing import Optional
 
 from sqlmodel import Field, Session, SQLModel, create_engine, select
 
-DB_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "bzo.db"
+DB_PATH = Path(__file__).resolve().parent.parent.parent.parent / "data" / "bzo.db"
 
 engine = None
 

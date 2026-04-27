@@ -7,8 +7,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from nupla.converter import download_pdf, convert_pdf_stream
-from nupla.enrichment import enrich_markdown_safe
+from nupla.pipeline.converter import download_pdf, convert_pdf_stream
+from nupla.pipeline.enrichment import enrich_markdown_safe
 
 URL = "https://www.oberrieden.ch/system/files/aktuell/dateien/BZO-Revision%20IVHB%20Erl%C3%A4uternder%20Bericht%20inkl.%20Anhang.pdf"
 

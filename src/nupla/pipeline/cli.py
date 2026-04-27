@@ -6,11 +6,11 @@ import sys
 
 from dotenv import load_dotenv
 
-from nupla.bfs import fuzzy_find_municipality, load_bfs, update_bfs_register
-from nupla.cantons import find_url, get_canton
-from nupla.db import init_db
-from nupla.profiles import DEFAULT_PROFILE, PROFILES
-from nupla.search import (
+from nupla.pipeline.bfs import fuzzy_find_municipality, load_bfs, update_bfs_register
+from nupla.pipeline.cantons import find_url, get_canton
+from nupla.pipeline.db import init_db
+from nupla.pipeline.profiles import DEFAULT_PROFILE, PROFILES
+from nupla.pipeline.search import (
     check_pdf_content,
     extract_pdfs,
     filter_pdfs_by_metadata,
@@ -60,7 +60,7 @@ def main():
 
     if args.command == "serve":
         import uvicorn
-        uvicorn.run("nupla.api:app", host=args.host, port=args.port, reload=True)
+        uvicorn.run("nupla.pipeline.api:app", host=args.host, port=args.port, reload=True)
     else:
         asyncio.run(_dispatch(args))
 

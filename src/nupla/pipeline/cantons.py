@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable
 
 from thefuzz import fuzz, process
 
-from nupla.db import init_db, load_canton_from_db, save_canton_to_db
+from nupla.pipeline.db import init_db, load_canton_from_db, save_canton_to_db
 
 # Type for a canton scraper function
 type CantonScraper = Callable[[], Awaitable[list[dict[str, str]]]]
@@ -54,4 +54,4 @@ def find_url(name: str, canton_data: list[dict[str, str]]) -> str | None:
 
 
 # Auto-discover canton scrapers
-from nupla import cantons_zh as _  # noqa: F401, E402
+from nupla.pipeline import cantons_zh as _  # noqa: F401, E402

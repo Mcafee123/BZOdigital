@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from nupla.converter import convert_pdf_stream, _base_url
+from nupla.pipeline.converter import convert_pdf_stream, _base_url
 
 
 async def main():

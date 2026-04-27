@@ -8,8 +8,8 @@ from urllib.parse import urljoin, urlparse
 import httpx
 from bs4 import BeautifulSoup
 
-from nupla.profiles import SearchProfile
-from nupla.search import parse_pdf_links
+from nupla.pipeline.profiles import SearchProfile
+from nupla.pipeline.search import parse_pdf_links
 
 IGNORED_EXTENSIONS = frozenset({
     ".jpg", ".jpeg", ".png", ".gif", ".svg", ".ico", ".webp",

@@ -11,7 +11,7 @@ Top-level contents:
 - `LICENSE` — MIT
 - `docs/*.jpg` — hand-drawn whiteboard slides describing the project's intent, user stories, tasks, and challenges. They are the closest thing to a spec; read them before proposing structure.
 - `data/<municipality>/src/*.pdf` — original source documents per Swiss municipality (currently only `oberrieden`). These are the inputs the pipeline will consume.
-- `src/nupla/` — Python package for stage I: discover and collect BZO PDFs for any Swiss municipality. Ships a `bzo` CLI (`bfs-update`, `refresh`, `list`, `search`, `serve`) and a FastAPI app (`bzo-api`) that also serves a vanilla-JS UI from `src/nupla/static/`. Pipeline-side; independent from `app/`.
+- `src/nupla/pipeline/` — Python package for stage I: discover and collect BZO PDFs for any Swiss municipality. Ships a `bzo` CLI (`bfs-update`, `refresh`, `list`, `search`, `serve`) and a FastAPI app (`bzo-api`) that also serves a vanilla-JS UI from `src/nupla/pipeline/static/`. Pipeline-side; independent from `app/`.
 - `app/` — Vue 3 SPA + FastAPI BFF boilerplate that renders a unified-diff file. First concrete piece of stage IV. See `app/README.md` for local dev (`uv sync` + `npm run dev`), container build, and the deploy prereqs.
 - `tf/` — Terraform for deploying `app/` to Azure Container Apps. PROD-only environment. Generic, public-safe code; private bootstrap (`tf/_project_init/`) is gitignored.
 - `.github/workflows/` — `build.yml` (sanity Docker build), `deploy-prod.yml` (build + push + `terraform apply` on push to `main`), `upload-data.yml` (sync `data/` and `app/data/` to the mounted Azure File share when those paths change).
@@ -35,7 +35,7 @@ Goals captured in the whiteboard docs:
 
 The work is staged. Future code should slot into one of these stages:
 
-- **I. Collect** source documents per municipality. Implemented in `src/nupla/`: BFS municipality register lookup, canton-level URL mapping (e.g. `cantons_zh.py`), Serper-or-Playwright web search, PDF discovery and metadata/content filtering. Manual drops into `data/<municipality>/src/` remain supported.
+- **I. Collect** source documents per municipality. Implemented in `src/nupla/pipeline/`: BFS municipality register lookup, canton-level URL mapping (e.g. `cantons_zh.py`), Serper-or-Playwright web search, PDF discovery and metadata/content filtering. Manual drops into `data/<municipality>/src/` remain supported.
 - **II. Extract** text and images from PDFs → Markdown.
 - **III. Connect** extracted content into consolidated data; **IIIa.** organize topic-by-topic with back-references to the source PDFs (preserve "ground truth" linkage — this is called out explicitly in `docs/2. ba.jpg`).
 - **IV. Frontend** — feed the consolidated data to an LLM with task-specific prompts for the user stories above.

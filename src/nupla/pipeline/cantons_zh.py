@@ -1,6 +1,6 @@
 """Zurich canton scraper — extracts Gemeinde names and website URLs from gpvzh.ch."""
 
-from nupla.cantons import register
+from nupla.pipeline.cantons import register
 
 SOURCE_URL = "https://www.gpvzh.ch/gemeindenabisz"
 

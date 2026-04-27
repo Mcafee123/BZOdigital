@@ -170,7 +170,7 @@ def resolve_batch(
     """
     items = list(items)
     if db_labels is None:
-        from nupla.db import get_labels  # local import to avoid cycles in tests
+        from nupla.pipeline.db import get_labels  # local import to avoid cycles in tests
         db_labels = get_labels()
     db_labels = list(db_labels)
 
