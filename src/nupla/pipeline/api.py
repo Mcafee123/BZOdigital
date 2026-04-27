@@ -225,6 +225,13 @@ async def on_startup():
         asyncio.create_task(_seed_in_background())
 
 
+@app.on_event("shutdown")
+def on_shutdown():
+    from nupla.pipeline.db import dispose_engine
+
+    dispose_engine()
+
+
 async def _seed_in_background():
     global _seeding
     _seeding = True

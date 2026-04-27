@@ -100,6 +100,16 @@ def _seed_default_labels():
         session.commit()
 
 
+def dispose_engine():
+    """Checkpoint the WAL and dispose the engine (call on shutdown)."""
+    global engine
+    if engine is not None:
+        with engine.connect() as conn:
+            conn.execute(__import__("sqlalchemy").text("PRAGMA wal_checkpoint(TRUNCATE)"))
+        engine.dispose()
+        engine = None
+
+
 def get_session():
     """Get a new session. Use as context manager or FastAPI dependency."""
     return Session(get_engine())
