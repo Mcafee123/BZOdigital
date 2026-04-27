@@ -19,13 +19,40 @@ const loading = ref(true);
 const error = ref<string | null>(null);
 const selectedKey = ref<string>((route.query.art as string) || '');
 
+const _DEFAULT_EXCLUDED = new Set(['Synopse', 'Bau- und Zonenordnung alt']);
+
 const changedRows = computed<SectionRow[]>(() => sections.value?.rows ?? []);
 const currentRow = computed<SectionRow | null>(() => {
   return changedRows.value.find((r) => r.key === selectedKey.value) ?? null;
 });
+
+const excludedDocs = ref<Set<string>>(new Set(_DEFAULT_EXCLUDED));
+
+const allSourceDocs = computed<string[]>(() => {
+  if (!xrefs.value) return [];
+  const docs = new Set<string>();
+  for (const refs of Object.values(xrefs.value.cross_references)) {
+    for (const r of refs) {
+      docs.add(docLabel(r.source_file, r.source_labels));
+    }
+  }
+  return [...docs].sort();
+});
+
+function toggleDoc(doc: string) {
+  const next = new Set(excludedDocs.value);
+  if (next.has(doc)) {
+    next.delete(doc);
+  } else {
+    next.add(doc);
+  }
+  excludedDocs.value = next;
+}
+
 const refsForCurrent = computed<CrossReferenceEntry[]>(() => {
   if (!selectedKey.value || !xrefs.value) return [];
-  return xrefs.value.cross_references[selectedKey.value] ?? [];
+  const all = xrefs.value.cross_references[selectedKey.value] ?? [];
+  return all.filter((r) => !excludedDocs.value.has(docLabel(r.source_file, r.source_labels)));
 });
 
 function rowTitle(r: SectionRow): string {
@@ -126,6 +153,16 @@ onMounted(async () => {
             <div v-else class="markdown" v-html="renderNeuOrDiff(currentRow)"></div>
           </div>
           <div class="col col-refs">
+            <div v-if="allSourceDocs.length > 0" class="doc-filters">
+              <button
+                v-for="doc in allSourceDocs"
+                :key="doc"
+                :class="['doc-chip', { excluded: excludedDocs.has(doc) }]"
+                @click="toggleDoc(doc)"
+              >
+                {{ doc }}
+              </button>
+            </div>
             <p v-if="refsForCurrent.length === 0" class="ref-empty">
               Keine Querverweise in Begleitdokumenten.
             </p>
@@ -205,6 +242,33 @@ onMounted(async () => {
 .cell-empty {
   color: var(--text-muted);
   font-style: italic;
+}
+
+.doc-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+.doc-chip {
+  padding: 0 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  background: #f0fdf4;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.doc-chip:hover {
+  border-color: #94a3b8;
+}
+.doc-chip.excluded {
+  background: #f1f5f9;
+  color: var(--text-muted);
+  text-decoration: line-through;
+  opacity: 0.7;
 }
 
 .ref-empty {
