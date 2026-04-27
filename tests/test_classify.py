@@ -234,3 +234,67 @@ class TestSkipIfLabeled:
         db = isolated_db
         labels = db.get_labels()
         assert "Andere" in labels
+
+
+class TestFallbackLabel:
+    def test_returns_andere_when_present(self):
+        from bzodigital.classify import fallback_label
+
+        assert fallback_label(["Synopse", "Andere", "Other"]) == "Andere"
+
+    def test_returns_none_when_missing(self):
+        from bzodigital.classify import fallback_label
+
+        assert fallback_label(["Synopse", "Bau- und Zonenordnung neu"]) is None
+
+    def test_matches_other_or_sonstige_aliases(self):
+        from bzodigital.classify import fallback_label
+
+        assert fallback_label(["Synopse", "Other"]) == "Other"
+        assert fallback_label(["Synopse", "Sonstige"]) == "Sonstige"
+
+
+class TestSeedClassifications:
+    """The api.py _seed_classifications helper auto-selects rows that get a
+    real category match (anything other than the fallback label)."""
+
+    @pytest.fixture
+    def isolated_db(self, tmp_path, monkeypatch):
+        from bzodigital import db
+
+        monkeypatch.setattr(db, "DB_PATH", tmp_path / "bzo.db")
+        monkeypatch.setattr(db, "engine", None)
+        db.init_db()
+        return db
+
+    def test_real_match_is_auto_selected(self, isolated_db):
+        from bzodigital.api import _seed_classifications
+
+        pdfs = [
+            {"url": _url("sy - synopse.pdf"), "title": ""},  # → Synopse
+            {"url": _url("budget-2024.pdf"), "title": "Budget"},  # → Andere
+        ]
+        _seed_classifications(bfs_nr=1, pdfs=pdfs)
+
+        anns = {a["pdf_url"]: a for a in isolated_db.get_annotations(1)}
+        assert anns[_url("sy - synopse.pdf")]["selected"] is True
+        assert anns[_url("sy - synopse.pdf")]["labels"] == ["Synopse"]
+        assert anns[_url("budget-2024.pdf")]["selected"] is False
+        assert anns[_url("budget-2024.pdf")]["labels"] == ["Andere"]
+
+    def test_skip_if_labeled_protects_user_state(self, isolated_db):
+        from bzodigital.api import _seed_classifications
+
+        # User has manually deselected a synopse and replaced its label.
+        isolated_db.upsert_annotation(
+            bfs_nr=1, pdf_url=_url("sy - synopse.pdf"), pdf_title="",
+            labels=["Andere"], selected=False,
+        )
+        _seed_classifications(
+            bfs_nr=1,
+            pdfs=[{"url": _url("sy - synopse.pdf"), "title": ""}],
+        )
+        ann = isolated_db.get_annotations(1)[0]
+        # User edits survive — auto-classification did not stomp them.
+        assert ann["labels"] == ["Andere"]
+        assert ann["selected"] is False

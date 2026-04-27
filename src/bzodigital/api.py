@@ -20,7 +20,7 @@ from pydantic import BaseModel
 
 from bzodigital.bfs import Municipality, fuzzy_find_municipality, load_bfs, update_bfs_register
 from bzodigital.cantons import find_url, get_canton
-from bzodigital.classify import resolve_batch as classify_batch
+from bzodigital.classify import fallback_label, resolve_batch as classify_batch
 from bzodigital.db import (
     add_label,
     clear_search_cache,
@@ -389,13 +389,17 @@ async def get_processed(municipality_name: str):
                     raw_pdfs.append(pdf)
         matched, ambiguous = filter_pdfs_by_metadata(raw_pdfs, profile)
         suggestions = _seed_classifications(muni.bfs_nr, [*matched, *ambiguous])
+        fb = fallback_label(get_labels())
         now = datetime.utcnow().isoformat()
         all_pdfs = [
             AnnotationResponse(
                 id=0, municipality_bfs_nr=muni.bfs_nr,
                 pdf_url=p["url"], pdf_title=p.get("title", ""),
                 labels=suggestions.get(p["url"], []),
-                selected=False, created_at=now, updated_at=now,
+                selected=bool(suggestions.get(p["url"])) and (
+                    fb is None or suggestions[p["url"]][0] != fb
+                ),
+                created_at=now, updated_at=now,
             )
             for p in [*matched, *ambiguous]
         ]
@@ -910,17 +914,24 @@ def _seed_classifications(bfs_nr: int, pdfs: list[dict]) -> dict[str, list[str]]
     """
     if not pdfs:
         return {}
+    labels = get_labels()
+    fallback = fallback_label(labels)
     suggestions = classify_batch(
         [{"url": p["url"], "title": p.get("title", "")} for p in pdfs],
-        db_labels=get_labels(),
+        db_labels=labels,
     )
     for p in pdfs:
+        suggested = suggestions.get(p["url"], [])
+        # Auto-select rows with a real category match — anything that isn't
+        # the "Andere" fallback. The user can deselect mistakes; an empty
+        # suggestion stays unselected.
+        is_real_match = bool(suggested) and (fallback is None or suggested[0] != fallback)
         upsert_annotation(
             bfs_nr=bfs_nr,
             pdf_url=p["url"],
             pdf_title=p.get("title", ""),
-            labels=suggestions.get(p["url"], []),
-            selected=False,
+            labels=suggested,
+            selected=is_real_match,
             skip_if_labeled=True,
         )
     return suggestions

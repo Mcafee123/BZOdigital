@@ -103,6 +103,11 @@ def _resolve_label(category: str, db_labels: Iterable[str]) -> str | None:
     return None
 
 
+def fallback_label(db_labels: Iterable[str]) -> str | None:
+    """Return the DB label name used as the catch-all bucket ("Andere"), or None."""
+    return _resolve_label("other", db_labels)
+
+
 def _extract_sort_key(url: str, title: str) -> tuple[int, tuple[int, int, int]]:
     """Return a sort key that orders BZO files newest → oldest under ascending sort.
 
