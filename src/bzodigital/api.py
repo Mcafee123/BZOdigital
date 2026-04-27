@@ -20,6 +20,7 @@ from pydantic import BaseModel
 
 from bzodigital.bfs import Municipality, fuzzy_find_municipality, load_bfs, update_bfs_register
 from bzodigital.cantons import find_url, get_canton
+from bzodigital.classify import resolve_batch as classify_batch
 from bzodigital.db import (
     add_label,
     clear_search_cache,
@@ -387,12 +388,14 @@ async def get_processed(municipality_name: str):
                     seen.add(pdf["url"])
                     raw_pdfs.append(pdf)
         matched, ambiguous = filter_pdfs_by_metadata(raw_pdfs, profile)
+        suggestions = _seed_classifications(muni.bfs_nr, [*matched, *ambiguous])
         now = datetime.utcnow().isoformat()
         all_pdfs = [
             AnnotationResponse(
                 id=0, municipality_bfs_nr=muni.bfs_nr,
                 pdf_url=p["url"], pdf_title=p.get("title", ""),
-                labels=[], selected=False, created_at=now, updated_at=now,
+                labels=suggestions.get(p["url"], []),
+                selected=False, created_at=now, updated_at=now,
             )
             for p in [*matched, *ambiguous]
         ]
@@ -899,6 +902,30 @@ def _resolve_local_upload(url: str) -> Path | None:
     return path if path.exists() else None
 
 
+def _seed_classifications(bfs_nr: int, pdfs: list[dict]) -> dict[str, list[str]]:
+    """Run the rules-first classifier and upsert annotations with suggested labels.
+
+    Skips rows the user has already labelled. Returns the suggestion map so
+    callers can surface labels in the same response without a second DB read.
+    """
+    if not pdfs:
+        return {}
+    suggestions = classify_batch(
+        [{"url": p["url"], "title": p.get("title", "")} for p in pdfs],
+        db_labels=get_labels(),
+    )
+    for p in pdfs:
+        upsert_annotation(
+            bfs_nr=bfs_nr,
+            pdf_url=p["url"],
+            pdf_title=p.get("title", ""),
+            labels=suggestions.get(p["url"], []),
+            selected=False,
+            skip_if_labeled=True,
+        )
+    return suggestions
+
+
 def _resolve_municipality(name: str) -> Municipality:
     """Fuzzy-resolve a municipality name, raise 404 if not found."""
     municipalities = load_bfs()
@@ -942,6 +969,7 @@ async def _build_response(
         matched, ambiguous = filter_pdfs_by_metadata(all_pdfs, profile)
         for p in ambiguous:
             p["match"] = "ambiguous"
+        _seed_classifications(muni.bfs_nr, [*matched, *ambiguous])
         pdf_results = [
             PdfResult(url=p["url"], title=p.get("title", ""), match=p.get("match", "metadata"))
             for p in [*matched, *ambiguous]
