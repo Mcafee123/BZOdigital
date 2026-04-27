@@ -1180,7 +1180,21 @@
         convertedFilenames = new Set(data.files.map(f => f.filename));
         updateProcessBar();
 
-        if (data.files.length === 0) return;
+        // Build md filename → pdf title map from selected annotations
+        const selectedMdNames = new Set();
+        const mdToTitle = {};
+        for (const [url, ann] of Object.entries(annotations)) {
+          const mdName = pdfUrlToMdName(url);
+          mdToTitle[mdName] = ann.pdf_title || '';
+          if (ann.selected) selectedMdNames.add(mdName);
+        }
+
+        // Filter to only show files matching selected annotations
+        const filteredFiles = selectedMdNames.size > 0
+          ? data.files.filter(f => selectedMdNames.has(f.filename))
+          : data.files;
+
+        if (filteredFiles.length === 0) return;
 
         // Remove any previous section
         const old = document.getElementById('existing-files');
@@ -1189,13 +1203,15 @@
         const section = document.createElement('div');
         section.id = 'existing-files';
         section.className = 'existing-files-section';
-        section.innerHTML = `<h3>Bereits konvertierte Dateien (${data.files.length})
+        section.innerHTML = `<h3>Bereits konvertierte Dateien (${filteredFiles.length})
           <a href="/viewer?municipality=${encodeURIComponent(muniName)}" style="font-size:0.85rem;font-weight:normal;margin-left:12px;color:#2563eb;text-decoration:none" target="_blank">Querverweise &rarr;</a></h3>` +
-          data.files.map(f => {
+          filteredFiles.map(f => {
             const sizeKB = Math.round(f.size / 1024);
+            const pdfTitle = mdToTitle[f.filename];
+            const titleSuffix = pdfTitle ? ` <span style="color:#6b7280">(${esc(pdfTitle)})</span>` : '';
             return `<div class="existing-file">
               <span class="icon">📄</span>
-              <span class="title" data-muni="${encodeAttr(muniName)}" data-filename="${encodeAttr(f.filename)}">${esc(f.filename)}</span>
+              <span class="title" data-muni="${encodeAttr(muniName)}" data-filename="${encodeAttr(f.filename)}">${esc(f.filename)}${titleSuffix}</span>
               <span class="size">${sizeKB} KB</span>
             </div>`;
           }).join('');
