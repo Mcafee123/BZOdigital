@@ -11,14 +11,28 @@ from pathlib import Path
 from urllib.parse import unquote
 from uuid import uuid4
 
-from fastapi import BackgroundTasks, Depends, FastAPI, File, HTTPException, Query, Request, UploadFile
+from fastapi import (
+    BackgroundTasks,
+    Depends,
+    FastAPI,
+    File,
+    HTTPException,
+    Query,
+    Request,
+    UploadFile,
+)
 from fastapi.responses import StreamingResponse
 from fastapi.responses import FileResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from nupla.pipeline.bfs import Municipality, fuzzy_find_municipality, load_bfs, update_bfs_register
+from nupla.pipeline.bfs import (
+    Municipality,
+    fuzzy_find_municipality,
+    load_bfs,
+    update_bfs_register,
+)
 from nupla.pipeline.cantons import find_url, get_canton
 from nupla.pipeline.classify import fallback_label, resolve_batch as classify_batch
 from nupla.pipeline.db import (
@@ -53,8 +67,12 @@ AUTH_PASS = os.environ.get("BASIC_AUTH_PASS", "")
 def verify_credentials(credentials: HTTPBasicCredentials = Depends(security)):
     if not AUTH_USER:
         return  # auth disabled when env vars are not set
-    correct_user = secrets.compare_digest(credentials.username.encode(), AUTH_USER.encode())
-    correct_pass = secrets.compare_digest(credentials.password.encode(), AUTH_PASS.encode())
+    correct_user = secrets.compare_digest(
+        credentials.username.encode(), AUTH_USER.encode()
+    )
+    correct_pass = secrets.compare_digest(
+        credentials.password.encode(), AUTH_PASS.encode()
+    )
     if not (correct_user and correct_pass):
         raise HTTPException(
             status_code=401,
@@ -236,11 +254,15 @@ async def get_bzo(
     search_profile = PROFILES[profile]
     municipalities = load_bfs()
     if not municipalities:
-        raise HTTPException(status_code=500, detail="BFS register not loaded. Run 'nupla bfs-update'.")
+        raise HTTPException(
+            status_code=500, detail="BFS register not loaded. Run 'nupla bfs-update'."
+        )
 
     matches = fuzzy_find_municipality(municipality_name, municipalities, limit=1)
     if not matches or matches[0][1] < 60:
-        raise HTTPException(status_code=404, detail=f"Municipality '{municipality_name}' not found.")
+        raise HTTPException(
+            status_code=404, detail=f"Municipality '{municipality_name}' not found."
+        )
 
     best_muni, _score = matches[0]
 
@@ -248,7 +270,13 @@ async def get_bzo(
     cache_key = _make_cache_key(best_muni, profile)
     cached_results = get_cached_search(cache_key)
     if cached_results is not None:
-        return await _build_response(best_muni, cached_results, search_profile, cached=True, extract_pdfs_flag=pdfs)
+        return await _build_response(
+            best_muni,
+            cached_results,
+            search_profile,
+            cached=True,
+            extract_pdfs_flag=pdfs,
+        )
 
     # Resolve URL and search
     canton_data = await get_canton(best_muni.canton.lower())
@@ -262,7 +290,14 @@ async def get_bzo(
     # Cache results
     save_search_cache(cache_key, results)
 
-    return await _build_response(best_muni, results, search_profile, cached=False, extract_pdfs_flag=pdfs, base_url=base_url)
+    return await _build_response(
+        best_muni,
+        results,
+        search_profile,
+        cached=False,
+        extract_pdfs_flag=pdfs,
+        base_url=base_url,
+    )
 
 
 @app.post("/api/bzo/batch")
@@ -301,13 +336,21 @@ def list_municipalities(
     """List or search BFS municipalities."""
     municipalities = load_bfs()
     if canton:
-        municipalities = [m for m in municipalities if m.canton.upper() == canton.upper()]
+        municipalities = [
+            m for m in municipalities if m.canton.upper() == canton.upper()
+        ]
 
     if q:
         matches = fuzzy_find_municipality(q, municipalities, limit=limit)
-        return [MunicipalityResponse(bfs_nr=m.bfs_nr, name=m.name, canton=m.canton) for m, _score in matches]
+        return [
+            MunicipalityResponse(bfs_nr=m.bfs_nr, name=m.name, canton=m.canton)
+            for m, _score in matches
+        ]
 
-    return [MunicipalityResponse(bfs_nr=m.bfs_nr, name=m.name, canton=m.canton) for m in municipalities[:limit]]
+    return [
+        MunicipalityResponse(bfs_nr=m.bfs_nr, name=m.name, canton=m.canton)
+        for m in municipalities[:limit]
+    ]
 
 
 # --- Labels ---
@@ -332,7 +375,9 @@ def create_label(body: LabelCreate):
 # --- Annotations ---
 
 
-@app.get("/api/bzo/{municipality_name}/annotations", response_model=list[AnnotationResponse])
+@app.get(
+    "/api/bzo/{municipality_name}/annotations", response_model=list[AnnotationResponse]
+)
 def get_municipality_annotations(municipality_name: str):
     """Get all PDF annotations for a municipality."""
     muni = _resolve_municipality(municipality_name)
@@ -386,6 +431,7 @@ async def get_processed(municipality_name: str):
     all_pdfs: list[AnnotationResponse] = []
     if cached_results:
         from nupla.pipeline.search import extract_pdfs, filter_pdfs_by_metadata
+
         seen: set[str] = set()
         raw_pdfs: list[dict] = []
         tasks = [extract_pdfs(r["url"]) for r in cached_results]
@@ -403,13 +449,15 @@ async def get_processed(municipality_name: str):
         now = datetime.utcnow().isoformat()
         all_pdfs = [
             AnnotationResponse(
-                id=0, municipality_bfs_nr=muni.bfs_nr,
-                pdf_url=p["url"], pdf_title=p.get("title", ""),
+                id=0,
+                municipality_bfs_nr=muni.bfs_nr,
+                pdf_url=p["url"],
+                pdf_title=p.get("title", ""),
                 labels=suggestions.get(p["url"], []),
-                selected=bool(suggestions.get(p["url"])) and (
-                    fb is None or suggestions[p["url"]][0] != fb
-                ),
-                created_at=now, updated_at=now,
+                selected=bool(suggestions.get(p["url"]))
+                and (fb is None or suggestions[p["url"]][0] != fb),
+                created_at=now,
+                updated_at=now,
             )
             for p in [*matched, *ambiguous]
         ]
@@ -427,7 +475,7 @@ async def get_processed(municipality_name: str):
 
 
 @app.post("/api/upload/{municipality_name}")
-async def upload_pdf(municipality_name: str, request: Request, file: UploadFile = File(...)):
+async def upload_pdf(municipality_name: str, file: UploadFile = File(...)):
     """Upload a PDF and create an annotation for it."""
     muni = _resolve_municipality(municipality_name)
     slug = _slug(muni.name)
@@ -442,9 +490,8 @@ async def upload_pdf(municipality_name: str, request: Request, file: UploadFile 
     content = await file.read()
     file_path.write_bytes(content)
 
-    # Build a URL that points to our own serve endpoint
-    base_url = str(request.base_url).rstrip("/")
-    serve_url = f"{base_url}/api/uploads/{_slug(muni.name)}/{file.filename}"
+    # Store a relative path so it resolves from whichever server serves the UI
+    serve_url = f"/api/uploads/{_slug(muni.name)}/{file.filename}"
 
     # Create annotation
     ann = upsert_annotation(
@@ -508,15 +555,29 @@ async def start_processing(municipality_name: str, body: ProcessRequest | None =
     for url, title in pdf_list:
         md_name = Path(_pdf_filename(url)).stem + ".md"
         if (md_dir / md_name).exists():
-            skipped.append({"url": url, "title": title or _pdf_filename(url), "markdown_path": str((md_dir / md_name).relative_to(DATA_DIR))})
+            skipped.append(
+                {
+                    "url": url,
+                    "title": title or _pdf_filename(url),
+                    "markdown_path": str((md_dir / md_name).relative_to(DATA_DIR)),
+                }
+            )
         else:
             to_process.append((url, title))
 
     if not to_process:
-        return {"job_id": None, "files_count": 0, "skipped": skipped, "message": "All files already converted."}
+        return {
+            "job_id": None,
+            "files_count": 0,
+            "skipped": skipped,
+            "message": "All files already converted.",
+        }
 
     job_id = str(uuid4())
-    files = [FileState(url=url, title=title or _pdf_filename(url)) for url, title in to_process]
+    files = [
+        FileState(url=url, title=title or _pdf_filename(url))
+        for url, title in to_process
+    ]
     job = JobState(job_id=job_id, municipality=muni.name, files=files)
     _jobs[job_id] = job
 
@@ -555,7 +616,9 @@ async def stream_job(job_id: str):
             if event is None:
                 # Job finished
                 job = _jobs.get(job_id)
-                completed = sum(1 for f in job.files if f.status == "done") if job else 0
+                completed = (
+                    sum(1 for f in job.files if f.status == "done") if job else 0
+                )
                 failed = sum(1 for f in job.files if f.status == "failed") if job else 0
                 yield f"event: done\ndata: {json.dumps({'completed': completed, 'failed': failed})}\n\n"
                 break
@@ -591,11 +654,13 @@ def list_converted_files(municipality_name: str):
         return {"municipality": muni.name, "files": []}
     files = []
     for p in sorted(md_dir.glob("*.md")):
-        files.append({
-            "filename": p.name,
-            "path": str(p.relative_to(DATA_DIR)),
-            "size": p.stat().st_size,
-        })
+        files.append(
+            {
+                "filename": p.name,
+                "path": str(p.relative_to(DATA_DIR)),
+                "size": p.stat().st_size,
+            }
+        )
     return {"municipality": muni.name, "files": files}
 
 
@@ -603,7 +668,9 @@ def list_converted_files(municipality_name: str):
 def get_file_preview(
     municipality_name: str,
     filename: str,
-    enriched: bool = Query(default=False, description="Enrich with law citation links on the fly"),
+    enriched: bool = Query(
+        default=False, description="Enrich with law citation links on the fly"
+    ),
 ):
     """Return a converted markdown file, optionally enriched with law citations."""
     muni = _resolve_municipality(municipality_name)
@@ -630,10 +697,16 @@ def get_file_preview(
                 default_law = "BZO"
 
         result = enrich_markdown_safe(
-            markdown, default_law=default_law, custom_laws=custom_laws,
+            markdown,
+            default_law=default_law,
+            custom_laws=custom_laws,
         )
         if result:
-            return {"filename": md_path.name, "markdown": result["markdown"], "enriched": True}
+            return {
+                "filename": md_path.name,
+                "markdown": result["markdown"],
+                "enriched": True,
+            }
 
     return {"filename": md_path.name, "markdown": markdown, "enriched": False}
 
@@ -740,7 +813,9 @@ def get_cross_references(municipality_name: str):
 
         companion_md = md_file.read_text(encoding="utf-8")
         result = enrich_markdown_safe(
-            companion_md, default_law="BZO", custom_laws=custom_laws,
+            companion_md,
+            default_law="BZO",
+            custom_laws=custom_laws,
         )
         if not result:
             continue
@@ -753,15 +828,19 @@ def get_cross_references(municipality_name: str):
 
             provision = cite["provision"]
             paragraph = _extract_paragraph(
-                companion_md, cite["start_index"], cite["end_index"],
+                companion_md,
+                cite["start_index"],
+                cite["end_index"],
             )
 
-            cross_references.setdefault(provision, []).append({
-                "source_file": md_file.name,
-                "source_labels": labels,
-                "citation_text": cite["text"],
-                "paragraph": paragraph,
-            })
+            cross_references.setdefault(provision, []).append(
+                {
+                    "source_file": md_file.name,
+                    "source_labels": labels,
+                    "citation_text": cite["text"],
+                    "paragraph": paragraph,
+                }
+            )
 
     return {
         "municipality": muni.name,
@@ -814,12 +893,16 @@ async def run_compare(municipality_name: str):
             missing.append(LABEL_ALT)
         if not neu_file:
             missing.append(LABEL_NEU)
-        raise HTTPException(400, f"Missing labeled markdown files: {', '.join(missing)}")
+        raise HTTPException(
+            400, f"Missing labeled markdown files: {', '.join(missing)}"
+        )
 
     left_bytes = alt_file.read_bytes()
     right_bytes = neu_file.read_bytes()
 
-    result = await compare_documents(left_bytes, alt_file.name, right_bytes, neu_file.name)
+    result = await compare_documents(
+        left_bytes, alt_file.name, right_bytes, neu_file.name
+    )
 
     # Save the unified diff
     diff_path = DATA_DIR / slug / "diff.unified"
@@ -833,7 +916,9 @@ async def run_compare(municipality_name: str):
     }
 
 
-def _find_md_for_label(annotations: list[dict], label: str, md_dir: Path) -> Path | None:
+def _find_md_for_label(
+    annotations: list[dict], label: str, md_dir: Path
+) -> Path | None:
     """Find the markdown file for a PDF annotation with a specific label."""
     for ann in annotations:
         if label in ann.get("labels", []) and ann.get("selected"):
@@ -853,7 +938,16 @@ async def _process_job(job_id: str, municipality_name: str, queue: asyncio.Queue
 
     for i, file_state in enumerate(job.files):
         file_state.status = "processing"
-        await queue.put({"type": "file_start", "data": {"file_index": i, "url": file_state.url, "title": file_state.title}})
+        await queue.put(
+            {
+                "type": "file_start",
+                "data": {
+                    "file_index": i,
+                    "url": file_state.url,
+                    "title": file_state.title,
+                },
+            }
+        )
 
         try:
             # Download — read from disk if it's a local upload
@@ -866,9 +960,13 @@ async def _process_job(job_id: str, municipality_name: str, queue: asyncio.Queue
             # Convert via DocConverter with progress relay
             async def on_progress(data, _idx=i):
                 file_state.progress = json.dumps(data)
-                await queue.put({"type": "progress", "data": {"file_index": _idx, **data}})
+                await queue.put(
+                    {"type": "progress", "data": {"file_index": _idx, **data}}
+                )
 
-            result = await convert_pdf_stream(pdf_bytes, _pdf_filename(file_state.url), on_progress)
+            result = await convert_pdf_stream(
+                pdf_bytes, _pdf_filename(file_state.url), on_progress
+            )
 
             # Save markdown — content may be in sections rather than top-level
             markdown = result.get("markdown", "")
@@ -883,18 +981,27 @@ async def _process_job(job_id: str, municipality_name: str, queue: asyncio.Queue
             file_state.status = "done"
             file_state.markdown_path = str(md_path.relative_to(DATA_DIR))
             file_state.page_count = result.get("page_count")
-            await queue.put({
-                "type": "file_done",
-                "data": {"file_index": i, "markdown_path": file_state.markdown_path, "page_count": file_state.page_count},
-            })
+            await queue.put(
+                {
+                    "type": "file_done",
+                    "data": {
+                        "file_index": i,
+                        "markdown_path": file_state.markdown_path,
+                        "page_count": file_state.page_count,
+                    },
+                }
+            )
 
         except Exception as e:
             file_state.status = "failed"
             err_msg = str(e) or f"{type(e).__name__}: (no message)"
             file_state.error = err_msg
             import traceback
+
             traceback.print_exc()
-            await queue.put({"type": "file_error", "data": {"file_index": i, "error": err_msg}})
+            await queue.put(
+                {"type": "file_error", "data": {"file_index": i, "error": err_msg}}
+            )
 
     # Mark job complete
     job.status = "failed" if all(f.status == "failed" for f in job.files) else "done"
@@ -908,6 +1015,7 @@ def _resolve_local_upload(url: str) -> Path | None:
     """If the URL points to our own uploads endpoint, return the local file path."""
     # Match /api/uploads/<slug>/<filename> in any base URL
     import re as _re
+
     m = _re.search(r"/api/uploads/([^/]+)/(.+)$", url)
     if not m:
         return None
@@ -935,7 +1043,9 @@ def _seed_classifications(bfs_nr: int, pdfs: list[dict]) -> dict[str, list[str]]
         # Auto-select rows with a real category match — anything that isn't
         # the "Andere" fallback. The user can deselect mistakes; an empty
         # suggestion stays unselected.
-        is_real_match = bool(suggested) and (fallback is None or suggested[0] != fallback)
+        is_real_match = bool(suggested) and (
+            fallback is None or suggested[0] != fallback
+        )
         upsert_annotation(
             bfs_nr=bfs_nr,
             pdf_url=p["url"],
@@ -992,7 +1102,9 @@ async def _build_response(
             p["match"] = "ambiguous"
         _seed_classifications(muni.bfs_nr, [*matched, *ambiguous])
         pdf_results = [
-            PdfResult(url=p["url"], title=p.get("title", ""), match=p.get("match", "metadata"))
+            PdfResult(
+                url=p["url"], title=p.get("title", ""), match=p.get("match", "metadata")
+            )
             for p in [*matched, *ambiguous]
         ]
 
@@ -1036,4 +1148,5 @@ async def _batch_worker(municipality_names: list[str]):
 def start():
     """Entry point for nupla-api."""
     import uvicorn
+
     uvicorn.run("nupla.pipeline.api:app", host="0.0.0.0", port=7000, reload=True)

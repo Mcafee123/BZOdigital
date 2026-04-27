@@ -53,6 +53,8 @@ uv.lock
 # SQLite (allow data/bzo.db for sharing)
 *.db
 !data/bzo.db
+*.db-shm
+*.db-wal
 
 # Terraform
 .terraform/

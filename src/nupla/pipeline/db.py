@@ -12,11 +12,20 @@ DB_PATH = Path(__file__).resolve().parent.parent.parent.parent / "data" / "bzo.d
 engine = None
 
 
+def _set_wal_mode(dbapi_conn, connection_record):
+    cursor = dbapi_conn.cursor()
+    cursor.execute("PRAGMA journal_mode=WAL")
+    cursor.close()
+
+
 def get_engine():
     global engine
     if engine is None:
+        from sqlalchemy import event
+
         DB_PATH.parent.mkdir(parents=True, exist_ok=True)
         engine = create_engine(f"sqlite:///{DB_PATH}", echo=False)
+        event.listen(engine, "connect", _set_wal_mode)
     return engine
 
 
@@ -102,7 +111,9 @@ def load_bfs_from_db() -> list[dict]:
     """Load all BFS municipalities from DB."""
     with get_session() as session:
         results = session.exec(select(BfsMunicipality)).all()
-        return [{"bfs_nr": m.bfs_nr, "name": m.name, "canton": m.canton} for m in results]
+        return [
+            {"bfs_nr": m.bfs_nr, "name": m.name, "canton": m.canton} for m in results
+        ]
 
 
 def save_bfs_to_db(municipalities: list[dict]):
@@ -144,14 +155,20 @@ def save_canton_to_db(canton_id: str, data: list[dict[str, str]]):
         # Insert new
         now = datetime.utcnow()
         for g in data:
-            session.add(CantonGemeinde(canton=canton_id, name=g["name"], url=g["url"], last_scraped=now))
+            session.add(
+                CantonGemeinde(
+                    canton=canton_id, name=g["name"], url=g["url"], last_scraped=now
+                )
+            )
         session.commit()
 
 
 # --- Search cache operations ---
 
 
-def get_cached_search(cache_key: str, max_age: timedelta = timedelta(hours=24)) -> list[dict] | None:
+def get_cached_search(
+    cache_key: str, max_age: timedelta = timedelta(hours=24)
+) -> list[dict] | None:
     """Get cached search results if fresh enough."""
     with get_session() as session:
         result = session.exec(
@@ -173,11 +190,13 @@ def save_search_cache(cache_key: str, results: list[dict]):
             existing.last_searched = datetime.utcnow()
             session.add(existing)
         else:
-            session.add(SearchCache(
-                cache_key=cache_key,
-                results_json=json.dumps(results),
-                last_searched=datetime.utcnow(),
-            ))
+            session.add(
+                SearchCache(
+                    cache_key=cache_key,
+                    results_json=json.dumps(results),
+                    last_searched=datetime.utcnow(),
+                )
+            )
         session.commit()
 
 
