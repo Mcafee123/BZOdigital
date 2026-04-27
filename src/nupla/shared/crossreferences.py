@@ -16,9 +16,9 @@ from nupla.shared.enrichment import build_bzo_custom_law, enrich_markdown_safe
 
 _ARTICLE_HEADING_RE = re.compile(r"^#{1,6}\s+Art\.?\s*(\d+[a-zA-Z]?)\b", re.MULTILINE)
 _MIN_PARAGRAPH_LEN = 80
-_MIN_TABLE_SUBSTANCE = 60
 _HTML_COMMENT_RE = re.compile(r"<!--.*?-->", re.DOTALL)
 _MIN_CLEANED_LEN = 50
+_CHANGELOG_RE = re.compile(r"\d{2}\.\d{2}\.\d{4}\s*—\s*\d{2}\.\d{2}\.\d{4}")
 _MAX_PARAGRAPH_LEN = 600
 
 
@@ -139,23 +139,39 @@ def _remove_contained(
 
 
 def _clean_paragraph(paragraph: str) -> str:
-    """Strip HTML comments and leading/trailing whitespace from a paragraph."""
+    """Clean up a paragraph extracted from markdown.
+
+    - Strips HTML comments.
+    - Removes markdown table formatting (pipe delimiters, empty cells).
+    - Rejoins words hyphenated across line breaks by PDF extraction
+      (e.g. ``Zuläs- sig`` → ``Zulässig``).
+    """
     cleaned = _HTML_COMMENT_RE.sub("", paragraph).strip()
+    # Strip table row formatting: split cells, drop empties, rejoin
+    if cleaned.startswith("|") or "\t|" in cleaned:
+        cells = [c.strip() for c in cleaned.split("|") if c.strip()]
+        cleaned = " — ".join(cells) if len(cells) > 1 else cells[0] if cells else ""
+    # Rejoin words hyphenated across PDF line breaks, but preserve
+    # suspended hyphens ("Wohn- und", "Einzel-, Doppel-", "WG- Zonen").
+    # PDF hyphenation always continues lowercase (mid-word).
+    cleaned = re.sub(
+        r"(?<!,)(\w)- (?!und |oder |bzw\.? |sowie |bis |wie |als )([a-zäöüéèê])",
+        r"\1\2",
+        cleaned,
+    )
     return cleaned
 
 
 def _is_low_value(paragraph: str) -> bool:
     """Return True for paragraphs that add no substantive context.
 
-    Catches:
-    - Table rows that are just article-title listings (TOC-style).
-    - Very short paragraphs after cleanup (bare headings, pointer stubs
-      like ``*Art. 20*`` or ``zu Art. 29``).
+    After cleaning (pipes stripped, HTML comments removed), filters
+    paragraphs that are just bare headings, pointer stubs, changelog
+    entries, or otherwise too short to be useful.
     """
-    if paragraph.startswith("|") or "\t|" in paragraph:
-        stripped = re.sub(r"[|\-\s]+", " ", paragraph).strip()
-        return len(stripped) < _MIN_TABLE_SUBSTANCE
-    # Strip markdown headings and check remaining substance
+    # Changelog rows: "09.12.2021 — 01.08.2023 — Art. 43 — eingefügt"
+    if _CHANGELOG_RE.search(paragraph):
+        return True
     without_headings = re.sub(
         r"^#{1,6}\s+.*$", "", paragraph, flags=re.MULTILINE
     ).strip()
