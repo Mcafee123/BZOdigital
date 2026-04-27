@@ -20,6 +20,13 @@ _HTML_COMMENT_RE = re.compile(r"<!--.*?-->", re.DOTALL)
 _MIN_CLEANED_LEN = 50
 _CHANGELOG_RE = re.compile(r"\d{2}\.\d{2}\.\d{4}\s*—\s*\d{2}\.\d{2}\.\d{4}")
 _MAX_PARAGRAPH_LEN = 600
+# Split on ". " followed by an uppercase letter or on ".\n", but not after
+# common abbreviations (Art., Abs., Bst., Nr., Kap., vgl., bzw., resp., gem.)
+_SENTENCE_SPLIT_RE = re.compile(
+    r"(?<!Art)(?<!Abs)(?<!Bst)(?<!Kap)(?<!vgl)(?<!bzw)(?<!gem)(?<!resp)"
+    r"(?<!\bNr)"
+    r"\.\s+(?=[A-ZÄÖÜ«\-\(])"
+)
 
 
 @dataclass(frozen=True)
@@ -183,8 +190,9 @@ def _truncate_paragraphs(
 ) -> dict[str, list[dict[str, Any]]]:
     """Truncate paragraphs that exceed the maximum length.
 
-    Keeps the beginning of the paragraph (which is already extracted around
-    the citation) and snaps to a sentence boundary when possible.
+    Keeps the citation visible: truncates from the start when the citation
+    is near the beginning, or centers a window around the citation when it
+    would otherwise be cut off.
     """
     result: dict[str, list[dict[str, Any]]] = {}
     for provision, refs in cross_references.items():
@@ -192,16 +200,82 @@ def _truncate_paragraphs(
         for ref in refs:
             para = ref["paragraph"]
             if len(para) > _MAX_PARAGRAPH_LEN:
-                # Try to snap at a sentence boundary near the limit
-                dot = para.find(". ", _MAX_PARAGRAPH_LEN - 80, _MAX_PARAGRAPH_LEN + 40)
-                if dot != -1:
-                    para = para[: dot + 1] + " …"
-                else:
-                    para = para[:_MAX_PARAGRAPH_LEN].rstrip() + " …"
+                para = _truncate(para, ref["citation_text"])
                 ref = {**ref, "paragraph": para}
             truncated.append(ref)
         result[provision] = truncated
     return result
+
+
+def _truncate(para: str, citation_text: str) -> str:
+    """Truncate a paragraph to ~_MAX_PARAGRAPH_LEN, keeping the citation visible.
+
+    Splits into sentences, finds the one containing the citation, then
+    expands outward sentence-by-sentence until the budget is exhausted.
+    """
+    # Split into sentences, preserving the period with each sentence
+    parts = _SENTENCE_SPLIT_RE.split(para)
+    if len(parts) <= 1:
+        # Can't split — hard-truncate around citation
+        return _hard_truncate(para, citation_text)
+
+    # Re-attach the period that was consumed by the split
+    sentences: list[str] = []
+    for i, part in enumerate(parts):
+        s = part.strip()
+        if i < len(parts) - 1:
+            s += "."
+        if s:
+            sentences.append(s)
+
+    # Find which sentence contains the citation
+    cite_idx = 0
+    for i, sent in enumerate(sentences):
+        if citation_text in sent:
+            cite_idx = i
+            break
+
+    # Expand outward from the citation sentence until budget is filled
+    selected = [cite_idx]
+    total_len = len(sentences[cite_idx])
+    lo, hi = cite_idx - 1, cite_idx + 1
+
+    while total_len < _MAX_PARAGRAPH_LEN:
+        added = False
+        if (
+            hi < len(sentences)
+            and total_len + len(sentences[hi]) + 1 <= _MAX_PARAGRAPH_LEN
+        ):
+            selected.append(hi)
+            total_len += len(sentences[hi]) + 1
+            hi += 1
+            added = True
+        if lo >= 0 and total_len + len(sentences[lo]) + 1 <= _MAX_PARAGRAPH_LEN:
+            selected.append(lo)
+            total_len += len(sentences[lo]) + 1
+            lo -= 1
+            added = True
+        if not added:
+            break
+
+    selected.sort()
+    prefix = "… " if selected[0] > 0 else ""
+    suffix = " …" if selected[-1] < len(sentences) - 1 else ""
+    return prefix + " ".join(sentences[i] for i in selected) + suffix
+
+
+def _hard_truncate(para: str, citation_text: str) -> str:
+    """Fallback truncation when sentence splitting isn't possible."""
+    cite_pos = para.find(citation_text)
+    if cite_pos != -1 and cite_pos + len(citation_text) > _MAX_PARAGRAPH_LEN:
+        half = _MAX_PARAGRAPH_LEN // 2
+        center = cite_pos + len(citation_text) // 2
+        win_start = max(0, center - half)
+        win_end = min(len(para), center + half)
+        prefix = "… " if win_start > 0 else ""
+        suffix = " …" if win_end < len(para) else ""
+        return prefix + para[win_start:win_end].strip() + suffix
+    return para[:_MAX_PARAGRAPH_LEN].rstrip() + " …"
 
 
 def _extract_paragraph(text: str, start_index: int, end_index: int) -> str:
