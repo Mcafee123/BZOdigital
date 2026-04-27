@@ -1,4 +1,5 @@
 """FastAPI backend that serves the SPA and exposes diff endpoints."""
+
 from __future__ import annotations
 
 import dataclasses
@@ -9,15 +10,18 @@ from pathlib import Path
 from urllib.parse import unquote
 
 from fastapi import FastAPI, HTTPException, Depends
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session, select, func
 
-from .database import get_session, BfsMunicipality, PdfAnnotation
+from .database import engine, get_session, BfsMunicipality, PdfAnnotation
 from nupla.shared.crossreferences import CompanionDoc, compute_cross_references
 from nupla.shared.paths import get_data_path
 
 WEB_DIST = Path(os.environ.get("WEB_DIST", "/app/web/dist"))
+
+_UPLOAD_ABS_RE = re.compile(r"^https?://[^/]+(/api/uploads/.+)$")
 
 _LEFT_RE = re.compile(r"^---\s+(?:a/)?(.+?)(?:\t.*)?$", re.MULTILINE)
 _RIGHT_RE = re.compile(r"^\+\+\+\s+(?:b/)?(.+?)(?:\t.*)?$", re.MULTILINE)
@@ -28,6 +32,25 @@ _SECTION_MARKER_TRAILER_RE = re.compile(r"\n*<!--\s*section:.*?-->\s*$", re.DOTA
 _WS_RE = re.compile(r"\s+")
 
 app = FastAPI(title="nupla-app", version="0.1.0")
+
+
+@app.on_event("startup")
+def _migrate_absolute_upload_urls() -> None:
+    """Rewrite any absolute upload URLs in the DB to relative paths (one-time)."""
+    with Session(engine) as session:
+        rows = session.exec(
+            select(PdfAnnotation).where(
+                PdfAnnotation.pdf_url.like("http%/api/uploads/%")
+            )
+        ).all()
+        for row in rows:
+            m = _UPLOAD_ABS_RE.match(row.pdf_url)
+            if m:
+                row.pdf_url = m.group(1)
+                session.add(row)
+        if rows:
+            session.commit()
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -106,49 +129,77 @@ def health() -> dict[str, str]:
 @app.get("/api/municipalities")
 def get_municipalities(session: Session = Depends(get_session)):
     """Return all municipalities that have entries in the pdfannotation table."""
-    statement = select(BfsMunicipality).join(PdfAnnotation, BfsMunicipality.bfs_nr == PdfAnnotation.municipality_bfs_nr).distinct()
+    statement = (
+        select(BfsMunicipality)
+        .join(
+            PdfAnnotation, BfsMunicipality.bfs_nr == PdfAnnotation.municipality_bfs_nr
+        )
+        .distinct()
+    )
     results = session.exec(statement).all()
-    
+
     municipalities = []
     for muni in results:
         municipalities.append({"name": muni.name, "folder": muni.name.lower()})
-            
+
     municipalities.sort(key=lambda x: x["name"])
     return municipalities
 
+
 @app.get("/api/municipalities/{folder}/pdfs")
 def get_municipality_pdfs(folder: str, session: Session = Depends(get_session)):
-    muni = session.exec(select(BfsMunicipality).where(func.lower(BfsMunicipality.name) == folder.lower())).first()
+    muni = session.exec(
+        select(BfsMunicipality).where(
+            func.lower(BfsMunicipality.name) == folder.lower()
+        )
+    ).first()
     if not muni:
         raise HTTPException(status_code=404, detail="Municipality not found")
-        
-    pdfs = session.exec(select(PdfAnnotation).where(PdfAnnotation.municipality_bfs_nr == muni.bfs_nr)).all()
-    
+
+    pdfs = session.exec(
+        select(PdfAnnotation).where(PdfAnnotation.municipality_bfs_nr == muni.bfs_nr)
+    ).all()
+
     results = []
     for pdf in pdfs:
         try:
             labels = json.loads(pdf.labels_json)
-            label = labels[0] if isinstance(labels, list) and len(labels) > 0 else pdf.pdf_title
-        except:
+            label = (
+                labels[0]
+                if isinstance(labels, list) and len(labels) > 0
+                else pdf.pdf_title
+            )
+        except (ValueError, KeyError, json.JSONDecodeError):
             label = pdf.pdf_title
-            
-        results.append({
-            "id": pdf.id,
-            "title": pdf.pdf_title,
-            "url": pdf.pdf_url,
-            "label": label,
-            "selected": pdf.selected
-        })
-        
-    return {
-        "municipality": {"name": muni.name, "status": "Genehmigt"}, 
-        "pdfs": results
-    }
+
+        # Normalise legacy absolute upload URLs to relative paths
+        url = pdf.pdf_url
+        m = _UPLOAD_ABS_RE.match(url)
+        if m:
+            url = m.group(1)
+
+        results.append(
+            {
+                "id": pdf.id,
+                "title": pdf.pdf_title,
+                "url": url,
+                "label": label,
+                "selected": pdf.selected,
+            }
+        )
+
+    return {"municipality": {"name": muni.name, "status": "Genehmigt"}, "pdfs": results}
 
 
 @app.get("/api/municipalities/{folder}/diff")
-def get_municipality_diff(folder: str, session: Session = Depends(get_session)) -> dict[str, str]:
-    muni = session.exec(select(BfsMunicipality).where(func.lower(BfsMunicipality.name) == folder.lower())).first()
+def get_municipality_diff(
+    folder: str, session: Session = Depends(get_session)
+) -> dict[str, str]:
+    muni = session.exec(
+        select(BfsMunicipality).where(
+            func.lower(BfsMunicipality.name) == folder.lower()
+        )
+    ).first()
     if not muni:
         raise HTTPException(status_code=404, detail="Municipality not found")
 
@@ -168,7 +219,11 @@ def get_municipality_diff(folder: str, session: Session = Depends(get_session)) 
 @app.get("/api/municipalities/{folder}/sections")
 def get_municipality_sections(folder: str, session: Session = Depends(get_session)):
     """Return the changed Art.-level sections between alt and neu markdown."""
-    muni = session.exec(select(BfsMunicipality).where(func.lower(BfsMunicipality.name) == folder.lower())).first()
+    muni = session.exec(
+        select(BfsMunicipality).where(
+            func.lower(BfsMunicipality.name) == folder.lower()
+        )
+    ).first()
     if not muni:
         raise HTTPException(status_code=404, detail="Municipality not found")
 
@@ -177,14 +232,20 @@ def get_municipality_sections(folder: str, session: Session = Depends(get_sessio
     if not diff_path.is_file():
         raise HTTPException(status_code=404, detail=f"No diff for {folder}")
 
-    alt_filename, neu_filename = _extract_filenames(diff_path.read_text(encoding="utf-8"))
+    alt_filename, neu_filename = _extract_filenames(
+        diff_path.read_text(encoding="utf-8")
+    )
     md_dir = folder_dir / "md"
     alt_path = md_dir / alt_filename
     neu_path = md_dir / neu_filename
     if not alt_path.is_file() or not neu_path.is_file():
-        raise HTTPException(status_code=404, detail=f"Source markdown missing under {md_dir}")
+        raise HTTPException(
+            status_code=404, detail=f"Source markdown missing under {md_dir}"
+        )
 
-    alt_sections = {s["key"]: s for s in _parse_articles(alt_path.read_text(encoding="utf-8"))}
+    alt_sections = {
+        s["key"]: s for s in _parse_articles(alt_path.read_text(encoding="utf-8"))
+    }
     neu_sections = _parse_articles(neu_path.read_text(encoding="utf-8"))
     seen_keys: set[str] = set()
 
@@ -196,28 +257,32 @@ def get_municipality_sections(folder: str, session: Session = Depends(get_sessio
         alt_body = alt["body"] if alt else ""
         if _norm(alt_body) == _norm(s["body"]):
             continue
-        rows.append({
-            "key": key,
-            "title_alt": alt["title"] if alt else None,
-            "title_neu": s["title"],
-            "alt": alt_body,
-            "neu": s["body"],
-            "added": alt is None,
-            "removed": False,
-        })
+        rows.append(
+            {
+                "key": key,
+                "title_alt": alt["title"] if alt else None,
+                "title_neu": s["title"],
+                "alt": alt_body,
+                "neu": s["body"],
+                "added": alt is None,
+                "removed": False,
+            }
+        )
 
     for key, alt in alt_sections.items():
         if key in seen_keys:
             continue
-        rows.append({
-            "key": key,
-            "title_alt": alt["title"],
-            "title_neu": None,
-            "alt": alt["body"],
-            "neu": "",
-            "added": False,
-            "removed": True,
-        })
+        rows.append(
+            {
+                "key": key,
+                "title_alt": alt["title"],
+                "title_neu": None,
+                "alt": alt["body"],
+                "neu": "",
+                "added": False,
+                "removed": True,
+            }
+        )
 
     return {
         "alt_filename": alt_filename,
@@ -289,6 +354,17 @@ def get_municipality_crossreferences(folder: str, session: Session = Depends(get
         companions=companions,
     )
     return {"municipality": muni.name, **dataclasses.asdict(result)}
+
+
+@app.get("/api/uploads/{municipality_slug}/{filename}")
+async def serve_upload(municipality_slug: str, filename: str):
+    """Serve an uploaded PDF file from the data directory."""
+    file_path = get_data_path() / municipality_slug / "uploads" / filename
+    if not file_path.exists():
+        raise HTTPException(404, "File not found.")
+    return FileResponse(
+        file_path, media_type="application/pdf", content_disposition_type="inline"
+    )
 
 
 if WEB_DIST.is_dir():
