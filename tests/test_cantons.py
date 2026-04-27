@@ -1,6 +1,6 @@
 """Tests for canton registry and URL lookup."""
 
-from bzodigital.cantons import SCRAPERS, find_url
+from nupla.cantons import SCRAPERS, find_url
 
 
 SAMPLE_CANTON_DATA = [

@@ -6,7 +6,7 @@ from pathlib import Path
 
 from thefuzz import fuzz, process
 
-from bzodigital.db import init_db, load_bfs_from_db, save_bfs_to_db
+from nupla.db import init_db, load_bfs_from_db, save_bfs_to_db
 
 BFS_JSON_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "bfs_municipalities.json"
 BFS_DOWNLOAD_URL = "https://dam-api.bfs.admin.ch/hub/api/dam/assets/286080/master"

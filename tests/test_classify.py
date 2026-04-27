@@ -2,7 +2,7 @@
 
 import pytest
 
-from bzodigital.classify import classify_pdf, resolve_batch
+from nupla.classify import classify_pdf, resolve_batch
 
 # A representative DB label set — matches what db._seed_default_labels installs.
 DB_LABELS = [
@@ -185,7 +185,7 @@ class TestSkipIfLabeled:
 
     @pytest.fixture
     def isolated_db(self, tmp_path, monkeypatch):
-        from bzodigital import db
+        from nupla import db
 
         monkeypatch.setattr(db, "DB_PATH", tmp_path / "bzo.db")
         monkeypatch.setattr(db, "engine", None)
@@ -238,17 +238,17 @@ class TestSkipIfLabeled:
 
 class TestFallbackLabel:
     def test_returns_andere_when_present(self):
-        from bzodigital.classify import fallback_label
+        from nupla.classify import fallback_label
 
         assert fallback_label(["Synopse", "Andere", "Other"]) == "Andere"
 
     def test_returns_none_when_missing(self):
-        from bzodigital.classify import fallback_label
+        from nupla.classify import fallback_label
 
         assert fallback_label(["Synopse", "Bau- und Zonenordnung neu"]) is None
 
     def test_matches_other_or_sonstige_aliases(self):
-        from bzodigital.classify import fallback_label
+        from nupla.classify import fallback_label
 
         assert fallback_label(["Synopse", "Other"]) == "Other"
         assert fallback_label(["Synopse", "Sonstige"]) == "Sonstige"
@@ -260,7 +260,7 @@ class TestSeedClassifications:
 
     @pytest.fixture
     def isolated_db(self, tmp_path, monkeypatch):
-        from bzodigital import db
+        from nupla import db
 
         monkeypatch.setattr(db, "DB_PATH", tmp_path / "bzo.db")
         monkeypatch.setattr(db, "engine", None)
@@ -268,7 +268,7 @@ class TestSeedClassifications:
         return db
 
     def test_real_match_is_auto_selected(self, isolated_db):
-        from bzodigital.api import _seed_classifications
+        from nupla.api import _seed_classifications
 
         pdfs = [
             {"url": _url("sy - synopse.pdf"), "title": ""},  # → Synopse
@@ -283,7 +283,7 @@ class TestSeedClassifications:
         assert anns[_url("budget-2024.pdf")]["labels"] == ["Andere"]
 
     def test_skip_if_labeled_protects_user_state(self, isolated_db):
-        from bzodigital.api import _seed_classifications
+        from nupla.api import _seed_classifications
 
         # User has manually deselected a synopse and replaced its label.
         isolated_db.upsert_annotation(

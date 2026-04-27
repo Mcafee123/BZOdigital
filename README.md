@@ -6,7 +6,7 @@ See [`CLAUDE.md`](./CLAUDE.md) for project goals, the staged pipeline (Collect �
 
 ## Repository layout
 
-- `src/bzodigital/` — **stage I (Collect):** Python package that discovers and downloads BZO PDFs for any Swiss municipality. Ships a `bzo` CLI and a FastAPI service.
+- `src/nupla/` — **stage I (Collect):** Python package that discovers and downloads BZO PDFs for any Swiss municipality. Ships a `bzo` CLI and a FastAPI service.
 - `app/` — **stage IV slice:** Vue 3 SPA + FastAPI BFF that renders a unified-diff file. See [`app/README.md`](./app/README.md).
 - `data/<municipality>/src/*.pdf` — original source PDFs (currently only `oberrieden`).
 - `tf/` — Terraform for deploying `app/` to Azure Container Apps (PROD only).
@@ -15,14 +15,14 @@ See [`CLAUDE.md`](./CLAUDE.md) for project goals, the staged pipeline (Collect �
 
 Pipeline stages II (extract) and III (connect) are not yet implemented.
 
-## Stage I: the `bzodigital` collector/search service
+## Stage I: the `nupla` collector/search service
 
-Lives in `src/bzodigital/`. Independent from `app/` — different package, different `pyproject.toml` (this repo's root `pyproject.toml`).
+Lives in `src/nupla/`. Independent from `app/` — different package, different `pyproject.toml` (this repo's root `pyproject.toml`).
 
 ### Modules
 
-- `cli.py` — `bzo` entry point with subcommands `bfs-update`, `refresh`, `list`, `search`, `serve`.
-- `api.py` — FastAPI REST API (`bzo-api` entry point); also serves the vanilla-JS UI in `static/`.
+- `cli.py` — `nupla` entry point with subcommands `bfs-update`, `refresh`, `list`, `search`, `serve`.
+- `api.py` — FastAPI REST API ; also serves the vanilla-JS UI in `static/`.
 - `bfs.py` — fuzzy lookup against the Swiss BFS municipality register.
 - `cantons.py`, `cantons_zh.py`, `gemeinden.py` — canton-level URL mappings and scrapers.
 - `crawler.py`, `search.py` — web search via Serper API or Playwright fallback; PDF discovery and metadata/content filtering.
@@ -39,16 +39,16 @@ From the repo root:
 ```bash
 uv sync                              # install dependencies into .venv
 uv run playwright install chromium   # one-time; needed when SERPER_API_KEY is unset
-uv run bzo bfs-update                # one-time; downloads the BFS register
-uv run bzo serve                     # http://localhost:7100 (UI + API; app/ uses 7000)
+uv run nupla bfs-update                # one-time; downloads the BFS register
+uv run nupla serve                     # http://localhost:7100 (UI + API; app/ uses 7000)
 ```
 
 CLI examples:
 
 ```bash
-uv run bzo list --canton ZH
-uv run bzo search Oberrieden --pdfs --check-content
-uv run bzo refresh --canton zh
+uv run nupla list --canton ZH
+uv run nupla search Oberrieden --pdfs --check-content
+uv run nupla refresh --canton zh
 ```
 
 ### Environment variables

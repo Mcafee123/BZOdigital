@@ -1,6 +1,6 @@
 """Tests for BFS municipality register fuzzy matching."""
 
-from bzodigital.bfs import Municipality, fuzzy_find_municipality
+from nupla.bfs import Municipality, fuzzy_find_municipality
 
 
 SAMPLE_MUNICIPALITIES = [

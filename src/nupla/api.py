@@ -18,10 +18,10 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from bzodigital.bfs import Municipality, fuzzy_find_municipality, load_bfs, update_bfs_register
-from bzodigital.cantons import find_url, get_canton
-from bzodigital.classify import fallback_label, resolve_batch as classify_batch
-from bzodigital.db import (
+from nupla.bfs import Municipality, fuzzy_find_municipality, load_bfs, update_bfs_register
+from nupla.cantons import find_url, get_canton
+from nupla.classify import fallback_label, resolve_batch as classify_batch
+from nupla.db import (
     add_label,
     clear_search_cache,
     delete_annotation,
@@ -32,10 +32,10 @@ from bzodigital.db import (
     save_search_cache,
     upsert_annotation,
 )
-from bzodigital.converter import compare_documents, convert_pdf_stream, download_pdf
-from bzodigital.enrichment import build_bzo_custom_law, enrich_markdown_safe
-from bzodigital.profiles import DEFAULT_PROFILE, PROFILES
-from bzodigital.search import (
+from nupla.converter import compare_documents, convert_pdf_stream, download_pdf
+from nupla.enrichment import build_bzo_custom_law, enrich_markdown_safe
+from nupla.profiles import DEFAULT_PROFILE, PROFILES
+from nupla.search import (
     extract_pdfs,
     filter_pdfs_by_metadata,
     has_serper_key,
@@ -236,7 +236,7 @@ async def get_bzo(
     search_profile = PROFILES[profile]
     municipalities = load_bfs()
     if not municipalities:
-        raise HTTPException(status_code=500, detail="BFS register not loaded. Run 'bzo bfs-update'.")
+        raise HTTPException(status_code=500, detail="BFS register not loaded. Run 'nupla bfs-update'.")
 
     matches = fuzzy_find_municipality(municipality_name, municipalities, limit=1)
     if not matches or matches[0][1] < 60:
@@ -385,7 +385,7 @@ async def get_processed(municipality_name: str):
 
     all_pdfs: list[AnnotationResponse] = []
     if cached_results:
-        from bzodigital.search import extract_pdfs, filter_pdfs_by_metadata
+        from nupla.search import extract_pdfs, filter_pdfs_by_metadata
         seen: set[str] = set()
         raw_pdfs: list[dict] = []
         tasks = [extract_pdfs(r["url"]) for r in cached_results]
@@ -1034,6 +1034,6 @@ async def _batch_worker(municipality_names: list[str]):
 
 
 def start():
-    """Entry point for bzo-api script."""
+    """Entry point for nupla-api."""
     import uvicorn
-    uvicorn.run("bzodigital.api:app", host="0.0.0.0", port=7000, reload=True)
+    uvicorn.run("nupla.api:app", host="0.0.0.0", port=7000, reload=True)

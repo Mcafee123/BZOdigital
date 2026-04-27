@@ -2,7 +2,7 @@
 
 import pytest
 
-from bzodigital.search import _url_is_pdf
+from nupla.search import _url_is_pdf
 
 
 class TestUrlIsPdf:

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional
 
-from bzodigital.law_enrichment import enrich_markdown, LawEntry
+from nupla.law_enrichment import enrich_markdown, LawEntry
 
 
 def enrich_markdown_safe(

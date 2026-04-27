@@ -6,11 +6,11 @@ import sys
 
 from dotenv import load_dotenv
 
-from bzodigital.bfs import fuzzy_find_municipality, load_bfs, update_bfs_register
-from bzodigital.cantons import find_url, get_canton
-from bzodigital.db import init_db
-from bzodigital.profiles import DEFAULT_PROFILE, PROFILES
-from bzodigital.search import (
+from nupla.bfs import fuzzy_find_municipality, load_bfs, update_bfs_register
+from nupla.cantons import find_url, get_canton
+from nupla.db import init_db
+from nupla.profiles import DEFAULT_PROFILE, PROFILES
+from nupla.search import (
     check_pdf_content,
     extract_pdfs,
     filter_pdfs_by_metadata,
@@ -60,7 +60,7 @@ def main():
 
     if args.command == "serve":
         import uvicorn
-        uvicorn.run("bzodigital.api:app", host=args.host, port=args.port, reload=True)
+        uvicorn.run("nupla.api:app", host=args.host, port=args.port, reload=True)
     else:
         asyncio.run(_dispatch(args))
 
@@ -83,7 +83,7 @@ async def _dispatch(args):
     elif args.command == "list":
         municipalities = load_bfs()
         if not municipalities:
-            print("BFS register not found. Run 'bzo bfs-update' first.")
+            print("BFS register not found. Run 'nupla bfs-update' first.")
             return
         if args.canton:
             municipalities = [m for m in municipalities if m.canton.upper() == args.canton.upper()]
@@ -94,7 +94,7 @@ async def _dispatch(args):
     elif args.command == "search":
         municipalities = load_bfs()
         if not municipalities:
-            print("BFS register not found. Run 'bzo bfs-update' first.")
+            print("BFS register not found. Run 'nupla bfs-update' first.")
             return
 
         profile = PROFILES[args.profile]

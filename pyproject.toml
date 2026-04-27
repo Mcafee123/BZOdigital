@@ -1,5 +1,5 @@
 [project]
-name = "bzodigital"
+name = "nupla"
 version = "0.1.0"
 description = "Swiss municipal zoning document finder"
 requires-python = ">=3.12"
@@ -18,8 +18,7 @@ dependencies = [
 ]
 
 [project.scripts]
-bzo = "bzodigital.cli:main"
-bzo-api = "bzodigital.api:start"
+nupla = "nupla.cli:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -7,7 +7,7 @@ from urllib.parse import unquote, urljoin, urlparse
 
 import httpx
 
-from bzodigital.profiles import SearchProfile
+from nupla.profiles import SearchProfile
 
 SERPER_URL = "https://google.serper.dev/search"
 NOISE_DOMAINS = frozenset({
@@ -98,7 +98,7 @@ async def search_or_crawl_site(base_url: str, profile: SearchProfile, max_result
     """Search with Serper if API key is available, otherwise crawl the site."""
     if has_serper_key():
         return await search_site(base_url, profile, max_results)
-    from bzodigital.crawler import crawl_site
+    from nupla.crawler import crawl_site
     # Crawler needs to visit many pages to find PDFs — max_pages != max_results
     return await crawl_site(base_url, profile, max_pages=200)
 
@@ -108,7 +108,7 @@ async def search_or_crawl_open(village_name: str, base_url: str | None, profile:
     if has_serper_key():
         return await search_open(village_name, profile, max_results)
     if base_url:
-        from bzodigital.crawler import crawl_site
+        from nupla.crawler import crawl_site
         return await crawl_site(base_url, profile, max_pages=max_results)
     return []
 

@@ -1,6 +1,6 @@
 """Tests for PDF link extraction using real HTML snippets from Swiss Gemeinde websites."""
 
-from bzodigital.search import parse_pdf_links
+from nupla.search import parse_pdf_links
 
 
 BASE_URL = "https://www.example.ch/page/123"
