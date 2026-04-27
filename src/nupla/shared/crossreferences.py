@@ -17,6 +17,8 @@ from nupla.shared.enrichment import build_bzo_custom_law, enrich_markdown_safe
 _ARTICLE_HEADING_RE = re.compile(r"^#{1,6}\s+Art\.?\s*(\d+[a-zA-Z]?)\b", re.MULTILINE)
 _MIN_PARAGRAPH_LEN = 80
 _MIN_TABLE_SUBSTANCE = 60
+_HTML_COMMENT_RE = re.compile(r"<!--.*?-->", re.DOTALL)
+_MIN_CLEANED_LEN = 50
 
 
 @dataclass(frozen=True)
@@ -78,7 +80,9 @@ def compute_cross_references(
                 cite["end_index"],
             )
 
-            if _is_low_value_table_row(paragraph):
+            paragraph = _clean_paragraph(paragraph)
+
+            if _is_low_value(paragraph):
                 continue
 
             seen_set = seen.setdefault(provision, set())
@@ -103,18 +107,28 @@ def compute_cross_references(
     )
 
 
-def _is_low_value_table_row(paragraph: str) -> bool:
-    """Detect table rows that are just article-title listings (TOC-style).
+def _clean_paragraph(paragraph: str) -> str:
+    """Strip HTML comments and leading/trailing whitespace from a paragraph."""
+    cleaned = _HTML_COMMENT_RE.sub("", paragraph).strip()
+    return cleaned
 
-    Returns True for rows like ``| Art. 4 | Gestaltungsplanpflicht | | |``
-    where the content after stripping article references, pipes, dashes,
-    and whitespace is too short to be substantive.  Rows with real
-    regulatory text (measurements, conditions, etc.) pass through.
+
+def _is_low_value(paragraph: str) -> bool:
+    """Return True for paragraphs that add no substantive context.
+
+    Catches:
+    - Table rows that are just article-title listings (TOC-style).
+    - Very short paragraphs after cleanup (bare headings, pointer stubs
+      like ``*Art. 20*`` or ``zu Art. 29``).
     """
-    if not (paragraph.startswith("|") or "\t|" in paragraph):
-        return False
-    stripped = re.sub(r"[|\-\s]+", " ", paragraph).strip()
-    return len(stripped) < _MIN_TABLE_SUBSTANCE
+    if paragraph.startswith("|") or "\t|" in paragraph:
+        stripped = re.sub(r"[|\-\s]+", " ", paragraph).strip()
+        return len(stripped) < _MIN_TABLE_SUBSTANCE
+    # Strip markdown headings and check remaining substance
+    without_headings = re.sub(
+        r"^#{1,6}\s+.*$", "", paragraph, flags=re.MULTILINE
+    ).strip()
+    return len(without_headings) < _MIN_CLEANED_LEN
 
 
 def _extract_paragraph(text: str, start_index: int, end_index: int) -> str:
