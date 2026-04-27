@@ -4,7 +4,7 @@ The classifier produces internal category keys (e.g. "regulation_old"); the
 human-readable labels written into PdfAnnotation.labels_json are sourced from
 the `label` table in the database — substring rules pick the right row per
 category. Anything we can't classify, or a category that doesn't match any
-existing label, falls back to the "Andere" / fallback label.
+existing label, is left without a proposed label so the operator can decide.
 """
 
 from __future__ import annotations
@@ -26,8 +26,6 @@ _LABEL_MATCHERS: dict[str, Callable[[str], bool]] = {
     "einwendungsbericht":    lambda n: "einwendung" in n,
     "erlauterungsbericht":   lambda n: "erläut" in n or "erlaut" in n,
     "versammlungsbeschluss": lambda n: "versammlung" in n,
-    # Fallback bucket — matched against typical names for "other".
-    "other":                 lambda n: n.strip() in ("andere", "other", "sonstige", "sonstiges"),
 }
 
 # Categories that must be unique per municipality. If two or more PDFs match
@@ -103,11 +101,6 @@ def _resolve_label(category: str, db_labels: Iterable[str]) -> str | None:
     return None
 
 
-def fallback_label(db_labels: Iterable[str]) -> str | None:
-    """Return the DB label name used as the catch-all bucket ("Andere"), or None."""
-    return _resolve_label("other", db_labels)
-
-
 def _extract_sort_key(url: str, title: str) -> tuple[int, tuple[int, int, int]]:
     """Return a sort key that orders BZO files newest → oldest under ascending sort.
 
@@ -164,9 +157,9 @@ def resolve_batch(
     for the strings written into PdfAnnotation.labels_json. If omitted, fetched
     lazily via db.get_labels() so this module stays unit-testable without a DB.
 
-    Returns {url: [label, ...]}. A label is always set: either the matched
-    category's DB label, or the fallback ("Andere") if no category-specific
-    label can be resolved.
+    Returns {url: [label, ...]}. Documents that don't match any category, or
+    whose category has no corresponding DB label, get an empty list — the
+    classifier deliberately does not propose a catch-all "Andere" tag.
     """
     items = list(items)
     if db_labels is None:
@@ -174,19 +167,16 @@ def resolve_batch(
         db_labels = get_labels()
     db_labels = list(db_labels)
 
-    fallback = _resolve_label("other", db_labels)
     raw: list[tuple[dict, str | None]] = [
         (i, classify_pdf(i["url"], i.get("title", ""))) for i in items
     ]
 
-    # Default everyone to the fallback; category matches override below.
-    suggestions: dict[str, list[str]] = {
-        i["url"]: ([fallback] if fallback else []) for i in items
-    }
+    suggestions: dict[str, list[str]] = {i["url"]: [] for i in items}
 
     def assign(url: str, category: str) -> None:
         label = _resolve_label(category, db_labels)
-        suggestions[url] = [label] if label else ([fallback] if fallback else [])
+        if label:
+            suggestions[url] = [label]
 
     # Single-instance categories: assign only when exactly one candidate exists.
     for cat in _SINGLE_INSTANCE:

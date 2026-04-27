@@ -72,9 +72,9 @@ class TestResolveBatch:
 
         assert result[_url("erl - 3-teilrev.-bzo-ivhb-und-anderes-erlauterungsbericht-und-anhang.pdf")] == ["Erläuterungsbericht gemäss Art. 47 RPV"]
         assert result[_url("sy - 2-teilrev.-bzo-ivhb-und-anderes-synopse.pdf")] == ["Synopse"]
-        # Non-classifiable items get the fallback label.
-        assert result[_url("info - prasentation.pdf")] == ["Andere"]
-        assert result[_url("öa - 1-publikationstext.pdf")] == ["Andere"]
+        # Non-classifiable items are left without a proposed label.
+        assert result[_url("info - prasentation.pdf")] == []
+        assert result[_url("öa - 1-publikationstext.pdf")] == []
         assert result[_url("BZO-Revision IVHB Einwendungsbericht §7 PBG.pdf")] == ["Einwendungsbericht gemäss § 7 PBG"]
         assert result[_url("Gemeindeversammlungsbeschluss 25-4 BZO IVHB.pdf")] == ["Gemeindeversammlungsbeschluss"]
         assert result[_url("aktuell 7.1-1-3-1.de.pdf")] == ["Bau- und Zonenordnung neu"]

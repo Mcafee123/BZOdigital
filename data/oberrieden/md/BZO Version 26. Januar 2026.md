@@ -1,5 +1,4 @@
 <!-- section:level=1 title="BZO Version 26. Januar 2026.pdf" -->
-![A logo featuring a blue shield with a white eight-pointed star, next to the text 'Gemeinde Oberrieden'.]()
 
 
 <!-- section:level=1 title="Arbeitsversion" -->

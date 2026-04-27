@@ -1,6 +1,4 @@
 <!-- section:level=1 title="BZO-Revision IVHB Synopse alt neu.pdf" -->
-![A logo featuring a blue shield with a white eight-pointed star, alongside text identifying the Canton of Zurich and the municipality of Oberrieden.]()
-
 Kanton Zürich
 
 Gemeinde Oberrieden
@@ -292,8 +290,6 @@ Einführung Attikageschoss: der Begriff Attikageschoss war bisher nicht im PBG d
 
 à Attikageschosse bzw. Flachdächer sind unter Anwendung von Art 11 Abs. 2 BZO auch in den Kernzonen denkbar, wenn sie bestehende Bauten oder Baugruppen sinnvoll ergänzen.
 
-![Two diagrams comparing 'PBG alt' and 'PBG neu' with cross-sections and percentages (47% and 74%) shown below, illustrating changes in structure or coverage.]()
-
 PBG alt
 
 PBG neu
@@ -310,8 +306,6 @@ Aufhebung grosser Grundabstand zur Flexibilisierung/Liberalisierung:
 
 Mit der IVHB wird der Begriff «Gebäudehöhe» durch «Fassadenhöhe» ersetzt. Aufgrund der unterschiedlichen Messweise der Fassaden- zur Gebäudehöhe kommt bei gleichbleibenden Mass neu noch die Isolation und die Dachhaut 'obendrauf' was zu 0.2-0.5 m höheren Gebäuden führt.
 
-![A technical diagram showing a building section with labeled points indicating old building height and new facade height, including an upper measurement point.]()
-
 Alte Gebäudehöhe
 
 Oberer Messpunkt
@@ -319,8 +313,6 @@ Oberer Messpunkt
 Neue Fassadenhöhe
 
 *Harmonisierung der Baubegriffe; Leitfaden (März 2017), S. 23*
-
-![A technical diagram showing the gable and eave side facade heights (Fh) of a pitched roof building relative to the ground level.]()
 
 giebelseitige
 
@@ -456,8 +448,6 @@ Einführung anrechenbares Untergeschoss (bis zu 50 % Ø VG):
 
 Fassadenhöhe bei Flachdach Kompensation ungleiche Messweise ggü. Satteldach (+ 0.5 m):
 
-![A technical diagram showing building elevation details with labeled measurement points and height indicators for facade and building height.]()
-
 Oberer Messpunkt
 
 *Die Anrechenbarkeit von Räumen ist in § 255 Abs. 2 PBG abschliessend geregelt. Die zulässige «anrechenbare Untergeschosszahl» bezieht sich auf das Maximum an anrechenbaren Flächen gem. § 255 Abs. 3 PBG.
@@ -465,8 +455,6 @@ Oberer Messpunkt
 *Kompensation  offene  Brüstung  bei  Flachdach  (+ 1.0 m)  und Deckelung  Attika  durch  Gesamthöhe  (entspricht  Fassadenhöhe + 3.30 m für das Attika)*
 
 tiefstgelegenen
-
-![Two technical diagrams illustrating building height measurements, showing the highest points of roof construction and the lowest terrain point under the roof slope.]()
 
 Dachflächenbereich über dem
 
@@ -485,8 +473,6 @@ Gesamthöhe h
 tiefster Punkt auf massgebendem
 
 Terrain unter der Dachfläche
-
-![A diagram illustrating three scenarios for building facade heights and setbacks relative to a reference line, labeled 'BZO neu', with annotations for different railing types and dimensions.]()
 
 2 Bei Flachdächern mit offener oder transparenter Brüstung erhöht sich die Fassadenhöhe um 1 m.
 

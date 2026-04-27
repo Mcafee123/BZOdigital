@@ -1,6 +1,4 @@
 <!-- section:level=1 title="Gemeindeversammlungsbeschluss 25-4 BZO IVHB (1).pdf" -->
-![Logo of the municipality of Oberrieden, featuring the name 'gemeinde oberrieden' and a blue shield with a white star, with 'Gemeindeversammlung' below.]()
-
 gemeinde
 
 oberrieden
@@ -458,10 +456,6 @@ Die Gemeindeversammlung beschliesst mit grossem Mehr:
 - Akten
 
 Gemeindeversammlung Oberrieden
-
-![A blue handwritten signature above two lines of printed text on a white background.]()
-
-![Handwritten blue ink signature or cursive text on a white background, appearing as two connected strokes.]()
 
 *Reto Wildeisen Gemeindepräsident*
 

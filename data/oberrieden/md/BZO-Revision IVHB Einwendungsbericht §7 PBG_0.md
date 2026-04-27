@@ -1,5 +1,4 @@
 <!-- section:level=1 title="BZO-Revision IVHB Einwendungsbericht §7 PBG_0.pdf" -->
-![Logo of the municipality of Oberrieden, featuring the word 'gemeinde' above 'oberrieden' and a blue shield with a white star.]()
 
 
 <!-- section:level=1 title="Teilrevision der Bau- und Zonenordnung" -->
@@ -16,8 +15,6 @@
 Einwendungsbericht gemäss § 7 PBG
 
 Stand: 18. März 2025
-
-![A technical diagram illustrating facade heights (Fh) for gable and side facades, with annotations for setback parapets and examples for pitched and flat roofs.]()
 
 Brüstung
 

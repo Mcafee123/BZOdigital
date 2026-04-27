@@ -34,7 +34,7 @@ from nupla.pipeline.bfs import (
     update_bfs_register,
 )
 from nupla.pipeline.cantons import find_url, get_canton
-from nupla.pipeline.classify import fallback_label, resolve_batch as classify_batch
+from nupla.pipeline.classify import resolve_batch as classify_batch
 from nupla.pipeline.db import (
     add_label,
     clear_search_cache,
@@ -453,7 +453,6 @@ async def get_processed(municipality_name: str):
                     raw_pdfs.append(pdf)
         matched, ambiguous = filter_pdfs_by_metadata(raw_pdfs, profile)
         suggestions = _seed_classifications(muni.bfs_nr, [*matched, *ambiguous])
-        fb = fallback_label(get_labels())
         now = datetime.utcnow().isoformat()
         all_pdfs = [
             AnnotationResponse(
@@ -462,8 +461,7 @@ async def get_processed(municipality_name: str):
                 pdf_url=p["url"],
                 pdf_title=p.get("title", ""),
                 labels=suggestions.get(p["url"], []),
-                selected=bool(suggestions.get(p["url"]))
-                and (fb is None or suggestions[p["url"]][0] != fb),
+                selected=bool(suggestions.get(p["url"])),
                 created_at=now,
                 updated_at=now,
             )
@@ -891,25 +889,20 @@ def _seed_classifications(bfs_nr: int, pdfs: list[dict]) -> dict[str, list[str]]
     if not pdfs:
         return {}
     labels = get_labels()
-    fallback = fallback_label(labels)
     suggestions = classify_batch(
         [{"url": p["url"], "title": p.get("title", "")} for p in pdfs],
         db_labels=labels,
     )
     for p in pdfs:
         suggested = suggestions.get(p["url"], [])
-        # Auto-select rows with a real category match — anything that isn't
-        # the "Andere" fallback. The user can deselect mistakes; an empty
-        # suggestion stays unselected.
-        is_real_match = bool(suggested) and (
-            fallback is None or suggested[0] != fallback
-        )
+        # Auto-select any row that got a category match. Unclassified docs
+        # come through with an empty suggestion and stay unselected.
         upsert_annotation(
             bfs_nr=bfs_nr,
             pdf_url=p["url"],
             pdf_title=p.get("title", ""),
             labels=suggested,
-            selected=is_real_match,
+            selected=bool(suggested),
             skip_if_labeled=True,
         )
     return suggestions
