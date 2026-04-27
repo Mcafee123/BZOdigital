@@ -16,6 +16,7 @@ from nupla.shared.enrichment import build_bzo_custom_law, enrich_markdown_safe
 
 _ARTICLE_HEADING_RE = re.compile(r"^#{1,6}\s+Art\.?\s*(\d+[a-zA-Z]?)\b", re.MULTILINE)
 _MIN_PARAGRAPH_LEN = 80
+_MIN_TABLE_SUBSTANCE = 60
 
 
 @dataclass(frozen=True)
@@ -56,9 +57,12 @@ def compute_cross_references(
     articles = _ARTICLE_HEADING_RE.findall(bzo_markdown)
 
     cross_references: dict[str, list[dict[str, Any]]] = {}
+    seen: dict[str, set[str]] = {}  # provision → set of paragraph texts
     for doc in companions:
         result = enrich_markdown_safe(
-            doc.markdown, default_law="BZO", custom_laws=custom_laws,
+            doc.markdown,
+            default_law="BZO",
+            custom_laws=custom_laws,
         )
         if not result:
             continue
@@ -69,15 +73,27 @@ def compute_cross_references(
 
             provision = cite["provision"]
             paragraph = _extract_paragraph(
-                doc.markdown, cite["start_index"], cite["end_index"],
+                doc.markdown,
+                cite["start_index"],
+                cite["end_index"],
             )
 
-            cross_references.setdefault(provision, []).append({
-                "source_file": doc.filename,
-                "source_labels": doc.labels,
-                "citation_text": cite["text"],
-                "paragraph": paragraph,
-            })
+            if _is_low_value_table_row(paragraph):
+                continue
+
+            seen_set = seen.setdefault(provision, set())
+            if paragraph in seen_set:
+                continue
+            seen_set.add(paragraph)
+
+            cross_references.setdefault(provision, []).append(
+                {
+                    "source_file": doc.filename,
+                    "source_labels": doc.labels,
+                    "citation_text": cite["text"],
+                    "paragraph": paragraph,
+                }
+            )
 
     return CrossRefResult(
         bzo_filename=bzo_filename,
@@ -85,6 +101,20 @@ def compute_cross_references(
         articles=articles,
         cross_references=cross_references,
     )
+
+
+def _is_low_value_table_row(paragraph: str) -> bool:
+    """Detect table rows that are just article-title listings (TOC-style).
+
+    Returns True for rows like ``| Art. 4 | Gestaltungsplanpflicht | | |``
+    where the content after stripping article references, pipes, dashes,
+    and whitespace is too short to be substantive.  Rows with real
+    regulatory text (measurements, conditions, etc.) pass through.
+    """
+    if not (paragraph.startswith("|") or "\t|" in paragraph):
+        return False
+    stripped = re.sub(r"[|\-\s]+", " ", paragraph).strip()
+    return len(stripped) < _MIN_TABLE_SUBSTANCE
 
 
 def _extract_paragraph(text: str, start_index: int, end_index: int) -> str:
