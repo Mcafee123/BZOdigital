@@ -511,7 +511,9 @@ async def serve_upload(municipality_slug: str, filename: str):
     file_path = DATA_DIR / municipality_slug / "uploads" / filename
     if not file_path.exists():
         raise HTTPException(404, "File not found.")
-    return FileResponse(file_path, media_type="application/pdf", filename=filename)
+    return FileResponse(
+        file_path, media_type="application/pdf", content_disposition_type="inline"
+    )
 
 
 # --- Processing ---
