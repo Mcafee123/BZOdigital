@@ -19,6 +19,7 @@ _MIN_PARAGRAPH_LEN = 80
 _MIN_TABLE_SUBSTANCE = 60
 _HTML_COMMENT_RE = re.compile(r"<!--.*?-->", re.DOTALL)
 _MIN_CLEANED_LEN = 50
+_MAX_PARAGRAPH_LEN = 600
 
 
 @dataclass(frozen=True)
@@ -100,6 +101,7 @@ def compute_cross_references(
             )
 
     cross_references = _remove_contained(cross_references)
+    cross_references = _truncate_paragraphs(cross_references)
 
     return CrossRefResult(
         bzo_filename=bzo_filename,
@@ -158,6 +160,32 @@ def _is_low_value(paragraph: str) -> bool:
         r"^#{1,6}\s+.*$", "", paragraph, flags=re.MULTILINE
     ).strip()
     return len(without_headings) < _MIN_CLEANED_LEN
+
+
+def _truncate_paragraphs(
+    cross_references: dict[str, list[dict[str, Any]]],
+) -> dict[str, list[dict[str, Any]]]:
+    """Truncate paragraphs that exceed the maximum length.
+
+    Keeps the beginning of the paragraph (which is already extracted around
+    the citation) and snaps to a sentence boundary when possible.
+    """
+    result: dict[str, list[dict[str, Any]]] = {}
+    for provision, refs in cross_references.items():
+        truncated = []
+        for ref in refs:
+            para = ref["paragraph"]
+            if len(para) > _MAX_PARAGRAPH_LEN:
+                # Try to snap at a sentence boundary near the limit
+                dot = para.find(". ", _MAX_PARAGRAPH_LEN - 80, _MAX_PARAGRAPH_LEN + 40)
+                if dot != -1:
+                    para = para[: dot + 1] + " …"
+                else:
+                    para = para[:_MAX_PARAGRAPH_LEN].rstrip() + " …"
+                ref = {**ref, "paragraph": para}
+            truncated.append(ref)
+        result[provision] = truncated
+    return result
 
 
 def _extract_paragraph(text: str, start_index: int, end_index: int) -> str:
