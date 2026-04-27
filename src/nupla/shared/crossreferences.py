@@ -99,12 +99,41 @@ def compute_cross_references(
                 }
             )
 
+    cross_references = _remove_contained(cross_references)
+
     return CrossRefResult(
         bzo_filename=bzo_filename,
         bzo_markdown=bzo_enriched,
         articles=articles,
         cross_references=cross_references,
     )
+
+
+def _remove_contained(
+    cross_references: dict[str, list[dict[str, Any]]],
+) -> dict[str, list[dict[str, Any]]]:
+    """Drop paragraphs that are contained within a longer one for the same provision.
+
+    When two citations in the same text region produce overlapping extractions,
+    the shorter paragraph is a substring of the longer one.  Keep only the
+    shorter (more focused) version.
+    """
+    result: dict[str, list[dict[str, Any]]] = {}
+    for provision, refs in cross_references.items():
+        paragraphs = [r["paragraph"] for r in refs]
+        # Sort shortest first so we prefer the focused version
+        indexed = sorted(enumerate(paragraphs), key=lambda t: len(t[1]))
+        drop: set[int] = set()
+        for i, (idx_a, para_a) in enumerate(indexed):
+            if idx_a in drop:
+                continue
+            for idx_b, para_b in indexed[i + 1 :]:
+                if idx_b in drop:
+                    continue
+                if para_a in para_b:
+                    drop.add(idx_b)
+        result[provision] = [r for j, r in enumerate(refs) if j not in drop]
+    return result
 
 
 def _clean_paragraph(paragraph: str) -> str:
