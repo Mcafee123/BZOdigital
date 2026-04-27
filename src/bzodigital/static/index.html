@@ -25,13 +25,10 @@
     .search-box {
       position: relative;
       margin-bottom: 1.5rem;
-      display: flex;
-      gap: 8px;
-      align-items: center;
     }
 
     input[type="text"] {
-      flex: 1;
+      width: 100%;
       padding: 0.75rem 1rem;
       font-size: 1rem;
       border: 2px solid #ccc;
@@ -41,20 +38,6 @@
     }
 
     input[type="text"]:focus { border-color: #2563eb; }
-
-    #reset-btn {
-      display: none;
-      padding: 0.55rem 0.9rem;
-      font-size: 0.8rem;
-      border: 1px solid #d1d5db;
-      border-radius: 8px;
-      background: white;
-      color: #6b7280;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all 0.15s;
-    }
-    #reset-btn:hover { border-color: #ef4444; color: #ef4444; }
 
     .suggestions {
       position: absolute;
@@ -470,6 +453,20 @@
 
     .upload-info { font-size: 0.8rem; color: #6b7280; }
 
+    .reset-btn {
+      margin-left: auto;
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      background: white;
+      color: #6b7280;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .reset-btn:hover { border-color: #ef4444; color: #ef4444; }
+
     /* Modal overlay */
     .modal-overlay {
       display: none;
@@ -577,7 +574,6 @@
 
   <div class="search-box">
     <input type="text" id="search" placeholder="Gemeinde suchen..." autocomplete="off">
-    <button id="reset-btn" title="Cache und Labels zurücksetzen">Clear</button>
     <div class="suggestions" id="suggestions"></div>
   </div>
 
@@ -593,6 +589,7 @@
     <input type="file" id="upload-input" accept=".pdf" multiple style="display:none">
     <button class="upload-btn" onclick="document.getElementById('upload-input').click()">+ PDF hochladen</button>
     <span id="upload-info" class="upload-info"></span>
+    <button id="reset-btn" class="reset-btn" title="Suchresultate, Cache und Labels zurücksetzen">Clear</button>
   </div>
 
   <ul id="results" class="results"></ul>
@@ -979,11 +976,9 @@
         loadExistingFiles(muni.name);
         checkCompareStatus(muni.name);
 
-        // Show the reset button
-        const resetBtn = document.getElementById('reset-btn');
-        resetBtn.style.display = 'block';
-        resetBtn.onclick = async () => {
-          if (!confirm('Cache und Labels für ' + muni.name + ' zurücksetzen?')) return;
+        // Wire up reset button
+        document.getElementById('reset-btn').onclick = async () => {
+          if (!confirm('Suchresultate, Cache und Labels für ' + muni.name + ' zurücksetzen?')) return;
           await fetch(`/api/bzo/${encodeURIComponent(muni.name)}/reset`, { method: 'DELETE' });
           await selectMunicipality(muni);
         };
