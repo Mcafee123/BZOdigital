@@ -1,0 +1,1 @@
+uv run bzo serve
