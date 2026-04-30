@@ -26,7 +26,7 @@ jobs:
     name: Build image and validate Terraform
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Build image (Vue SPA + FastAPI)
         run: docker build -t nupla-app:ci-${{ github.sha }} -f src/nupla/app/Dockerfile .
