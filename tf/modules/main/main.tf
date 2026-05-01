@@ -86,6 +86,8 @@ module "container_app" {
   container_app_environment_id = local.cae_config.id
   keyvault_id                  = local.keyvault.id
 
+  business_hours_scaling = var.business_hours_scaling
+
   identity_config = {
     type = "UserAssigned"
     user_assigned_identities = {

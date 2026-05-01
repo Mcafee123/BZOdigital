@@ -31,12 +31,26 @@ variable "mount_path" {
 
 variable "min_replicas" {
   type    = number
-  default = 1
+  default = 0
 }
 
 variable "max_replicas" {
   type    = number
   default = 3
+}
+
+variable "business_hours_scaling" {
+  type = object({
+    start_hour = number
+    end_hour   = number
+    weekdays   = optional(string, "*")
+    timezone   = optional(string, "Europe/Zurich")
+  })
+  default = {
+    start_hour = 6
+    end_hour   = 23
+  }
+  description = "Keeps one replica warm between start_hour and end_hour. Only takes effect when min_replicas == 0; outside the window the HTTP scaler can still cold-start on traffic."
 }
 
 variable "cpu" {
