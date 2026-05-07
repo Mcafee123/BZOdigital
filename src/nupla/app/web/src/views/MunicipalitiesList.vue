@@ -10,7 +10,7 @@ const searchQuery = ref('');
 const isDropdownOpen = ref(false);
 
 const isModalOpen = ref(false);
-const pdfUrl = ref('/OLL2026_BZO_V06.pdf');
+const pdfUrl = ref('/OLL2026-BZO_final.pdf');
 
 const handleKeydown = (e: KeyboardEvent) => {
   if (!isModalOpen.value) return;
@@ -48,6 +48,7 @@ onUnmounted(() => {
 <template>
   <div id="view-home" class="view active">
     <div class="logo">NUPLA</div>
+    <div class="version-badge">v0.1 Prototyp</div>
     <div class="subtitle">Nutzungsplanungen einfach verstehen</div>
     
     <div class="search-wrapper" @focusout="handleFocusOut">
@@ -55,7 +56,7 @@ onUnmounted(() => {
         type="text" 
         v-model="searchQuery"
         @focus="isDropdownOpen = true"
-        placeholder="Gemeinde suchen (z.B. Bern)..." 
+        placeholder="Gemeinde suchen (z.B. Oberrieden)..." 
         autocomplete="off" 
       />
       
@@ -82,6 +83,10 @@ onUnmounted(() => {
     <button class="presentation-btn" @click="isModalOpen = true">
       Präsentation
     </button>
+    
+    <div class="contact-info">
+      Fragen, Anregungen, Mitmachen: <a href="mailto:mail@nupla.info">mail@nupla.info</a>
+    </div>
 
     <!-- Presentation Modal -->
     <Teleport to="body">
@@ -152,7 +157,7 @@ onUnmounted(() => {
 
 .presentation-btn {
   margin-top: 40px;
-  padding: 10px 24px;
+  padding: 6px 48px;
   font-size: 14px;
   font-weight: 500;
   color: var(--surface-color);
@@ -172,6 +177,24 @@ onUnmounted(() => {
   border-color: #374151;
   transform: translateY(-1px);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.contact-info {
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.contact-info a {
+  color: var(--accent-color);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.contact-info a:hover {
+  text-decoration: underline;
+  color: var(--accent-hover);
 }
 
 .modal-overlay {
@@ -259,6 +282,16 @@ onUnmounted(() => {
   font-size: 14px;
   margin: 0;
   font-weight: 500;
+}
+
+.version-badge {
+  font-size: 9px;
+  color: var(--text-muted);
+  opacity: 0.6;
+  margin-top: -6px;
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
 .ejustice-logo {
